@@ -8,7 +8,6 @@ import (
 	"github.com/2637309949/bulrush/utils"
 )
 
-
 // Mode read from json or yaml
 type registerHandle func(map[string]interface{})
 type modelHandle func(name string) (*mgo.Collection, map[string]interface {})

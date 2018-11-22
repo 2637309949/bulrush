@@ -86,8 +86,7 @@ func ToStrArray(t []interface{}) []string {
 // SafeMap field safely map Map
 func SafeMap(source map [string]interface{}, key string, mapFunc func(interface{})) interface{}{
 	if source != nil {
-		item, ok := source[key]
-		if ok  {
+		if item, ok := source[key]; ok {
 			mapFunc(item)
 			return item
 		}

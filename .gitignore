@@ -1,0 +1,7 @@
+.idea
+.vscode
+.history
+
+pids
+logs
+vendor

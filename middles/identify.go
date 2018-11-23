@@ -35,8 +35,8 @@ type Iden struct {
 	IgnoreURLs 	[]interface{}
 }
 
-func (iden *Iden) obtainToken(c *gin.Context) {
-	authData, err := iden.Auth(c)
+// Authorization userinfo
+func Authorization (iden *Iden, authData interface{}) map[string]interface{} {
 	if authData != nil {
 		data := map[string]interface{} {
 			"accessToken": 		utils.RandString(32),
@@ -46,6 +46,23 @@ func (iden *Iden) obtainToken(c *gin.Context) {
 			"updated": 			now.New(time.Now()).Unix(),
 			"extra": 			authData,
 		}
+		iden.Tokens.Save(data)
+		return data
+	}
+	return nil
+}
+
+// Authentication userinfo
+func Authentication (iden *Iden, accessToken string) map[string]interface{} {
+	verifyToken := iden.Tokens.Find(accessToken, "")
+	return verifyToken
+}
+
+// obtainToken token
+func (iden *Iden) obtainToken(c *gin.Context) {
+	authData, err := iden.Auth(c)
+	if authData != nil {
+		data := Authorization(iden, authData)
 		c.JSON(http.StatusOK, gin.H{
 			"data": 	data, 
 			"errcode": 	nil,
@@ -63,7 +80,7 @@ func (iden *Iden) obtainToken(c *gin.Context) {
 	}
 }
 
-
+// revokeToken token
 func (iden *Iden) revokeToken(c *gin.Context) {
 	var accessToken string
 	queryToken  := c.Query("accessToken")
@@ -95,6 +112,7 @@ func (iden *Iden) revokeToken(c *gin.Context) {
 	c.Abort()
 }
 
+// refleshToken token
 func (iden *Iden) refleshToken(c *gin.Context) {
 	var refreshToken string
 	queryToken  := c.Query("accessToken")
@@ -134,6 +152,7 @@ func (iden *Iden) refleshToken(c *gin.Context) {
 	c.Abort()
 }
 
+// verifyToken token
 func (iden *Iden) verifyToken(c *gin.Context) {
 	var accessToken string
 	queryToken  := c.Query("accessToken")
@@ -146,7 +165,7 @@ func (iden *Iden) verifyToken(c *gin.Context) {
 	} else if headerToken != "" {
 		accessToken = headerToken
 	}
-	verifyToken := iden.Tokens.Find(accessToken, "")
+	verifyToken := Authentication(iden, accessToken)
 	if verifyToken != nil {
 		c.Set("identify", verifyToken)
 		c.Next()
@@ -166,7 +185,7 @@ func (iden *Iden) Inject(injects map[string]interface{}) {
 	var revokeTokenRoute 	= iden.Routes.RevokeTokenRoute
 	var refleshTokenRoute 	= iden.Routes.RefleshTokenRoute
 	var ignoreUrls 			= iden.IgnoreURLs
-	router, _ 			   := injects["Router"].(*gin.RouterGroup)
+	router, _ 			    := injects["Router"].(*gin.RouterGroup)
 	router.POST(obtainTokenRoute,  iden.obtainToken)
 	router.POST(revokeTokenRoute,  iden.obtainToken)
 	router.POST(refleshTokenRoute, iden.refleshToken)

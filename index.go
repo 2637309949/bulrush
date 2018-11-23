@@ -102,6 +102,7 @@ func (bulrush *Bulrush) Run() error {
 			"Engine": bulrush.engine,
 			"Router": bulrush.router,
 			"Mongo":  bulrush.mongo,
+			"Config": bulrush.config,
 		})
 	}
 	err := bulrush.engine.Run(port)

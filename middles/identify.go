@@ -185,7 +185,7 @@ func (iden *Iden) Inject(injects map[string]interface{}) {
 	var revokeTokenRoute 	= iden.Routes.RevokeTokenRoute
 	var refleshTokenRoute 	= iden.Routes.RefleshTokenRoute
 	var ignoreUrls 			= iden.IgnoreURLs
-	router, _ 			    := injects["Router"].(*gin.RouterGroup)
+	router, _ 			   := injects["Router"].(*gin.RouterGroup)
 	router.POST(obtainTokenRoute,  iden.obtainToken)
 	router.POST(revokeTokenRoute,  iden.obtainToken)
 	router.POST(refleshTokenRoute, iden.refleshToken)

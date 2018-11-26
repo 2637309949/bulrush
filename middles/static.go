@@ -11,28 +11,30 @@ import (
 // index html
 const index = "index.html"
 
-// ServeFileSystem filesystem
+// ServeFileSystem -
 type ServeFileSystem interface {
 	http.FileSystem
 	Exists(prefix string, path string) bool
 }
 
-type localFileSystem struct {
+// LocalFileSystem -
+type LocalFileSystem struct {
 	http.FileSystem
 	root    string
 	indexes bool
 }
 
 // LocalFile -
-func LocalFile(root string, indexes bool) *localFileSystem {
-	return &localFileSystem{
+func LocalFile(root string, indexes bool) *LocalFileSystem {
+	return &LocalFileSystem{
 		FileSystem: gin.Dir(root, indexes),
 		root:       root,
 		indexes:    indexes,
 	}
 }
 
-func (l *localFileSystem) Exists(prefix string, filepath string) bool {
+// Exists detect the presence of files
+func (l *LocalFileSystem) Exists(prefix string, filepath string) bool {
 	if p := strings.TrimPrefix(filepath, prefix); len(p) < len(filepath) {
 		name := path.Join(l.root, p)
 		stats, err := os.Stat(name)

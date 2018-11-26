@@ -49,6 +49,7 @@ func New() *Bulrush {
 	}
 	bulrush.mongo.Register = register(bulrush)
 	bulrush.mongo.Model = model(bulrush)
+	bulrush.mongo.Hooks.List = list(bulrush)
 	Mongo = bulrush.mongo
 	return bulrush
 }

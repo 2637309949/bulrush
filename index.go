@@ -12,24 +12,12 @@ type Bulrush struct {
 	engine 	*gin.Engine
 	router  *gin.RouterGroup
 	mongo 	*MongoGroup
+	redis   *RedisGroup
 	injects []func(map[string]interface{})
 	middles []gin.HandlerFunc
 }
 
-// New returns a new blank bulrush instance without any middleware attached.
-// By default the configuration is:
-// - RedirectTrailingSlash:  true
-// - engine
-// 	- RedirectFixedPath:      false
-// 	- HandleMethodNotAllowed: false
-// 	- ForwardedByClientIP:    true
-// 	- UseRawPath:             false
-// 	- UnescapePathValues:     true
-// - mongo
-// 	- Session
-// 	- Register
-// 	- Model
-// 	- manifests
+// New returns a new blank bulrush instance
 func New() *Bulrush {
 	var bulrush *Bulrush
 	var engine *gin.Engine
@@ -46,11 +34,21 @@ func New() *Bulrush {
 			Model: 			nil,
 			manifests: 		make([]interface{}, 0),
 		},
+		redis: &RedisGroup {
+			Client:			nil,
+		},
 	}
-	bulrush.mongo.Register = register(bulrush)
-	bulrush.mongo.Model = model(bulrush)
+	bulrush.mongo.Register   = register(bulrush)
+	bulrush.mongo.Model 	 = model(bulrush)
 	bulrush.mongo.Hooks.List = list(bulrush)
-	Mongo = bulrush.mongo
+
+	Mongo 	= bulrush.mongo
+	Redis	= bulrush.redis
+	Middles =  bulrush.middles
+	Injects = bulrush.injects
+	Config 	= bulrush.config
+
+	appendInstance(bulrush)
 	return bulrush
 }
 
@@ -61,8 +59,6 @@ func (bulrush *Bulrush) Use(middles ...gin.HandlerFunc) *Bulrush{
 }
 
 // LoadConfig load config from string path
-// - path
-// - m
 func (bulrush *Bulrush) LoadConfig(path string, m utils.Mode) *Bulrush {
 	cfg, err := utils.LoadConfig(path, m)
 	if err != nil {
@@ -84,19 +80,19 @@ func (bulrush *Bulrush) Run() error {
 	mode, 	_ 	:= bulrush.config.String("mode")
 	prefix, _ 	:= bulrush.config.String("prefix")
 
-	port 	= utils.Some(port, ":8080").(string)
-	mode 	= utils.Some(mode, "debug").(string)
+	port 	= utils.Some(port, 	 ":8080").(string)
+	mode 	= utils.Some(mode, 	 "debug").(string)
 	prefix 	= utils.Some(prefix, "/api/v1").(string)
 
 	gin.SetMode(mode)
 	bulrush.mongo.Session = obtainSession(bulrush.config)
+	
+	bulrush.redis.Client  = obtainClient(bulrush.config)
 	bulrush.router = bulrush.engine.Group(prefix)
-
 	// middle
 	for _, middle := range bulrush.middles {
 		bulrush.router.Use(middle)
 	}
-
 	// inject
 	for _, callback := range bulrush.injects {
 		callback(map[string]interface{} {

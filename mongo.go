@@ -1,6 +1,8 @@
 package bulrush
 
 import (
+		"math"
+		"strconv"
 		"fmt"
 		"time"
 		"net/url"
@@ -128,11 +130,16 @@ func obtainSession(config *ldCfg.Config) *mgo.Session{
 }
 
 func list(bulrush *Bulrush) func(string,interface{}) func (c *gin.Context) {
-	return func(name string, target interface{}) func (c *gin.Context) {
+	return func(name string, list interface{}) func (c *gin.Context) {
 		return func (c *gin.Context) {
 			Model, _ := bulrush.mongo.Model(name)
 			var match map[string]interface{}
-			cond := c.DefaultQuery("cond", "%7B%7D")
+			cond  := c.DefaultQuery("cond", "%7B%7D")
+
+			page, _  := strconv.Atoi(c.DefaultQuery("page", "1"))
+			size, _  := strconv.Atoi(c.DefaultQuery("size", "20"))
+			_range 	 := c.DefaultQuery("range", "PAGE")
+
 			unescapeCond, err := url.QueryUnescape(cond)
 			if err != nil {
 				c.JSON(http.StatusOK, gin.H{
@@ -152,7 +159,13 @@ func list(bulrush *Bulrush) func(string,interface{}) func (c *gin.Context) {
 				return
 			}
 			// return mapping body， not json in db
-			err = Model.Find(match).All(target)
+			query := Model.Find(match)
+			totalrecords, _ := query.Count()
+			if _range != "ALL" {
+				query = query.Skip((page - 1) * size).Limit(size)
+			}
+			totalpages := math.Ceil(float64(totalrecords) / float64(size))
+			err = query.All(list)
 			if err != nil {
 				c.JSON(http.StatusOK, gin.H{
 					"data": 	nil,
@@ -162,13 +175,18 @@ func list(bulrush *Bulrush) func(string,interface{}) func (c *gin.Context) {
 				return
 			}
 			c.JSON(http.StatusOK, gin.H{
-				"data": target,
+				"data": map[string]interface{}{
+					"range": _range,
+					"page": page,
+					"totalpages": totalpages,
+					"size":  size,
+					"totalrecords": totalrecords,
+					"cond": match,
+					"list": list,
+				},
 				"errcode": 	nil,
 				"errmsg": 	nil,
 			})
 		}
 	}
 }
-
-// Mongo export
-var Mongo *MongoGroup

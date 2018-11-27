@@ -187,7 +187,7 @@ func (iden *Iden) Inject(injects map[string]interface{}) {
 	var ignoreUrls 			= iden.IgnoreURLs
 	router, _ 			   := injects["Router"].(*gin.RouterGroup)
 	router.POST(obtainTokenRoute,  iden.obtainToken)
-	router.POST(revokeTokenRoute,  iden.obtainToken)
+	router.POST(revokeTokenRoute,  iden.revokeToken)
 	router.POST(refleshTokenRoute, iden.refleshToken)
 	router.Use(func(c *gin.Context) {
 		reqPath   := c.Request.URL.Path

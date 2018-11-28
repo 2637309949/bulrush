@@ -1,6 +1,7 @@
 package middles
 
 import (
+	"errors"
 	"time"
 	"regexp"
 	"net/http"
@@ -53,9 +54,18 @@ func Authorization (iden *Iden, authData interface{}) map[string]interface{} {
 }
 
 // Authentication userinfo
-func Authentication (iden *Iden, accessToken string) map[string]interface{} {
+func Authentication (iden *Iden, accessToken string) (map[string]interface{}, error) {
 	verifyToken := iden.Tokens.Find(accessToken, "")
-	return verifyToken
+	now 		:= time.Now().Unix()
+	if verifyToken == nil {
+		return nil, errors.New("auth token failed, token may not exist")
+	}
+	expiresIn, _ := verifyToken["expiresIn"]
+	created, _ 	 := verifyToken["created"]
+	if (expiresIn.(float64) + created.(float64)) < float64(now){
+		return nil, errors.New("auth token failed, token may be overdue")
+	}
+	return verifyToken, nil
 }
 
 // obtainToken token
@@ -165,7 +175,7 @@ func (iden *Iden) verifyToken(c *gin.Context) {
 	} else if headerToken != "" {
 		accessToken = headerToken
 	}
-	verifyToken := Authentication(iden, accessToken)
+	verifyToken, err := Authentication(iden, accessToken)
 	if verifyToken != nil {
 		c.Set("identify", verifyToken)
 		c.Next()
@@ -173,7 +183,7 @@ func (iden *Iden) verifyToken(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"data": 	nil,
 			"errcode": 	500,
-			"errmsg": 	"authToken failed",
+			"errmsg": 	err.Error(),
 		})
 		c.Abort()
 	}

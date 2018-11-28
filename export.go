@@ -4,21 +4,20 @@ import (
 		  "errors"
 		  "github.com/gin-gonic/gin"
 		  "github.com/thoas/go-funk"
-	ldCfg "github.com/olebedev/config"
 )
 var bulrushs []*Bulrush
 
 // Master *Bulrush export, just for one instance use
 var (
-	Config 	*ldCfg.Config
+	Config 	*WellConfig
 	Mongo 	*MongoGroup
 	Redis   *RedisGroup
 	Middles []gin.HandlerFunc
-	Injects []func(map[string]interface{})
+	Injects []interface{}
 )
 
-// append instance
-func appendInstance(b *Bulrush) {
+// remainInstance instance
+func remainInstance(b *Bulrush) {
 	bulrushs = append(bulrushs, b)
 }
 

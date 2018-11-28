@@ -1,17 +1,16 @@
 package bulrush
 
 import (
-		"math"
-		"strconv"
-		"fmt"
-		"time"
-		"net/url"
-		"net/http"
-		"encoding/json"
-		"github.com/gin-gonic/gin"
-		"github.com/globalsign/mgo"
-  ldCfg "github.com/olebedev/config"
-		"github.com/2637309949/bulrush/utils"
+	"math"
+	"strconv"
+	"fmt"
+	"time"
+	"net/url"
+	"net/http"
+	"encoding/json"
+	"github.com/gin-gonic/gin"
+	"github.com/globalsign/mgo"
+	"github.com/2637309949/bulrush/utils"
 )
 
 type registerHandler func(map[string]interface{})
@@ -53,7 +52,7 @@ func model(bulrush *Bulrush) modelHandler{
 	}
 }
 
-func obtainDialInfo(config *ldCfg.Config) *mgo.DialInfo{
+func obtainDialInfo(config *WellConfig) *mgo.DialInfo{
 	addrs, _ := config.List("mongo.addrs")
 	opts, _  := config.Map("mongo.opts")
 	dialInfo := &mgo.DialInfo{
@@ -116,7 +115,7 @@ func obtainDialInfo(config *ldCfg.Config) *mgo.DialInfo{
 	return dialInfo
 }
 
-func obtainSession(config *ldCfg.Config) *mgo.Session{
+func obtainSession(config *WellConfig) *mgo.Session{
 	addrs, _ := config.List("mongo.addrs")
 	if addrs != nil && len(addrs) > 0 {
 		dialInfo := obtainDialInfo(config)

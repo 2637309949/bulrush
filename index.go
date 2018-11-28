@@ -2,18 +2,64 @@ package bulrush
 
 import (
 	"github.com/2637309949/bulrush/utils"
+	"github.com/olebedev/config"
 	"github.com/gin-gonic/gin"
-	ldCfg "github.com/olebedev/config"
+	"io/ioutil"
+	"fmt"
 )
+
+// Mode read from json or yaml
+type Mode int
+const (
+	// JSON json mode
+	_  Mode = iota + 1
+	// JSONMode json mode
+	JSONMode
+	// YAMLMode yaml mode
+	YAMLMode
+)
+
+// WellConfig -
+type WellConfig struct {
+	config.Config
+	Path string
+	Mode Mode
+}
+
+// LoadFile -
+func (wc *WellConfig) LoadFile() *WellConfig {
+	var (
+		cfg *config.Config
+		err error
+	)
+    file, err := ioutil.ReadFile(wc.Path)
+    if err != nil {
+		panic(err)
+    }
+	buffer := string(file)
+	switch wc.Mode {
+		case JSONMode:
+			cfg, err = config.ParseJson(buffer)
+		case YAMLMode:
+			cfg, err = config.ParseYaml(buffer)
+		default:
+			panic(fmt.Errorf("No support this Mode %d",wc.Mode))
+	}
+    if err != nil {
+		panic(err)
+    }
+	wellCfg := &WellConfig{ *cfg, wc.Path, wc.Mode }
+	return wellCfg
+}
 
 // Bulrush is the framework's instance
 type Bulrush struct {
-	config 	*ldCfg.Config
+	config 	*WellConfig
 	engine 	*gin.Engine
 	router  *gin.RouterGroup
 	mongo 	*MongoGroup
 	redis   *RedisGroup
-	injects []func(map[string]interface{})
+	injects []interface{}
 	middles []gin.HandlerFunc
 }
 
@@ -26,7 +72,7 @@ func New() *Bulrush {
 		config: 		nil,
 		router: 		nil,
 		engine: 		engine,
-		injects: 		make([]func(map[string]interface{}), 0),
+		injects: 		make([]interface{}, 0),
 		middles: 		make([]gin.HandlerFunc, 0),
 		mongo: &MongoGroup {
 			Session: 		nil,
@@ -47,8 +93,7 @@ func New() *Bulrush {
 	Middles =  bulrush.middles
 	Injects = bulrush.injects
 	Config 	= bulrush.config
-
-	appendInstance(bulrush)
+	remainInstance(bulrush)
 	return bulrush
 }
 
@@ -59,17 +104,14 @@ func (bulrush *Bulrush) Use(middles ...gin.HandlerFunc) *Bulrush{
 }
 
 // LoadConfig load config from string path
-func (bulrush *Bulrush) LoadConfig(path string, m utils.Mode) *Bulrush {
-	cfg, err := utils.LoadConfig(path, m)
-	if err != nil {
-		panic(err)
-	}
-	bulrush.config = cfg
+func (bulrush *Bulrush) LoadConfig(path string, m Mode) *Bulrush {
+	wc := &WellConfig{ Path: path, Mode: m }
+	bulrush.config = wc.LoadFile()
 	return bulrush
 }
 
 // Inject inject params to func
-func (bulrush *Bulrush) Inject(injects ...func(map[string]interface{})) *Bulrush{
+func (bulrush *Bulrush) Inject(injects ...interface{}) *Bulrush{
 	bulrush.injects = append(bulrush.injects, injects...)
 	return bulrush
 }
@@ -86,7 +128,6 @@ func (bulrush *Bulrush) Run() error {
 
 	gin.SetMode(mode)
 	bulrush.mongo.Session = obtainSession(bulrush.config)
-	
 	bulrush.redis.Client  = obtainClient(bulrush.config)
 	bulrush.router = bulrush.engine.Group(prefix)
 	// middle
@@ -94,12 +135,13 @@ func (bulrush *Bulrush) Run() error {
 		bulrush.router.Use(middle)
 	}
 	// inject
-	for _, callback := range bulrush.injects {
-		callback(map[string]interface{} {
+	for _, target := range bulrush.injects {
+		invoke(target, map[string]interface{} {
 			"Engine": bulrush.engine,
 			"Router": bulrush.router,
 			"Mongo":  bulrush.mongo,
 			"Config": bulrush.config,
+			"Redis":  bulrush.redis,
 		})
 	}
 	err := bulrush.engine.Run(port)

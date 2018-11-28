@@ -1,9 +1,7 @@
 package bulrush
 
 import (
-	"fmt"
-		  "github.com/go-redis/redis"
-	ldCfg "github.com/olebedev/config"
+	"github.com/go-redis/redis"
 )
 
 // RedisGroup some common function
@@ -11,7 +9,8 @@ type RedisGroup struct {
 	Client *redis.Client
 }
 
-func obtainClient(config *ldCfg.Config) *redis.Client{
+	
+func obtainClient(config *WellConfig) *redis.Client{
 	addrs, _ := config.String("redis.addrs")
 	if addrs != "" {
 		options := &redis.Options{
@@ -28,9 +27,7 @@ func obtainClient(config *ldCfg.Config) *redis.Client{
 			options.DB = item.(int)
 		}
 		client := redis.NewClient(options)
-		resu, err := client.Ping().Result()
-		fmt.Print(resu)
-		fmt.Println(err)
+		_, err := client.Ping().Result()
 		if err != nil {
 			panic(err)
 		}

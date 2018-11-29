@@ -191,11 +191,11 @@ func (iden *Iden) verifyToken(c *gin.Context) {
 
 // Inject for gin
 func (iden *Iden) Inject(injects map[string]interface{}) {
-	var obtainTokenRoute 	= iden.Routes.ObtainTokenRoute
-	var revokeTokenRoute 	= iden.Routes.RevokeTokenRoute
-	var refleshTokenRoute 	= iden.Routes.RefleshTokenRoute
-	var ignoreUrls 			= iden.IgnoreURLs
-	router, _ 			   := injects["Router"].(*gin.RouterGroup)
+	obtainTokenRoute 	:= iden.Routes.ObtainTokenRoute
+	revokeTokenRoute 	:= iden.Routes.RevokeTokenRoute
+	refleshTokenRoute 	:= iden.Routes.RefleshTokenRoute
+	ignoreUrls 			:= iden.IgnoreURLs
+	router, _ 			:= injects["Router"].(*gin.RouterGroup)
 	router.POST(obtainTokenRoute,  iden.obtainToken)
 	router.POST(revokeTokenRoute,  iden.revokeToken)
 	router.POST(refleshTokenRoute, iden.refleshToken)

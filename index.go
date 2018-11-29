@@ -1,29 +1,16 @@
 package bulrush
 
 import (
+	"strings"
 	"github.com/2637309949/bulrush/utils"
 	"github.com/olebedev/config"
 	"github.com/gin-gonic/gin"
-	"io/ioutil"
-	"fmt"
-)
-
-// Mode read from json or yaml
-type Mode int
-const (
-	// JSON json mode
-	_  Mode = iota + 1
-	// JSONMode json mode
-	JSONMode
-	// YAMLMode yaml mode
-	YAMLMode
 )
 
 // WellConfig -
 type WellConfig struct {
 	config.Config
 	Path string
-	Mode Mode
 }
 
 // LoadFile -
@@ -32,23 +19,15 @@ func (wc *WellConfig) LoadFile() *WellConfig {
 		cfg *config.Config
 		err error
 	)
-    file, err := ioutil.ReadFile(wc.Path)
-    if err != nil {
-		panic(err)
-    }
-	buffer := string(file)
-	switch wc.Mode {
-		case JSONMode:
-			cfg, err = config.ParseJson(buffer)
-		case YAMLMode:
-			cfg, err = config.ParseYaml(buffer)
-		default:
-			panic(fmt.Errorf("No support this Mode %d",wc.Mode))
+	if strings.HasSuffix(wc.Path, ".json") {
+		cfg, err = config.ParseJsonFile(wc.Path)
+	} else if strings.HasSuffix(wc.Path, ".yaml") {
+		cfg, err = config.ParseYamlFile(wc.Path)
 	}
     if err != nil {
 		panic(err)
     }
-	wellCfg := &WellConfig{ *cfg, wc.Path, wc.Mode }
+	wellCfg := &WellConfig{ *cfg, wc.Path }
 	return wellCfg
 }
 
@@ -104,8 +83,8 @@ func (bulrush *Bulrush) Use(middles ...gin.HandlerFunc) *Bulrush{
 }
 
 // LoadConfig load config from string path
-func (bulrush *Bulrush) LoadConfig(path string, m Mode) *Bulrush {
-	wc := &WellConfig{ Path: path, Mode: m }
+func (bulrush *Bulrush) LoadConfig(path string) *Bulrush {
+	wc := &WellConfig{ Path: path }
 	bulrush.config = wc.LoadFile()
 	return bulrush
 }
@@ -118,32 +97,18 @@ func (bulrush *Bulrush) Inject(injects ...interface{}) *Bulrush{
 
 // Run app
 func (bulrush *Bulrush) Run() error {
-	port, 	_ 	:= bulrush.config.String("port")
-	mode, 	_ 	:= bulrush.config.String("mode")
-	prefix, _ 	:= bulrush.config.String("prefix")
-
-	port 	= utils.Some(port, 	 ":8080").(string)
-	mode 	= utils.Some(mode, 	 "debug").(string)
-	prefix 	= utils.Some(prefix, "/api/v1").(string)
-
+	port   := utils.Some(utils.LeftV(bulrush.config.String("port")), 	":8080").(string)
+	mode   := utils.Some(utils.LeftV(bulrush.config.String("mode")), 	"debug").(string)
+	prefix := utils.Some(utils.LeftV(bulrush.config.String("prefix")),  "/api/v1").(string)
 	gin.SetMode(mode)
 	bulrush.mongo.Session = obtainSession(bulrush.config)
 	bulrush.redis.Client  = obtainClient(bulrush.config)
-	bulrush.router = bulrush.engine.Group(prefix)
-	// middle
+	bulrush.router 		  = bulrush.engine.Group(prefix)
+
 	for _, middle := range bulrush.middles {
 		bulrush.router.Use(middle)
 	}
-	// inject
-	for _, target := range bulrush.injects {
-		invoke(target, map[string]interface{} {
-			"Engine": bulrush.engine,
-			"Router": bulrush.router,
-			"Mongo":  bulrush.mongo,
-			"Config": bulrush.config,
-			"Redis":  bulrush.redis,
-		})
-	}
+	rangeInvoke(bulrush.injects, bulrush)
 	err := bulrush.engine.Run(port)
 	return err
 }

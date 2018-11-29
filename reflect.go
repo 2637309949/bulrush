@@ -16,13 +16,8 @@ type InjectGroup struct {
 }
 
 // invoke -
-func invoke(target interface{}, injects map[string]interface{}) {
-	engine, _ := injects["Engine"]
-	mongo, _  := injects["Mongo"]
-	router, _ := injects["Router"]
-	config, _ := injects["Config"]
-	redis, _  := injects["Redis"]
-	getType   := reflect.TypeOf(target)
+func invoke(target interface{}, bulrush *Bulrush) {
+	getType  := reflect.TypeOf(target)
 	getValue := reflect.ValueOf(target)
 	for i := 0; i < getType.NumMethod(); i++ {
 		inputs 	   := make([]reflect.Value, 0)
@@ -30,7 +25,6 @@ func invoke(target interface{}, injects map[string]interface{}) {
 		methodName := methodType.Name
 		method 	   := getValue.Method(i)
 		numIn	   := methodType.Type.NumIn()
-		
 		if !strings.HasPrefix(methodName, "Inject") {
 			continue
 		}
@@ -38,22 +32,35 @@ func invoke(target interface{}, injects map[string]interface{}) {
 			ptype := methodType.Type.In(index)
 			switch {
 				case ptype == reflect.TypeOf(map[string]interface{}{}):
-					inputs = append(inputs, reflect.ValueOf(injects))
-				case ptype == reflect.TypeOf(engine):
-					inputs = append(inputs, reflect.ValueOf(engine))
-				case ptype == reflect.TypeOf(mongo):
-					inputs = append(inputs, reflect.ValueOf(mongo))
-				case ptype == reflect.TypeOf(router):
-					inputs = append(inputs, reflect.ValueOf(router))
-				case ptype == reflect.TypeOf(config):
-					inputs = append(inputs, reflect.ValueOf(config))
-				case ptype == reflect.TypeOf(redis):
-					inputs = append(inputs, reflect.ValueOf(redis))
+					inputs = append(inputs, reflect.ValueOf(map[string]interface{} {
+						"Engine": bulrush.engine,
+						"Router": bulrush.router,
+						"Mongo":  bulrush.mongo,
+						"Config": bulrush.config,
+						"Redis":  bulrush.redis,
+					}))
+				case ptype == reflect.TypeOf(bulrush.engine):
+					inputs = append(inputs, reflect.ValueOf(bulrush.engine))
+				case ptype == reflect.TypeOf(bulrush.mongo):
+					inputs = append(inputs, reflect.ValueOf(bulrush.mongo))
+				case ptype == reflect.TypeOf(bulrush.router):
+					inputs = append(inputs, reflect.ValueOf(bulrush.router))
+				case ptype == reflect.TypeOf(bulrush.config):
+					inputs = append(inputs, reflect.ValueOf(bulrush.config))
+				case ptype == reflect.TypeOf(bulrush.redis):
+					inputs = append(inputs, reflect.ValueOf(bulrush.redis))
 				default:
 			}
 		}
 		if method.IsValid() {
 			method.Call(inputs)
 		}
+	}
+}
+
+// rangeInvoke -
+func rangeInvoke(injects []interface{}, bulrush *Bulrush) {
+	for _, target := range injects {
+		invoke(target, bulrush)
 	}
 }

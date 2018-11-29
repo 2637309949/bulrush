@@ -53,3 +53,14 @@ func RandString(n int) string {
 	}
 	return string(bytes)
 }
+
+// LeftV -
+func LeftV(left interface{}, right interface{}) interface{} {
+	return left
+}
+
+// RightV -
+func RightV(left interface{}, right interface{}) interface{} {
+	return right
+}
+

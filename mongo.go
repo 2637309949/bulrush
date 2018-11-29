@@ -52,69 +52,35 @@ func model(bulrush *Bulrush) modelHandler{
 	}
 }
 
+// obtainDialInfo -
 func obtainDialInfo(config *WellConfig) *mgo.DialInfo{
-	addrs, _ := config.List("mongo.addrs")
-	opts, _  := config.Map("mongo.opts")
+	addrs    := utils.LeftV(config.List("mongo.addrs")).([]interface{})
+	opts	 := utils.LeftV(config.Map("mongo.opts")).(map[string]interface{})
 	dialInfo := &mgo.DialInfo{
 		Addrs: utils.ToStrArray(addrs),
 	}
-	if item, ok := opts["timeout"]; ok {
-		dialInfo.Timeout = time.Duration(item.(int)) * time.Second
-	}
-	if item, ok := opts["database"]; ok {
-		dialInfo.Database = item.(string)
-	}
-	if item, ok := opts["replicaSetName"]; ok {
-		dialInfo.ReplicaSetName = item.(string)
-	}
-	if item, ok := opts["source"]; ok {
-		dialInfo.Source = item.(string)
-	}
-	if item, ok := opts["service"]; ok {
-		dialInfo.Service = item.(string)
-	}
-	if item, ok := opts["serviceHost"]; ok {
-		dialInfo.ServiceHost = item.(string)
-	}
-	if item, ok := opts["mechanism"]; ok {
-		dialInfo.Mechanism = item.(string)
-	}
-	if item, ok := opts["username"]; ok {
-		dialInfo.Username = item.(string)
-	}
-	if item, ok := opts["password"]; ok {
-		dialInfo.Password = item.(string)
-	}
-	if item, ok := opts["poolLimit"]; ok {
-		dialInfo.PoolLimit = item.(int)
-	}
-	if item, ok := opts["poolTimeout"]; ok {
-		dialInfo.PoolTimeout = time.Duration(item.(int)) * time.Second
-	}
-	if item, ok := opts["readTimeout"]; ok {
-		dialInfo.ReadTimeout = time.Duration(item.(int)) * time.Second
-	}
-	if item, ok := opts["writeTimeout"]; ok {
-		dialInfo.WriteTimeout = time.Duration(item.(int)) * time.Second
-	}
-	if item, ok := opts["appName"]; ok {
-		dialInfo.AppName = item.(string)
-	}
-	if item, ok := opts["failFast"]; ok {
-		dialInfo.FailFast = item.(bool)
-	}
-	if item, ok := opts["direct"]; ok {
-		dialInfo.Direct = item.(bool)
-	}
-	if item, ok := opts["minPoolSize"]; ok {
-		dialInfo.MinPoolSize = item.(int)
-	}
-	if item, ok := opts["maxIdleTimeMS"]; ok {
-		dialInfo.MaxIdleTimeMS = item.(int)
-	}
+	dialInfo.Timeout  		 = time.Duration(utils.Some(utils.LeftOkV(opts["timeout"]), 0).(int)) * time.Second
+	dialInfo.Database 		 = utils.Some(utils.LeftOkV(opts["database"]), "").(string)
+	dialInfo.ReplicaSetName  = utils.Some(utils.LeftOkV(opts["replicaSetName"]), "").(string)
+	dialInfo.Source     	 = utils.Some(utils.LeftOkV(opts["source"]), "").(string)
+	dialInfo.Service     	 = utils.Some(utils.LeftOkV(opts["service"]), "").(string)
+	dialInfo.ServiceHost     = utils.Some(utils.LeftOkV(opts["serviceHost"]), "").(string)
+	dialInfo.Mechanism    	 = utils.Some(utils.LeftOkV(opts["mechanism"]), "").(string)
+	dialInfo.Username    	 = utils.Some(utils.LeftOkV(opts["username"]), "").(string)
+	dialInfo.Password   	 = utils.Some(utils.LeftOkV(opts["password"]), "").(string)
+	dialInfo.PoolLimit 	 	 = utils.Some(utils.LeftOkV(opts["poolLimit"]), 0).(int)
+	dialInfo.PoolTimeout 	 = time.Duration(utils.Some(utils.LeftOkV(opts["poolTimeout"]), 0).(int)) * time.Second
+	dialInfo.ReadTimeout 	 = time.Duration(utils.Some(utils.LeftOkV(opts["readTimeout"]), 0).(int)) * time.Second
+	dialInfo.WriteTimeout 	 = time.Duration(utils.Some(utils.LeftOkV(opts["writeTimeout"]), 0).(int)) * time.Second
+	dialInfo.AppName    	 = utils.Some(utils.LeftOkV(opts["appName"]), "").(string)
+	dialInfo.FailFast    	 = utils.Some(utils.LeftOkV(opts["failFast"]), false).(bool)
+	dialInfo.Direct    		 = utils.Some(utils.LeftOkV(opts["direct"]), false).(bool)
+	dialInfo.MinPoolSize 	 = utils.Some(utils.LeftOkV(opts["minPoolSize"]), 0).(int)
+	dialInfo.MaxIdleTimeMS 	 = utils.Some(utils.LeftOkV(opts["maxIdleTimeMS"]), 0).(int)
 	return dialInfo
 }
 
+// obtainSession -
 func obtainSession(config *WellConfig) *mgo.Session{
 	addrs, _ := config.List("mongo.addrs")
 	if addrs != nil && len(addrs) > 0 {
@@ -131,14 +97,12 @@ func obtainSession(config *WellConfig) *mgo.Session{
 func list(bulrush *Bulrush) func(string,interface{}) func (c *gin.Context) {
 	return func(name string, list interface{}) func (c *gin.Context) {
 		return func (c *gin.Context) {
-			Model, _ := bulrush.mongo.Model(name)
 			var match map[string]interface{}
-			cond  := c.DefaultQuery("cond", "%7B%7D")
-
+			Model, _ := bulrush.mongo.Model(name)
+			cond  	 := c.DefaultQuery("cond", "%7B%7D")
 			page, _  := strconv.Atoi(c.DefaultQuery("page", "1"))
 			size, _  := strconv.Atoi(c.DefaultQuery("size", "20"))
 			_range 	 := c.DefaultQuery("range", "PAGE")
-
 			unescapeCond, err := url.QueryUnescape(cond)
 			if err != nil {
 				c.JSON(http.StatusOK, gin.H{
@@ -163,8 +127,8 @@ func list(bulrush *Bulrush) func(string,interface{}) func (c *gin.Context) {
 			if _range != "ALL" {
 				query = query.Skip((page - 1) * size).Limit(size)
 			}
-			totalpages := math.Ceil(float64(totalrecords) / float64(size))
 			err = query.All(list)
+			totalpages := math.Ceil(float64(totalrecords) / float64(size))
 			if err != nil {
 				c.JSON(http.StatusOK, gin.H{
 					"data": 	nil,

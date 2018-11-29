@@ -9,7 +9,7 @@ type RedisGroup struct {
 	Client *redis.Client
 }
 
-	
+// obtainClient -
 func obtainClient(config *WellConfig) *redis.Client{
 	addrs, _ := config.String("redis.addrs")
 	if addrs != "" {

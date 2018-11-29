@@ -7,7 +7,7 @@ import (
 )
 var bulrushs []*Bulrush
 
-// Master *Bulrush export, just for one instance use
+// master *Bulrush export, just for one instance use
 var (
 	Config 	*WellConfig
 	Mongo 	*MongoGroup
@@ -22,13 +22,13 @@ func remainInstance(b *Bulrush) {
 }
 
 // Obtain a application
-func Obtain(name string) *Bulrush {
+func Obtain(name string) (*Bulrush, error) {
 	target := funk.Find(bulrushs, func(item *Bulrush) bool {
 		name, _ := item.config.String("name")
 		return name == name
 	})
 	if target == nil {
-		panic(errors.New("no such application"))
+		return nil, errors.New("no such application")
 	}
-	return target.(*Bulrush)
+	return target.(*Bulrush), nil
 }

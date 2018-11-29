@@ -19,6 +19,10 @@ type InjectGroup struct {
 func invoke(target interface{}, bulrush *Bulrush) {
 	getType  := reflect.TypeOf(target)
 	getValue := reflect.ValueOf(target)
+
+	if getValue.Kind() != reflect.Ptr {
+		panic("target must be a ptr")
+	}
 	for i := 0; i < getType.NumMethod(); i++ {
 		inputs 	   := make([]reflect.Value, 0)
 		methodType := getType.Method(i)
@@ -58,8 +62,8 @@ func invoke(target interface{}, bulrush *Bulrush) {
 	}
 }
 
-// rangeInvoke -
-func rangeInvoke(injects []interface{}, bulrush *Bulrush) {
+// injectInvoke -
+func injectInvoke(injects []interface{}, bulrush *Bulrush) {
 	for _, target := range injects {
 		invoke(target, bulrush)
 	}

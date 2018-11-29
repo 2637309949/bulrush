@@ -5,17 +5,9 @@ import (
 	"fmt"
 )
 
-// GetOrElse -
-func GetOrElse(target map[string]interface{}, key string, initValue interface{}) interface{} {
-	if value, ok := target[key]; ok {
-		return value
-	}
-	return initValue
-}
-
 // Some get or a default value
 func Some(target interface{}, initValue interface{}) interface{}{
-	if target != nil && target != "" {
+	if target != nil && target != "" && target != 0 {
 		return target
 	}
 	return initValue
@@ -64,3 +56,27 @@ func RightV(left interface{}, right interface{}) interface{} {
 	return right
 }
 
+// LeftOkV -
+func LeftOkV(left interface{}, right... bool) interface{} {
+	var (
+		l interface{}
+		r = true
+	)
+	if len(right) == 0 && (l == "" || l == nil || l == 0){
+		r = false
+	} else {
+		r = right[0]
+	}
+	if r {
+		return left
+	}
+	return nil
+}
+
+// LeftSV -
+func LeftSV(left interface{}, right error) interface{} {
+	if right != nil {
+		panic(right)
+	}
+	return left
+}

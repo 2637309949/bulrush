@@ -1,6 +1,8 @@
 package bulrush
 
 import (
+	"log"
+	"errors"
 	"strings"
 	"github.com/2637309949/bulrush/utils"
 	"github.com/olebedev/config"
@@ -14,21 +16,22 @@ type WellConfig struct {
 }
 
 // LoadFile -
-func (wc *WellConfig) LoadFile() *WellConfig {
-	var (
-		cfg *config.Config
-		err error
-	)
+func (wc *WellConfig) LoadFile() (*WellConfig, error) {
 	if strings.HasSuffix(wc.Path, ".json") {
-		cfg, err = config.ParseJsonFile(wc.Path)
+		cfg, err := config.ParseJsonFile(wc.Path)
+		if err != nil {
+			return nil, err
+		}
+		return &WellConfig{ *cfg, wc.Path }, nil
 	} else if strings.HasSuffix(wc.Path, ".yaml") {
-		cfg, err = config.ParseYamlFile(wc.Path)
+		cfg, err := config.ParseYamlFile(wc.Path)
+		if err != nil {
+			return nil, err
+		}
+		return &WellConfig{ *cfg, wc.Path }, nil
+	} else {
+		return nil, errors.New("unsupported file type")
 	}
-    if err != nil {
-		panic(err)
-    }
-	wellCfg := &WellConfig{ *cfg, wc.Path }
-	return wellCfg
 }
 
 // Bulrush is the framework's instance
@@ -85,7 +88,7 @@ func (bulrush *Bulrush) Use(middles ...gin.HandlerFunc) *Bulrush{
 // LoadConfig load config from string path
 func (bulrush *Bulrush) LoadConfig(path string) *Bulrush {
 	wc := &WellConfig{ Path: path }
-	bulrush.config = wc.LoadFile()
+	bulrush.config = utils.LeftSV(wc.LoadFile()).(*WellConfig)
 	return bulrush
 }
 
@@ -100,15 +103,19 @@ func (bulrush *Bulrush) Run() error {
 	port   := utils.Some(utils.LeftV(bulrush.config.String("port")), 	":8080").(string)
 	mode   := utils.Some(utils.LeftV(bulrush.config.String("mode")), 	"debug").(string)
 	prefix := utils.Some(utils.LeftV(bulrush.config.String("prefix")),  "/api/v1").(string)
+
 	gin.SetMode(mode)
+	gin.DebugPrintRouteFunc = func(httpMethod, absolutePath, handlerName string, nuHandlers int) {
+		log.Printf("%5v %9v\n", httpMethod, absolutePath)
+	}
+
 	bulrush.mongo.Session = obtainSession(bulrush.config)
 	bulrush.redis.Client  = obtainClient(bulrush.config)
 	bulrush.router 		  = bulrush.engine.Group(prefix)
-
 	for _, middle := range bulrush.middles {
 		bulrush.router.Use(middle)
 	}
-	rangeInvoke(bulrush.injects, bulrush)
+	injectInvoke(bulrush.injects, bulrush)
 	err := bulrush.engine.Run(port)
 	return err
 }

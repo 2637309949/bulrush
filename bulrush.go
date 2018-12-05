@@ -2,41 +2,9 @@ package bulrush
 
 import (
 	"log"
-	"errors"
-	"strings"
 	"github.com/2637309949/bulrush/utils"
-	"github.com/2637309949/bulrush/middles"
-	"github.com/olebedev/config"
 	"github.com/gin-gonic/gin"
 )
-
-// WellConfig -
-type WellConfig struct {
-	config.Config
-	Path string
-}
-
-// LoadFile -
-func (wc *WellConfig) LoadFile(path string) (*WellConfig, error) {
-	var (
-		jsonSuffix = ".json"
-		yamlSuffix = ".yaml"
-		ErrUNSupported = errors.New("unsupported file type")
-		readFile func(filename string) (*config.Config, error)
-	)
-	if strings.HasSuffix(wc.Path, jsonSuffix) {
-		readFile = config.ParseJsonFile
-	} else if strings.HasSuffix(wc.Path, yamlSuffix) {
-		readFile = config.ParseYamlFile
-	} else {
-		return nil, ErrUNSupported
-	}
-	cfg, err := readFile(wc.Path)
-	if err != nil {
-		return nil, err
-	}
-	return &WellConfig{ *cfg, wc.Path }, nil
-}
 
 // Bulrush is the framework's instance
 type Bulrush struct {
@@ -84,7 +52,8 @@ func New() *Bulrush {
 // Default return a new bulrush with some default middles
 func Default() *Bulrush {
 	bulrush := New()
-	bulrush.middles = append(bulrush.middles, LoggerWithWriter(bulrush))
+	bulrush.engine.Use(gin.Recovery())
+	bulrush.middles = append(bulrush.middles, gin.Recovery(), LoggerWithWriter(bulrush))
 	return bulrush
 }
 
@@ -114,9 +83,9 @@ func (bulrush *Bulrush) Inject(injects ...interface{}) *Bulrush{
 
 // Run app
 func (bulrush *Bulrush) Run()  {
-	port   := utils.Some(utils.LeftV(bulrush.config.String("port")), 	":8080").(string)
-	mode   := utils.Some(utils.LeftV(bulrush.config.String("mode")), 	"debug").(string)
-	prefix := utils.Some(utils.LeftV(bulrush.config.String("prefix")),  "/api/v1").(string)
+	port   := bulrush.config.getString("port",  ":8080")
+	mode   := bulrush.config.getString("mode",  "debug")
+	prefix := bulrush.config.getString("prefix","/api/v1")
 
 	gin.SetMode(mode)
 	gin.DebugPrintRouteFunc = func(httpMethod, absolutePath, handlerName string, nuHandlers int) {
@@ -127,7 +96,7 @@ func (bulrush *Bulrush) Run()  {
 	bulrush.redis.Client  = obtainClient(bulrush.config)
 	bulrush.router 		  = bulrush.engine.Group(prefix)
 
-	middles.RouteMiddles(bulrush.router, bulrush.middles)
+	routeMiddles(bulrush.router, bulrush.middles)
 	injectInvoke(bulrush.injects, bulrush)
 	err := bulrush.engine.Run(port)
 	if err != nil {

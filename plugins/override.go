@@ -1,4 +1,4 @@
-package middles
+package plugins
 
 import (
 	"github.com/gin-gonic/gin"

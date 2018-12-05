@@ -1,17 +1,17 @@
 package bulrush
 
 import (
-	"github.com/globalsign/mgo/bson"
 	"math"
-	"strconv"
 	"fmt"
 	"time"
 	"net/url"
+	"strconv"
 	"net/http"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/globalsign/mgo"
 	"github.com/2637309949/bulrush/utils"
+	"github.com/globalsign/mgo/bson"
 )
 
 type registerHandler func(map[string]interface{})
@@ -56,29 +56,29 @@ func model(bulrush *Bulrush) modelHandler {
 
 // obtainDialInfo -
 func obtainDialInfo(config *WellConfig) *mgo.DialInfo {
-	addrs    := utils.LeftV(config.List("mongo.addrs")).([]interface{})
-	opts	 := utils.LeftV(config.Map("mongo.opts")).(map[string]interface{})
-	dial := &mgo.DialInfo {
-		Addrs: utils.ToStrArray(addrs),
-	}
-	dial.Timeout  		 = time.Duration(utils.Some(utils.LeftOkV(opts["timeout"]), 0).(int)) * time.Second
-	dial.Database 		 = utils.Some(utils.LeftOkV(opts["database"]), "").(string)
-	dial.ReplicaSetName  = utils.Some(utils.LeftOkV(opts["replicaSetName"]), "").(string)
-	dial.Source     	 = utils.Some(utils.LeftOkV(opts["source"]), "").(string)
-	dial.Service     	 = utils.Some(utils.LeftOkV(opts["service"]), "").(string)
-	dial.ServiceHost     = utils.Some(utils.LeftOkV(opts["serviceHost"]), "").(string)
-	dial.Mechanism    	 = utils.Some(utils.LeftOkV(opts["mechanism"]), "").(string)
-	dial.Username    	 = utils.Some(utils.LeftOkV(opts["username"]), "").(string)
-	dial.Password   	 = utils.Some(utils.LeftOkV(opts["password"]), "").(string)
-	dial.PoolLimit 	 	 = utils.Some(utils.LeftOkV(opts["poolLimit"]), 0).(int)
-	dial.PoolTimeout 	 = time.Duration(utils.Some(utils.LeftOkV(opts["poolTimeout"]), 0).(int)) * time.Second
-	dial.ReadTimeout 	 = time.Duration(utils.Some(utils.LeftOkV(opts["readTimeout"]), 0).(int)) * time.Second
-	dial.WriteTimeout 	 = time.Duration(utils.Some(utils.LeftOkV(opts["writeTimeout"]), 0).(int)) * time.Second
-	dial.AppName    	 = utils.Some(utils.LeftOkV(opts["appName"]), "").(string)
-	dial.FailFast    	 = utils.Some(utils.LeftOkV(opts["failFast"]), false).(bool)
-	dial.Direct    		 = utils.Some(utils.LeftOkV(opts["direct"]), false).(bool)
-	dial.MinPoolSize 	 = utils.Some(utils.LeftOkV(opts["minPoolSize"]), 0).(int)
-	dial.MaxIdleTimeMS 	 = utils.Some(utils.LeftOkV(opts["maxIdleTimeMS"]), 0).(int)
+	addrs    := config.getStrList("mongo.addrs", nil)
+	dial := &mgo.DialInfo {}
+
+	dial.Addrs 			 = addrs
+	dial.Timeout  		 = time.Duration(config.getInt("mongo.opts.timeout", 0)) * time.Second
+	dial.Database 		 = config.getString("mongo.opts.database", "")
+
+	dial.ReplicaSetName  = config.getString("mongo.opts.replicaSetName", "")
+	dial.Source     	 = config.getString("mongo.opts.source", "")
+	dial.Service     	 = config.getString("mongo.opts.service", "")
+	dial.ServiceHost     = config.getString("mongo.opts.serviceHost", "")
+	dial.Mechanism    	 = config.getString("mongo.opts.mechanism", "")
+	dial.Username    	 = config.getString("mongo.opts.username", "")
+	dial.Password   	 = config.getString("mongo.opts.password", "")
+	dial.PoolLimit 	 	 = config.getInt("mongo.opts.poolLimit", 0)
+	dial.PoolTimeout 	 = time.Duration(config.getInt("mongo.opts.poolTimeout", 0)) * time.Second
+	dial.ReadTimeout 	 = time.Duration(config.getInt("mongo.opts.readTimeout", 0)) * time.Second
+	dial.WriteTimeout 	 = time.Duration(config.getInt("mongo.opts.writeTimeout", 0)) * time.Second
+	dial.AppName    	 = config.getString("mongo.opts.appName", "")
+	dial.FailFast    	 = config.getBool("mongo.opts.failFast", false)
+	dial.Direct    		 = config.getBool("mongo.opts.direct", false)
+	dial.MinPoolSize 	 = config.getInt("mongo.opts.minPoolSize", 0)
+	dial.MaxIdleTimeMS 	 = config.getInt("mongo.opts.maxIdleTimeMS", 0)
 	return dial
 }
 

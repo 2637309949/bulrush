@@ -13,11 +13,7 @@ type RedisGroup struct {
 func obtainClient(config *WellConfig) *redis.Client{
 	addrs, _ := config.String("redis.addrs")
 	if addrs != "" {
-		options := &redis.Options{
-			Addr:     addrs,
-			Password: "",
-			DB:       0,
-		}
+		options := &redis.Options{}
 		options.Addr = addrs
 		opts, _  := config.Map("redis.opts")
 		if item, ok := opts["password"]; ok {
@@ -27,13 +23,11 @@ func obtainClient(config *WellConfig) *redis.Client{
 			options.DB = item.(int)
 		}
 		client := redis.NewClient(options)
-		_, err := client.Ping().Result()
-		if err != nil {
+		if _, err := client.Ping().Result(); err != nil {
 			panic(err)
 		}
 		return client
 	}
 	return nil
 }
-
 

@@ -11,8 +11,8 @@ import (
 // index html
 const index = "index.html"
 
-// ServeFileSystem -
-type ServeFileSystem interface {
+// DeliveryFileSystem -
+type DeliveryFileSystem interface {
 	http.FileSystem
 	Exists(prefix string, path string) bool
 }
@@ -34,15 +34,15 @@ func LocalFile(root string, indexes bool) *LocalFileSystem {
 }
 
 // Exists detect the presence of files
-func (l *LocalFileSystem) Exists(prefix string, filepath string) bool {
+func (local *LocalFileSystem) Exists(prefix string, filepath string) bool {
 	if p := strings.TrimPrefix(filepath, prefix); len(p) < len(filepath) {
-		name := path.Join(l.root, p)
+		name := path.Join(local.root, p)
 		stats, err := os.Stat(name)
 		if err != nil {
 			return false
 		}
 		if stats.IsDir() {
-			if !l.indexes {
+			if !local.indexes {
 				index := path.Join(name, index)
 				_, err := os.Stat(index)
 				if err != nil {
@@ -55,21 +55,21 @@ func (l *LocalFileSystem) Exists(prefix string, filepath string) bool {
 	return false
 }
 
-// Serve -
-type Serve struct {
+// Delivery -
+type Delivery struct {
 	URLPrefix string
-	Fs ServeFileSystem
+	Fs DeliveryFileSystem
 }
 
 // Inject for gin
-func (serve *Serve) Inject(injects map[string]interface{}) {
-	engine, _ := injects["Engine"].(*gin.Engine);
-	fileserver := http.FileServer(serve.Fs)
-	if serve.URLPrefix != "" {
-		fileserver = http.StripPrefix(serve.URLPrefix, fileserver)
+func (delivery *Delivery) Inject(injects map[string]interface{}) {
+	engine, _  := injects["Engine"].(*gin.Engine);
+	fileserver := http.FileServer(delivery.Fs)
+	if delivery.URLPrefix != "" {
+		fileserver = http.StripPrefix(delivery.URLPrefix, fileserver)
 	}
-	engine.GET(serve.URLPrefix + "/*any", func(c *gin.Context) {
-		if serve.Fs.Exists(serve.URLPrefix, c.Request.URL.Path) {
+	engine.GET(delivery.URLPrefix + "/*any", func(c *gin.Context) {
+		if delivery.Fs.Exists(delivery.URLPrefix, c.Request.URL.Path) {
 			fileserver.ServeHTTP(c.Writer, c.Request)
 			c.Abort()
 		}

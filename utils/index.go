@@ -58,14 +58,11 @@ func RightV(left interface{}, right interface{}) interface{} {
 
 // LeftOkV -
 func LeftOkV(left interface{}, right... bool) interface{} {
-	var (
-		l interface{}
-		r = true
-	)
-	if len(right) == 0 && (l == "" || l == nil || l == 0){
-		r = false
-	} else {
+	var r = true
+	if len(right) != 0{
 		r = right[0]
+	} else if(left == "" || left == nil || left == 0) {
+		r = false
 	}
 	if r {
 		return left

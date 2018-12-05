@@ -5,20 +5,36 @@ import (
 		  "github.com/gin-gonic/gin"
 		  "github.com/thoas/go-funk"
 )
-var bulrushs []*Bulrush
 
+// all application instance
+var bulrushs []*Bulrush
 // master *Bulrush export, just for one instance use
 var (
-	Config 	*WellConfig
-	Mongo 	*MongoGroup
-	Redis   *RedisGroup
-	Middles []gin.HandlerFunc
-	Injects []interface{}
+	Config 		*WellConfig
+	Mongo 		*MongoGroup
+	Redis   	*RedisGroup
+	Middles 	[]gin.HandlerFunc
+	Injects 	[]interface{}
 )
 
-// remainInstance instance
-func remainInstance(b *Bulrush) {
-	bulrushs = append(bulrushs, b)
+// retain instance
+func retain(bulrush *Bulrush) {
+	bulrushs = append(bulrushs, bulrush)
+	if Mongo == nil {
+		Mongo = bulrush.mongo
+	}
+	if Redis == nil {
+		Redis = bulrush.redis
+	}
+	if Middles == nil {
+		Middles = bulrush.middles
+	}
+	if Injects == nil {
+		Injects = bulrush.injects
+	}
+	if Config == nil {
+		Config = bulrush.config
+	}
 }
 
 // Obtain a application

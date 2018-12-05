@@ -189,6 +189,28 @@ func (iden *Iden) verifyToken(c *gin.Context) {
 	}
 }
 
+// ResolveToken -
+func ResolveToken(c *gin.Context) (string, bool) {
+	var token string
+	identify, ok :=  c.Get("identify")
+	if ok {
+		token = identify.(map[string]interface{})["accessToken"].(string)
+		return token, true
+	}
+	return "", false
+}
+
+// ResolveUser -
+func ResolveUser(c *gin.Context) (interface{}, bool) {
+	var token interface{}
+	identify, ok :=  c.Get("identify")
+	if ok {
+		token = identify.(map[string]interface{})["extra"]
+		return token, true
+	}
+	return nil, false
+}
+
 // Inject for gin
 func (iden *Iden) Inject(injects map[string]interface{}) {
 	obtainTokenRoute 	:= iden.Routes.ObtainTokenRoute
@@ -205,10 +227,8 @@ func (iden *Iden) Inject(injects map[string]interface{}) {
 			r, _ := regexp.Compile(regex.(string))
 			return r.MatchString(reqPath)
 		})
-		// ignore spec req
 		if igTarget != nil {
 			c.Next()
-		// authToken
 		} else {
 			iden.verifyToken(c)
 		}

@@ -8,10 +8,11 @@ import (
 // Override -
 type Override struct {
 }
+
 // Inject for gin
 func (over *Override) Inject(injects map[string]interface{}) {
-	engine, _ := injects["Engine"].(*gin.Engine);
-	router, _ := injects["Router"].(*gin.RouterGroup);
+	engine, _ := injects["Engine"].(*gin.Engine)
+	router, _ := injects["Router"].(*gin.RouterGroup)
 	engine.Use(func(c *gin.Context) {
 		if c.Request.Method != "POST" {
 			c.Next()

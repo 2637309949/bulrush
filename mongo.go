@@ -4,6 +4,7 @@ import (
 	"math"
 	"fmt"
 	"time"
+	"errors"
 	"net/url"
 	"strconv"
 	"net/http"
@@ -16,28 +17,37 @@ import (
 
 type registerHandler func(map[string]interface{})
 type modelHandler 	 func(name string) (*mgo.Collection, map[string]interface {})
-type hooksHandler    struct {
+type mgoHooks    struct {
+	One  func(name string) func (c *gin.Context)
 	List func(name string) func (c *gin.Context)
-	One func(name string) func (c *gin.Context)
 }
 
-// MongoGroup some common function
+// MongoGroup -
 type MongoGroup struct {
 	Session 	*mgo.Session
 	Register 	registerHandler
 	Model 		modelHandler
-	Hooks 		hooksHandler
+	Hooks 		mgoHooks
 	manifests 	[]interface{}
 }
 
+// register -
 func register(bulrush *Bulrush) registerHandler {
 	return func(manifest map[string]interface{}) {
+		var ok = true
+		_, ok = manifest["name"]
+		_, ok = manifest["reflector"]
+		if !ok {
+			panic(errors.New("name and reflector params must be provided"))
+		}
 		bulrush.mongo.manifests = append(bulrush.mongo.manifests, manifest)
 	}
 }
 
 func model(bulrush *Bulrush) modelHandler {
 	return func(name string) (*mgo.Collection, map[string]interface {}) {
+		var db string
+		var collect string
 		manifest := utils.Find(bulrush.mongo.manifests, func (item interface{}) bool {
 			flag := item.(map [string] interface{})["name"].(string) == name
 			return flag
@@ -45,11 +55,19 @@ func model(bulrush *Bulrush) modelHandler {
 		if manifest == nil {
 			panic(fmt.Errorf("manifest %s not found", name))
 		}
-		db, ok := manifest["db"]
-		if !ok || db == "" {
-			db, _ = bulrush.config.String("mongo.opts.database")
+
+		if dbName, ok := manifest["db"]; ok && dbName.(string) != "" {
+			db = dbName.(string)
+		} else {
+			db = bulrush.config.getString("mongo.opts.database", "bulrush")
 		}
-		model := bulrush.mongo.Session.DB(db.(string)).C(name)
+		
+		if ctName, ok := manifest["collection"]; ok && ctName.(string) != "" {
+			collect = ctName.(string)
+		} else {
+			collect = name
+		}
+		model := bulrush.mongo.Session.DB(db).C(collect)
 		return model, manifest
 	}
 }
@@ -62,7 +80,6 @@ func obtainDialInfo(config *WellConfig) *mgo.DialInfo {
 	dial.Addrs 			 = addrs
 	dial.Timeout  		 = time.Duration(config.getInt("mongo.opts.timeout", 0)) * time.Second
 	dial.Database 		 = config.getString("mongo.opts.database", "")
-
 	dial.ReplicaSetName  = config.getString("mongo.opts.replicaSetName", "")
 	dial.Source     	 = config.getString("mongo.opts.source", "")
 	dial.Service     	 = config.getString("mongo.opts.service", "")
@@ -71,9 +88,9 @@ func obtainDialInfo(config *WellConfig) *mgo.DialInfo {
 	dial.Username    	 = config.getString("mongo.opts.username", "")
 	dial.Password   	 = config.getString("mongo.opts.password", "")
 	dial.PoolLimit 	 	 = config.getInt("mongo.opts.poolLimit", 0)
-	dial.PoolTimeout 	 = time.Duration(config.getInt("mongo.opts.poolTimeout", 0)) * time.Second
-	dial.ReadTimeout 	 = time.Duration(config.getInt("mongo.opts.readTimeout", 0)) * time.Second
-	dial.WriteTimeout 	 = time.Duration(config.getInt("mongo.opts.writeTimeout", 0)) * time.Second
+	dial.PoolTimeout 	 = config.getDurationFromSecInt("mongo.opts.poolTimeout", 0)
+	dial.ReadTimeout 	 = config.getDurationFromSecInt("mongo.opts.readTimeout", 0)
+	dial.WriteTimeout 	 = config.getDurationFromSecInt("mongo.opts.writeTimeout", 0)
 	dial.AppName    	 = config.getString("mongo.opts.appName", "")
 	dial.FailFast    	 = config.getBool("mongo.opts.failFast", false)
 	dial.Direct    		 = config.getBool("mongo.opts.direct", false)
@@ -93,8 +110,8 @@ func obtainSession(config *WellConfig) *mgo.Session {
 	return nil
 }
 
-// list -
-func list(bulrush *Bulrush) func(string) func (c *gin.Context) {
+// List -
+func List(bulrush *Bulrush) func(string) func (c *gin.Context) {
 	return func(name string) func (c *gin.Context) {
 		return func (c *gin.Context) {
 			var match map[string]interface{}
@@ -157,8 +174,8 @@ func list(bulrush *Bulrush) func(string) func (c *gin.Context) {
 	}
 }
 
-// one -
-func one(bulrush *Bulrush) func(string) func (c *gin.Context) {
+// One -
+func One(bulrush *Bulrush) func(string) func (c *gin.Context) {
 	return func(name string) func (c *gin.Context) {
 		return func (c *gin.Context) {
 			id := c.Param("id")

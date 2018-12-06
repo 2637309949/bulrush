@@ -15,6 +15,7 @@ var (
 	Redis   	*RedisGroup
 	Middles 	[]gin.HandlerFunc
 	Injects 	[]interface{}
+	Logger		func(info string)
 )
 
 // retain instance
@@ -34,6 +35,9 @@ func retain(bulrush *Bulrush) {
 	}
 	if Config == nil {
 		Config = bulrush.config
+	}
+	if Logger == nil {
+		Logger = LoggerWrap(bulrush)
 	}
 }
 

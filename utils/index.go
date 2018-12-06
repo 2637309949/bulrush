@@ -36,6 +36,16 @@ func ToStrArray(t []interface{}) []string {
 	return s
 }
 
+// ToIntArray -
+func ToIntArray(t []interface{}) []int {
+	s := make([]int, len(t))
+	for i, v := range t {
+		s[i] = v.(int)
+	}
+	return s
+}
+
+
 // RandString -
 func RandString(n int) string {
 	const seeds = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"

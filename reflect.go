@@ -5,7 +5,6 @@ import (
 	"strings"
 	"reflect"
 	"github.com/thoas/go-funk"
-	"github.com/gin-gonic/gin"
 )
 
 // InjectGroup -
@@ -82,7 +81,7 @@ func invokeMethod(target interface{}, injectParams []interface{}) interface {} {
 			return rs[0].Interface()
 		}
 	} else {
-		panic(fmt.Errorf("Invalid method: %s in inject", methodName))
+		panic(fmt.Errorf("invalid method: %s in inject", methodName))
 	}
 	return nil
 }
@@ -113,10 +112,6 @@ func inspectInvoke(target interface{}, bulrush *Bulrush) interface {}{
 	injectParams := []interface{}{
 		bulrush.engine,
 		bulrush.router,
-		map[string]interface{}{
-			"DebugPrintRouteFunc": gin.DebugPrintRouteFunc,
-			"SetMode": 			   gin.SetMode,
-		},
 	}
 	return invokeMethod(target, injectParams)
 }

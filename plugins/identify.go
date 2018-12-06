@@ -195,7 +195,7 @@ func ResolveToken(c *gin.Context) (string, bool) {
 	identify, ok :=  c.Get("identify")
 	if ok {
 		token = identify.(map[string]interface{})["accessToken"].(string)
-		return token, true
+		return token, ok
 	}
 	return "", false
 }
@@ -206,7 +206,7 @@ func ResolveUser(c *gin.Context) (interface{}, bool) {
 	identify, ok :=  c.Get("identify")
 	if ok {
 		token = identify.(map[string]interface{})["extra"]
-		return token, true
+		return token, ok
 	}
 	return nil, false
 }

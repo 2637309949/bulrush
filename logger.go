@@ -41,7 +41,7 @@ func levelStr(level LOGLEVEL) string {
 	switch level {
 		case SYSLEVEL:
 			levelStr = "0"
-		case USERSTROBE:
+		case USERLEVEL:
 			levelStr = "1"
 	}
 	return levelStr
@@ -61,7 +61,7 @@ func getLogFile(level LOGLEVEL, path string) string {
 		sizeMatch  := false
 		if level == SYSLEVEL {
 			sizeMatch = fileSize < SYSSTROBE
-		} else if level == USERSTROBE {
+		} else if level == USERLEVEL {
 			sizeMatch = fileSize < USERSTROBE
 		}
 		
@@ -88,6 +88,9 @@ func createLog(path string) io.Writer {
 }
 
 // LoggerWithWriter -
+// fileName start with "0"
+// Gin Middles
+// System level
 func LoggerWithWriter(bulrush *Bulrush) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		logsDir  := utils.Some(utils.LeftV(bulrush.config.String("logs")), 	"logs").(string)
@@ -100,12 +103,27 @@ func LoggerWithWriter(bulrush *Bulrush) gin.HandlerFunc {
 		raw 	 := c.Request.URL.RawQuery
 		c.Next()
 		end 	 := time.Now()
-		latency  := end.Sub(start)
+		latency  := float64(end.Sub(start) / time.Millisecond)
 		clientIP := c.ClientIP()
 		method   := c.Request.Method
 		if raw != "" {
 			path = path + "?" + raw
 		}
-		fmt.Fprintf(out, "--> %v %8v %s %6s %s\n", end.Format("2006/01/02 15:04:05"), latency, clientIP, method, path)
+		fmt.Fprintf(out, "[%v]<-E-> %.2fms %s %6s %s\n", end.Format("2006/01/02 15:04:05"), latency, clientIP, method, path)
 	}
+}
+
+// LoggerWrap -
+// fileName start with "1"
+// User level
+func LoggerWrap(bulrush *Bulrush) func(string){
+	return func(info string) {
+		logsDir  := utils.Some(utils.LeftV(bulrush.config.String("logs")), 	"logs").(string)
+		logsDir   = gPath.Join(".", logsDir)
+		logPath  := getLogFile(USERLEVEL, logsDir)
+		writer   := createLog(logPath)
+		out 	 := writer
+		start 	 := time.Now()
+		fmt.Fprintf(out, "[%v]<-S-> %s\n", start.Format("2006/01/02 15:04:05"), info)
+	}		
 }

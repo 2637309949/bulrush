@@ -1,6 +1,6 @@
 # Bulrush Framework
 
-![Bulrush flash](./assets/flash.jpeg)
+![Bulrush flash](./assets/flash.jpg)
 
 ## MIT License
 

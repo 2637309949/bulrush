@@ -2,6 +2,43 @@
 
 ![Bulrush flash](./assets/flash.jpg)
 
+
+## Instruction
+1. Install Bulrush
+```shell
+$ go get github.com/2637309949/juglans
+```
+2. Init a Bulrush Instance
+```shell
+import (
+    "github.com/2637309949/bulrush"
+)
+// Use attachs a global Recovery middleware to the router
+// Use attachs a Recovery middleware to the user router
+// Use attachs a LoggerWithWriter middleware to the user router
+app := bulrush.Default()
+app.LoadConfig(CONFIGPATH)
+app.Inject(&plugins.Middles{}, &routes.Routes{}, &models.Model{})
+app.DebugPrintRouteFunc(func(httpMethod, absolutePath, handlerName string, nuHandlers int) {
+    fmt.Printf("%5v %9v\n", httpMethod, absolutePath)
+})
+app.Run()
+```
+or
+```shell
+import (
+    "github.com/2637309949/bulrush"
+)
+// No middlewares has been attached
+app := bulrush.New()
+app.LoadConfig(CONFIGPATH)
+app.Inject(&plugins.Middles{}, &routes.Routes{}, &models.Model{})
+app.DebugPrintRouteFunc(func(httpMethod, absolutePath, handlerName string, nuHandlers int) {
+    fmt.Printf("%5v %9v\n", httpMethod, absolutePath)
+})
+app.Run()
+```
+3. For more details, Please reference to [bulrush_template](https://github.com/2637309949/bulrush_template). 
 ## MIT License
 
 Copyright (c) 2016 Freax

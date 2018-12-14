@@ -1,7 +1,6 @@
 package bulrush
 
 import (
-	"github.com/2637309949/bulrush/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,8 +14,6 @@ type Bulrush struct {
 	config 		*WellConfig
 	engine 		*gin.Engine
 	router  	*gin.RouterGroup
-	mongo 		*MongoGroup
-	redis   	*RedisGroup
 	injects 	[]interface{}
 	middles 	[]gin.HandlerFunc
 }
@@ -29,37 +26,14 @@ type Bulrush struct {
 // --injects struct instance can be reflect by bulrush
 // --middles some middles for gin self
 func New() *Bulrush {
-	var (
-		engine  *gin.Engine
-		bulrush *Bulrush
-	)
-	engine  = gin.New()
-	bulrush = &Bulrush {
+	engine  := gin.New()
+	bulrush := &Bulrush {
 		config: 	nil,
 		router: 	nil,
 		engine: 	engine,
 		injects: 	make([]interface{}, 0),
 		middles: 	make([]gin.HandlerFunc, 0),
-		mongo: &MongoGroup {
-			Session: 	nil,
-			Register: 	nil,
-			Model: 		nil,
-			manifests: 	make([]interface{}, 0),
-		},
-		redis: &RedisGroup {
-			Client:		nil,
-		},
 	}
-	bulrush.mongo.Register   = register(bulrush)
-	bulrush.mongo.Model 	 = model(bulrush)
-
-	bulrush.mongo.Hooks.List = List(bulrush)
-	bulrush.mongo.Hooks.One  = One(bulrush)
-
-	bulrush.redis.Hooks.FindToken   = FindToken(bulrush)
-	bulrush.redis.Hooks.SaveToken   = SaveToken(bulrush)
-	bulrush.redis.Hooks.RevokeToken = RevokeToken(bulrush)
-	retain(bulrush)
 	return bulrush
 }
 
@@ -91,8 +65,7 @@ func (bulrush *Bulrush) Inspect(target interface{}) interface {} {
 // LoadConfig load config from string path
 // currently, it support loading file that end with .json or .yarm
 func (bulrush *Bulrush) LoadConfig(path string) *Bulrush {
-	wc := &WellConfig{ Path: path }
-	bulrush.config = utils.LeftSV(wc.LoadFile(path)).(*WellConfig)
+	bulrush.config = NewWc(path)
 	return bulrush
 }
 
@@ -135,15 +108,11 @@ func (bulrush *Bulrush) Run()  {
 	if mode != "" {
 		bulrush.SetMode(mode)
 	}
-	bulrush.mongo.Session = obtainSession(bulrush.config)
-	bulrush.redis.Client  = obtainClient(bulrush.config)
 	bulrush.router 		  = bulrush.engine.Group(prefix)
-
 	routeMiddles(bulrush.router, bulrush.middles)
 	injectInvoke(bulrush.injects, bulrush)
 	err := bulrush.engine.Run(port)
 	if err != nil {
-		bulrush.mongo.Session.Close()
 		panic(err)
 	}
 }

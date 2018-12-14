@@ -3,7 +3,6 @@ package bulrush
 import (
 	"math"
 	"fmt"
-	"time"
 	"errors"
 	"net/url"
 	"strconv"
@@ -15,70 +14,80 @@ import (
 	"github.com/globalsign/mgo/bson"
 )
 
-type registerHandler func(map[string]interface{})
-type modelHandler 	 func(name string) (*mgo.Collection, map[string]interface {})
-type mgoHooks    struct {
+// mgoHooks -
+type mgoHooks struct {
 	One  func(name string) func (c *gin.Context)
 	List func(name string) func (c *gin.Context)
 }
 
-// MongoGroup -
-type MongoGroup struct {
+// Mgo -
+type Mgo struct {
 	Session 	*mgo.Session
-	Register 	registerHandler
-	Model 		modelHandler
-	Hooks 		mgoHooks
+	Hooks 		*mgoHooks
+	config 		*WellConfig
 	manifests 	[]interface{}
 }
 
-// register -
-func register(bulrush *Bulrush) registerHandler {
-	return func(manifest map[string]interface{}) {
-		var ok = true
-		_, ok = manifest["name"]
-		_, ok = manifest["reflector"]
-		if !ok {
-			panic(errors.New("name and reflector params must be provided"))
-		}
-		bulrush.mongo.manifests = append(bulrush.mongo.manifests, manifest)
+// NewMgo -
+func NewMgo(path string) *Mgo{
+	wc 	    := &WellConfig{ Path: path }
+	config  := utils.LeftSV(wc.LoadFile(path)).(*WellConfig)
+	session := obSession(config)
+	mgo		:= &Mgo{
+		Hooks: 	   &mgoHooks{},
+		Session:   session,
+		manifests: make([]interface{}, 0),
+		config:    config,
 	}
+	mgo.Hooks.List = list(mgo)
+	mgo.Hooks.One = one(mgo)
+	return mgo
 }
 
-func model(bulrush *Bulrush) modelHandler {
-	return func(name string) (*mgo.Collection, map[string]interface {}) {
-		var db string
-		var collect string
-		manifest := utils.Find(bulrush.mongo.manifests, func (item interface{}) bool {
-			flag := item.(map [string] interface{})["name"].(string) == name
-			return flag
-		}).(map[string]interface{})
-		if manifest == nil {
-			panic(fmt.Errorf("manifest %s not found", name))
-		}
-
-		if dbName, ok := manifest["db"]; ok && dbName.(string) != "" {
-			db = dbName.(string)
-		} else {
-			db = bulrush.config.getString("mongo.opts.database", "bulrush")
-		}
-		
-		if ctName, ok := manifest["collection"]; ok && ctName.(string) != "" {
-			collect = ctName.(string)
-		} else {
-			collect = name
-		}
-		model := bulrush.mongo.Session.DB(db).C(collect)
-		return model, manifest
+// Register -
+func (mgo *Mgo)Register(manifest map[string]interface{}) {
+	var ok = true
+	_, ok = manifest["name"]
+	_, ok = manifest["reflector"]
+	if !ok {
+		panic(errors.New("name and reflector params must be provided"))
 	}
+	mgo.manifests = append(mgo.manifests, manifest)
 }
 
-// obtainDialInfo -
-func obtainDialInfo(config *WellConfig) *mgo.DialInfo {
+// Model -
+func (mgo *Mgo)Model(name string) (*mgo.Collection, map[string]interface {}) {
+	var db string
+	var collect string
+	manifest := utils.Find(mgo.manifests, func (item interface{}) bool {
+		flag := item.(map [string] interface{})["name"].(string) == name
+		return flag
+	}).(map[string]interface{})
+	if manifest == nil {
+		panic(fmt.Errorf("manifest %s not found", name))
+	}
+
+	if dbName, ok := manifest["db"]; ok && dbName.(string) != "" {
+		db = dbName.(string)
+	} else {
+		db = mgo.config.getString("mongo.opts.database", "bulrush")
+	}
+	
+	if ctName, ok := manifest["collection"]; ok && ctName.(string) != "" {
+		collect = ctName.(string)
+	} else {
+		collect = name
+	}
+	model := mgo.Session.DB(db).C(collect)
+	return model, manifest
+}
+
+// obDialInfo -
+func obDialInfo(config *WellConfig) *mgo.DialInfo {
 	addrs    := config.getStrList("mongo.addrs", nil)
 	dial := &mgo.DialInfo {}
-
 	dial.Addrs 			 = addrs
-	dial.Timeout  		 = time.Duration(config.getInt("mongo.opts.timeout", 0)) * time.Second
+	dial.Timeout  		 = config.getDurationFromSecInt("mongo.opts.timeout", 0)
 	dial.Database 		 = config.getString("mongo.opts.database", "")
 	dial.ReplicaSetName  = config.getString("mongo.opts.replicaSetName", "")
 	dial.Source     	 = config.getString("mongo.opts.source", "")
@@ -99,23 +108,23 @@ func obtainDialInfo(config *WellConfig) *mgo.DialInfo {
 	return dial
 }
 
-// obtainSession -
-func obtainSession(config *WellConfig) *mgo.Session {
+// obSession -
+func obSession(config *WellConfig) *mgo.Session {
 	addrs, _ := config.List("mongo.addrs")
 	if addrs != nil && len(addrs) > 0 {
-		dial := obtainDialInfo(config)
+		dial := obDialInfo(config)
 		session := utils.LeftSV(mgo.DialWithInfo(dial)).(*mgo.Session)
 		return session
 	}
 	return nil
 }
 
-// List -
-func List(bulrush *Bulrush) func(string) func (c *gin.Context) {
+// list -
+func list(mgo *Mgo) func(string) func (c *gin.Context) {
 	return func(name string) func (c *gin.Context) {
 		return func (c *gin.Context) {
 			var match map[string]interface{}
-			Model, manifest := bulrush.mongo.Model(name)
+			Model, manifest := mgo.Model(name)
 			target := utils.LeftOkV(manifest["reflector"])
 			list := createSlice(target)
 
@@ -174,12 +183,12 @@ func List(bulrush *Bulrush) func(string) func (c *gin.Context) {
 	}
 }
 
-// One -
-func One(bulrush *Bulrush) func(string) func (c *gin.Context) {
+// one -
+func one(mgo *Mgo) func(string) func (c *gin.Context) {
 	return func(name string) func (c *gin.Context) {
 		return func (c *gin.Context) {
 			id := c.Param("id")
-			Model, manifest := bulrush.mongo.Model(name)
+			Model, manifest := mgo.Model(name)
 			target := utils.LeftOkV(manifest["reflector"])
 			one := createObject(target)
 			isOj := bson.IsObjectIdHex(id)

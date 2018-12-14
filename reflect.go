@@ -91,15 +91,11 @@ func injectInvoke(injects []interface{}, bulrush *Bulrush) {
 	injectParams := []interface{}{
 		bulrush.engine,
 		bulrush.router,
-		bulrush.mongo,
 		bulrush.config,
-		bulrush.redis,
 		map[string]interface{} {
 			"Engine": bulrush.engine,
 			"Router": bulrush.router,
-			"Mongo":  bulrush.mongo,
 			"Config": bulrush.config,
-			"Redis":  bulrush.redis,
 		},
 	}
 	for _, target := range injects {

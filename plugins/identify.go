@@ -27,8 +27,8 @@ type TokensGroup struct {
 // AuthenHandle auth user info
 type AuthenHandle func(c *gin.Context) (interface{}, error)
 
-// Iden authentication interface
-type Iden struct {
+// Identify authentication interface
+type Identify struct {
 	ExpiresIn	int
 	Routes  	RoutesGroup
 	Auth 		AuthenHandle
@@ -37,7 +37,7 @@ type Iden struct {
 }
 
 // Authorization userinfo
-func Authorization (iden *Iden, authData interface{}) map[string]interface{} {
+func Authorization (iden *Identify, authData interface{}) map[string]interface{} {
 	if authData != nil {
 		data := map[string]interface{} {
 			"accessToken": 		utils.RandString(32),
@@ -54,7 +54,7 @@ func Authorization (iden *Iden, authData interface{}) map[string]interface{} {
 }
 
 // Authentication userinfo
-func Authentication (iden *Iden, accessToken string) (map[string]interface{}, error) {
+func Authentication (iden *Identify, accessToken string) (map[string]interface{}, error) {
 	verifyToken := iden.Tokens.Find(accessToken, "")
 	now 		:= time.Now().Unix()
 	if verifyToken == nil {
@@ -69,7 +69,7 @@ func Authentication (iden *Iden, accessToken string) (map[string]interface{}, er
 }
 
 // obtainToken token
-func (iden *Iden) obtainToken(c *gin.Context) {
+func (iden *Identify) obtainToken(c *gin.Context) {
 	authData, err := iden.Auth(c)
 	if authData != nil {
 		data := Authorization(iden, authData)
@@ -91,7 +91,7 @@ func (iden *Iden) obtainToken(c *gin.Context) {
 }
 
 // revokeToken token
-func (iden *Iden) revokeToken(c *gin.Context) {
+func (iden *Identify) revokeToken(c *gin.Context) {
 	var accessToken string
 	queryToken  := c.Query("accessToken")
 	formToken   := c.PostForm("accessToken")
@@ -123,7 +123,7 @@ func (iden *Iden) revokeToken(c *gin.Context) {
 }
 
 // refleshToken token
-func (iden *Iden) refleshToken(c *gin.Context) {
+func (iden *Identify) refleshToken(c *gin.Context) {
 	var refreshToken string
 	queryToken  := c.Query("accessToken")
 	formToken   := c.PostForm("accessToken")
@@ -163,7 +163,7 @@ func (iden *Iden) refleshToken(c *gin.Context) {
 }
 
 // verifyToken token
-func (iden *Iden) verifyToken(c *gin.Context) {
+func (iden *Identify) verifyToken(c *gin.Context) {
 	var accessToken string
 	queryToken  := c.Query("accessToken")
 	formToken   := c.PostForm("accessToken")
@@ -212,7 +212,7 @@ func ResolveUser(c *gin.Context) (interface{}, bool) {
 }
 
 // Inject for gin
-func (iden *Iden) Inject(injects map[string]interface{}) {
+func (iden *Identify) Inject(injects map[string]interface{}) {
 	obtainTokenRoute 	:= iden.Routes.ObtainTokenRoute
 	revokeTokenRoute 	:= iden.Routes.RevokeTokenRoute
 	refleshTokenRoute 	:= iden.Routes.RefleshTokenRoute

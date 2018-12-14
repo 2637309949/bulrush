@@ -24,6 +24,12 @@ type WellConfig struct {
 	Path string
 }
 
+// NewWc -
+func NewWc(path string) *WellConfig{
+	wc := &WellConfig{ Path: path }
+	return utils.LeftSV(wc.LoadFile(path)).(*WellConfig)
+}
+
 // LoadFile -
 func (wc *WellConfig) LoadFile(path string) (*WellConfig, error) {
 	var readFile func(filename string) (*config.Config, error) 

@@ -212,12 +212,11 @@ func ResolveUser(c *gin.Context) (interface{}, bool) {
 }
 
 // Inject for gin
-func (iden *Identify) Inject(injects map[string]interface{}) {
+func (iden *Identify) Inject(router *gin.RouterGroup) {
 	obtainTokenRoute 	:= iden.Routes.ObtainTokenRoute
 	revokeTokenRoute 	:= iden.Routes.RevokeTokenRoute
 	refleshTokenRoute 	:= iden.Routes.RefleshTokenRoute
 	ignoreUrls 			:= iden.IgnoreURLs
-	router, _ 			:= injects["Router"].(*gin.RouterGroup)
 	router.POST(obtainTokenRoute,  iden.obtainToken)
 	router.POST(revokeTokenRoute,  iden.revokeToken)
 	router.POST(refleshTokenRoute, iden.refleshToken)

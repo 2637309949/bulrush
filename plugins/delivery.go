@@ -62,13 +62,12 @@ type Delivery struct {
 }
 
 // Inject for gin
-func (delivery *Delivery) Inject(injects map[string]interface{}) {
-	engine, _  := injects["Engine"].(*gin.Engine);
+func (delivery *Delivery) Inject(httpProxy *gin.Engine) {
 	fileserver := http.FileServer(delivery.Fs)
 	if delivery.URLPrefix != "" {
 		fileserver = http.StripPrefix(delivery.URLPrefix, fileserver)
 	}
-	engine.GET(delivery.URLPrefix + "/*any", func(c *gin.Context) {
+	httpProxy.GET(delivery.URLPrefix + "/*any", func(c *gin.Context) {
 		if delivery.Fs.Exists(delivery.URLPrefix, c.Request.URL.Path) {
 			fileserver.ServeHTTP(c.Writer, c.Request)
 			c.Abort()

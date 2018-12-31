@@ -10,10 +10,8 @@ type Override struct {
 }
 
 // Inject for gin
-func (over *Override) Inject(injects map[string]interface{}) {
-	engine, _ := injects["Engine"].(*gin.Engine)
-	router, _ := injects["Router"].(*gin.RouterGroup)
-	engine.Use(func(c *gin.Context) {
+func (over *Override) Inject(router *gin.RouterGroup, httpProxy*gin.Engine) {
+	httpProxy.Use(func(c *gin.Context) {
 		if c.Request.Method != "POST" {
 			c.Next()
 		} else {
@@ -23,7 +21,7 @@ func (over *Override) Inject(injects map[string]interface{}) {
 				for _, target := range methods {
 					if(target == strings.ToUpper(method)) {
 						c.Request.Method = target
-						engine.HandleContext(c)
+						httpProxy.HandleContext(c)
 						break
 					}
 				}
@@ -40,7 +38,7 @@ func (over *Override) Inject(injects map[string]interface{}) {
 				for _, target := range methods {
 					if(target == strings.ToUpper(method)) {
 						c.Request.Method = target
-						engine.HandleContext(c)
+						httpProxy.HandleContext(c)
 						break
 					}
 				}

@@ -1,77 +1,71 @@
 package bulrush
 
 import (
+	"reflect"
+	"fmt"
 	"github.com/gin-gonic/gin"
 )
 
 // Bulrush is the framework's instance
 // --config json or yaml config for bulrush
-// --engine gin engine, no middles has been used
+// --httpProxy gin httpProxy, no middles has been used
 // --router all router that user defined will be hook in a new router
 // --injects struct instance can be reflect by bulrush
 // --middles some middles for gin self
 type Bulrush struct {
-	config 		*WellConfig
-	engine 		*gin.Engine
+	httpProxy 		*gin.Engine
 	router  	*gin.RouterGroup
+	config 		*WellConfig
+	middles 	[]interface{}
 	injects 	[]interface{}
-	middles 	[]gin.HandlerFunc
 }
 
 // New returns a new blank bulrush instance
 // Bulrush is the framework's instance
 // --config json or yaml config for bulrush
-// --engine gin engine, no middles has been used
+// --httpProxy gin httpProxy, no middles has been used
 // --router all router that user defined will be hook in a new router
 // --injects struct instance can be reflect by bulrush
 // --middles some middles for gin self
 func New() *Bulrush {
-	engine  := gin.New()
+	httpProxy  := gin.New()
 	bulrush := &Bulrush {
 		config: 	nil,
 		router: 	nil,
-		engine: 	engine,
+		httpProxy: 	httpProxy,
+		middles: 	make([]interface{}, 0),
 		injects: 	make([]interface{}, 0),
-		middles: 	make([]gin.HandlerFunc, 0),
 	}
+	bulrush.Inject(httpProxy)
 	return bulrush
 }
 
 // Default return a new bulrush with some default middles
-// --Recovery middle has been register in engine and user router
+// --Recovery middle has been register in httpProxy and user router
 // --LoggerWithWriter middles has been register in router for print requester
 func Default() *Bulrush {
 	bulrush := New()
-	bulrush.engine.Use(gin.Recovery())
-	bulrush.middles = append(bulrush.middles, gin.Recovery(), LoggerWithWriter(bulrush))
+	bulrush.middles = append(bulrush.middles, func(httpProxy *gin.Engine, router *gin.RouterGroup) {
+		httpProxy.Use(gin.Recovery())
+		router.Use(gin.Recovery())
+	}, func(router *gin.RouterGroup) {
+		router.Use(LoggerWithWriter(bulrush))
+	})
 	return bulrush
 }
 
 // Use attachs a global middleware to the router
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
-func (bulrush *Bulrush) Use(middles ...gin.HandlerFunc) *Bulrush {
+func (bulrush *Bulrush) Use(middles ...interface{}) *Bulrush {
 	bulrush.middles = append(bulrush.middles, middles...)
 	return bulrush
 }
 
-// Inspect -
-// Inspect will be useful if you want to get some params that can not been quote
-// by bulrush instance
-func (bulrush *Bulrush) Inspect(target interface{}) interface {} {
-	return inspectInvoke(target, bulrush)
-}
-
-// LoadConfig load config from string path
+// Config load config from string path
 // currently, it support loading file that end with .json or .yarm
-func (bulrush *Bulrush) LoadConfig(path string) *Bulrush {
+func (bulrush *Bulrush) Config(path string) *Bulrush {
 	bulrush.config = NewWc(path)
-	return bulrush
-}
-
-// Inject inject params to func
-func (bulrush *Bulrush) Inject(injects ...interface{}) *Bulrush {
-	bulrush.injects = append(bulrush.injects, injects...)
 	return bulrush
 }
 
@@ -89,14 +83,25 @@ func (bulrush *Bulrush) DebugPrintRouteFunc(handler func(string, string, string,
 	return bulrush
 }
 
+// Inject -
+func (bulrush *Bulrush) Inject(injects ...interface{}) *Bulrush {
+	for _, item := range  injects {
+		exists := typeExists(bulrush.injects, item)
+		if exists {
+			panic(fmt.Errorf("item: %s type %s has exists", item, reflect.TypeOf(item)))
+		} else {
+			bulrush.injects = append(bulrush.injects, item)
+		}
+	}
+	return bulrush
+}
+
 // IsDebugging -
 func (bulrush *Bulrush) IsDebugging() bool {
 	return IsDebugging()
 }
 
 // Run app, something has been done
-// -- Init a new mongo session
-// -- Init a new Redis Client
 // -- Init a new Router
 // -- Register middles in gin
 // -- Reflect
@@ -105,13 +110,16 @@ func (bulrush *Bulrush) Run()  {
 	port   := bulrush.config.getString("port",  ":8080")
 	mode   := bulrush.config.getString("mode",  "")
 	prefix := bulrush.config.getString("prefix","/api/v1")
+	// read configuration first
 	if mode != "" {
 		bulrush.SetMode(mode)
 	}
-	bulrush.router 		  = bulrush.engine.Group(prefix)
-	routeMiddles(bulrush.router, bulrush.middles)
-	injectInvoke(bulrush.injects, bulrush)
-	err := bulrush.engine.Run(port)
+	// router middle
+	bulrush.router = bulrush.httpProxy.Group(prefix)
+	bulrush.Inject(bulrush.router, bulrush.config)
+
+	dynamicMethodsCall(bulrush.middles, bulrush.injects)
+	err := bulrush.httpProxy.Run(port)
 	if err != nil {
 		panic(err)
 	}

@@ -7,18 +7,17 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-// InjectGroup -
-type InjectGroup struct {
-	InjectMongo  func(interface{})
-	InjectRouter func(interface{})
-	InjectConfig func(interface{})
-	InjectEngine func(interface{})
-	InjectRedis  func(interface{})
-	Inject 	     func(interface{})
+// dynamicObjectsCall
+// call method by reflect
+func dynamicObjectsCall(injects []interface{}, ptrDyn[]interface{}) {
+	for _, target := range injects {
+		dynamicObjectCall(target, ptrDyn)
+	}
 }
 
-// invokeObject -
-func invokeObject(target interface{}, injectParams []interface{}) {
+// dynamicObjectsCall
+// call method by reflect
+func dynamicObjectCall(target interface{}, params[]interface{}) {
 	getType  := reflect.TypeOf(target)
 	getValue := reflect.ValueOf(target)
 
@@ -37,7 +36,7 @@ func invokeObject(target interface{}, injectParams []interface{}) {
 		}
 		for index := 1; index < numIn; index ++ {
 			ptype := methodType.Type.In(index)
-			r := funk.Find(injectParams, func(x interface{}) bool {
+			r := funk.Find(params, func(x interface{}) bool {
 				return ptype == reflect.TypeOf(x)
 			})
 			if r != nil {
@@ -55,8 +54,9 @@ func invokeObject(target interface{}, injectParams []interface{}) {
 	}
 }
 
-// invokeMethod -
-func invokeMethod(target interface{}, injectParams []interface{}) interface {} {
+// dynamicMethodCall
+// call method by reflect
+func dynamicMethodCall(target interface{}, params[]interface{}) interface {} {
 	valid 	   := true
 	getType    := reflect.TypeOf(target)
 	methodName := getType.Name()
@@ -65,7 +65,7 @@ func invokeMethod(target interface{}, injectParams []interface{}) interface {} {
 	numIn	   := getType.NumIn()
 	for index := 0; index < numIn; index ++ {
 		ptype := getType.In(index)
-		r := funk.Find(injectParams, func(x interface{}) bool {
+		r := funk.Find(params, func(x interface{}) bool {
 			return ptype == reflect.TypeOf(x)
 		})
 		if r != nil {
@@ -77,7 +77,7 @@ func invokeMethod(target interface{}, injectParams []interface{}) interface {} {
 	}
 	if getValue.IsValid() && valid {
 		rs := getValue.Call(inputs)
-		if rs[0].IsValid() {
+		if len(rs) > 0 && rs[0].IsValid() {
 			return rs[0].Interface()
 		}
 	} else {
@@ -86,34 +86,29 @@ func invokeMethod(target interface{}, injectParams []interface{}) interface {} {
 	return nil
 }
 
-// injectInvoke -
-func injectInvoke(injects []interface{}, bulrush *Bulrush) {
-	injectParams := []interface{}{
-		bulrush.engine,
-		bulrush.router,
-		bulrush.config,
-		map[string]interface{} {
-			"Engine": bulrush.engine,
-			"Router": bulrush.router,
-			"Config": bulrush.config,
-		},
-	}
+// dynamicMethodsCall
+// call method by reflect
+func dynamicMethodsCall(injects []interface{}, params[]interface{}) {
 	for _, target := range injects {
-		invokeObject(target, injectParams)
+		dynamicMethodCall(target, params)
 	}
 }
 
-// inspectInvoke -
-func inspectInvoke(target interface{}, bulrush *Bulrush) interface {}{
-	injectParams := []interface{}{
-		bulrush.engine,
-		bulrush.router,
+// typeExists
+// check type if exists or not
+func typeExists(injects []interface{}, target interface{}) bool {
+	ptype  := reflect.TypeOf(target)
+	r := funk.Find(injects, func(x interface{}) bool {
+		return ptype == reflect.TypeOf(x)
+	})
+	if r != nil {
+		return true
 	}
-	return invokeMethod(target, injectParams)
+	return false
 }
 
-// createSlice -
-// return slice
+// createSlice
+// create slice by reflect
 func createSlice(target interface{}) interface{} {
 	tagetType 	:= reflect.TypeOf(target)
 	if tagetType.Kind() == reflect.Ptr {
@@ -123,8 +118,8 @@ func createSlice(target interface{}) interface{} {
 	return targetSlice
 }
 
-// createObject -
-// return ptr
+// createObject
+// create object by reflect
 func createObject(target interface{}) interface{} {
 	tagetType 	 := reflect.TypeOf(target)
 	if tagetType.Kind() == reflect.Ptr {

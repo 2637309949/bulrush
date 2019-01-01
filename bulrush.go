@@ -10,12 +10,11 @@ import (
 // Bulrush is the framework's instance
 // --config json or yaml config for bulrush
 // --httpProxy gin httpProxy, no middles has been used
-// --router all router that user defined will be hook in a new router
 // --injects struct instance can be reflect by bulrush
 // --middles some middles for gin self
 type Bulrush struct {
 	HTTPProxy 	*gin.Engine
-	config 		*WellConfig
+	config 		*WellCfg
 	middles 	[]interface{}
 	injects 	[]interface{}
 }
@@ -36,10 +35,11 @@ func New() *Bulrush {
 		injects: 	make([]interface{}, 0),
 	}
 	bulrush.Inject(HTTPProxy)
-	bulrush.middles = append(bulrush.middles, func(HTTPProxy *gin.Engine, config *WellConfig) *gin.RouterGroup {
-		prefix := config.getString("prefix","/api/v1")
-		return HTTPProxy.Group(prefix)
-	})
+	// HTTPRouter middles
+	HTTPRouter := func(HTTPProxy *gin.Engine, config *WellCfg) *gin.RouterGroup {
+		return plugins.HTTPRouter(config.getString("prefix","/api/v1"))(HTTPProxy)
+	}
+	bulrush.Use(HTTPRouter)
 	return bulrush
 }
 
@@ -56,7 +56,7 @@ func Default() *Bulrush {
 			return LoggerWithWriter(upperType)
 		})
 	}
-	bulrush.middles = append(bulrush.middles, plugins.Recovery(), loggerWithWriter(bulrush, LoggerWithWriter))
+	bulrush.Use(plugins.Recovery(), loggerWithWriter(bulrush, LoggerWithWriter))
 	return bulrush
 }
 
@@ -72,15 +72,18 @@ func (bulrush *Bulrush) Use(middles ...interface{}) *Bulrush {
 // currently, it support loading file that end with .json or .yarm
 func (bulrush *Bulrush) Config(path string) *Bulrush {
 	bulrush.config = NewWc(path)
+	if mode := bulrush.config.getString("mode",  ""); mode != "" {
+		gin.SetMode(mode)
+	}
 	bulrush.Inject(bulrush.config)
 	return bulrush
 }
 
 // Inject `inject` to bulrush
+// - inject should be someone that never be pushed in before.
 func (bulrush *Bulrush) Inject(injects ...interface{}) *Bulrush {
 	for _, inject := range  injects {
-		exists := typeExists(bulrush.injects, inject)
-		if exists {
+		if typeExists(bulrush.injects, inject) {
 			panic(fmt.Errorf("item: %s type %s has exists", inject, reflect.TypeOf(inject)))
 		} else {
 			bulrush.injects = append(bulrush.injects, inject)
@@ -90,34 +93,15 @@ func (bulrush *Bulrush) Inject(injects ...interface{}) *Bulrush {
 }
 
 // Run app, something has been done
-// -- Init a new Router
-// -- Register middles in gin
-// -- Reflect
-// -- List on
 func (bulrush *Bulrush) Run()  {
-	port   := bulrush.config.getString("port",  ":8080")
-	mode   := bulrush.config.getString("mode",  "")
-	// read configuration first
-	if mode != "" {
-		SetMode(mode)
+	HTTPRun := func(HTTPProxy *gin.Engine, config *WellCfg) {
+		port   := config.getString("port",  ":8080")
+		if err := HTTPProxy.Run(port);err != nil {
+			panic(err)
+		}
 	}
+	bulrush.Use(HTTPRun)
 	dynamicMethodsCall(bulrush.middles, &bulrush.injects, func(rs interface{}) {
 		bulrush.Inject(rs.([] interface{})...)
 	})
-	err := bulrush.HTTPProxy.Run(port)
-	if err != nil {
-		panic(err)
-	}
-}
-
-// DebugPrintRouteFunc function in gin
-func DebugPrintRouteFunc(handler func(string, string, string, int)) {
-	gin.DebugPrintRouteFunc = handler
-}
-
-// SetMode function in gin
-// you should empty mode str in config if you want to set mode in code
-// mode will be set in run function again if mode str in config is not empty
-func SetMode(mode string) {
-	gin.SetMode(mode)
 }

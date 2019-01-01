@@ -24,12 +24,12 @@ type mgoHooks struct {
 type Mgo struct {
 	Session 	*mgo.Session
 	Hooks 		*mgoHooks
-	config 		*WellConfig
+	config 		*WellCfg
 	manifests 	[]interface{}
 }
 
 // NewMgo -
-func NewMgo(config *WellConfig) *Mgo{
+func NewMgo(config *WellCfg) *Mgo{
 	session := obSession(config)
 	mgo		:= &Mgo{
 		Hooks: 	   &mgoHooks{},
@@ -81,7 +81,7 @@ func (mgo *Mgo)Model(name string) (*mgo.Collection, map[string]interface {}) {
 }
 
 // obDialInfo -
-func obDialInfo(config *WellConfig) *mgo.DialInfo {
+func obDialInfo(config *WellCfg) *mgo.DialInfo {
 	addrs    := config.getStrList("mongo.addrs", nil)
 	dial := &mgo.DialInfo {}
 	dial.Addrs 			 = addrs
@@ -107,7 +107,7 @@ func obDialInfo(config *WellConfig) *mgo.DialInfo {
 }
 
 // obSession -
-func obSession(config *WellConfig) *mgo.Session {
+func obSession(config *WellCfg) *mgo.Session {
 	addrs, _ := config.List("mongo.addrs")
 	if addrs != nil && len(addrs) > 0 {
 		dial := obDialInfo(config)

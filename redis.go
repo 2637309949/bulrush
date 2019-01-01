@@ -15,11 +15,11 @@ type  rdsHooks struct {
 type Rds struct {
 	Client  *redis.Client
 	Hooks   *rdsHooks
-	config 	*WellConfig
+	config 	*WellCfg
 }
 
 // NewRds -
-func NewRds(config *WellConfig) *Rds{
+func NewRds(config *WellCfg) *Rds{
 	client  := obClient(config)
 	rds     := &Rds {
 		Client: client,
@@ -32,7 +32,7 @@ func NewRds(config *WellConfig) *Rds{
 }
 
 // obClient -
-func obClient(config *WellConfig) *redis.Client{
+func obClient(config *WellCfg) *redis.Client{
 	addrs := config.getString("redis.addrs", "")
 	if addrs != "" {
 		options := &redis.Options{}

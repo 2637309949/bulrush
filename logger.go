@@ -116,7 +116,7 @@ func LoggerWithWriter(bulrush *Bulrush) gin.HandlerFunc {
 // LoggerWrap -
 // fileName start with "1"
 // User level
-func LoggerWrap(wc *WellConfig) func(string){
+func LoggerWrap(wc *WellCfg) func(string){
 	return func(info string) {
 		logsDir  := utils.Some(utils.LeftV(wc.String("logs")), 	"logs").(string)
 		logsDir   = gPath.Join(".", logsDir)

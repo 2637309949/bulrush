@@ -8,15 +8,19 @@ import (
 )
 
 // dynamicObjectsCall
-// call method by reflect
+// - you can call a method in object by this method
+// - injects contains injectObject
+// - ptrDyn `inject params` that be about to be injected
 func dynamicObjectsCall(injects []interface{}, ptrDyn[]interface{}) {
 	for _, target := range injects {
 		dynamicObjectCall(target, ptrDyn)
 	}
 }
 
-// dynamicObjectsCall
-// call method by reflect
+// dynamicObjectCall
+// - you can call a method in object by this method
+// - injects contains injectObject
+// - ptrDyn `inject params` that be about to be injected
 func dynamicObjectCall(target interface{}, params[]interface{}) {
 	getType  := reflect.TypeOf(target)
 	getValue := reflect.ValueOf(target)

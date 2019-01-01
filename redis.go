@@ -3,7 +3,6 @@ package bulrush
 import (
 	"time"
 	"encoding/json"
-	"github.com/2637309949/bulrush/utils"
 	"github.com/go-redis/redis"
 )
 
@@ -20,9 +19,7 @@ type Rds struct {
 }
 
 // NewRds -
-func NewRds(path string) *Rds{
-	wc 	    := &WellConfig{ Path: path }
-	config  := utils.LeftSV(wc.LoadFile(path)).(*WellConfig)
+func NewRds(config *WellConfig) *Rds{
 	client  := obClient(config)
 	rds     := &Rds {
 		Client: client,

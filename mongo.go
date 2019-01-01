@@ -29,9 +29,7 @@ type Mgo struct {
 }
 
 // NewMgo -
-func NewMgo(path string) *Mgo{
-	wc 	    := &WellConfig{ Path: path }
-	config  := utils.LeftSV(wc.LoadFile(path)).(*WellConfig)
+func NewMgo(config *WellConfig) *Mgo{
 	session := obSession(config)
 	mgo		:= &Mgo{
 		Hooks: 	   &mgoHooks{},

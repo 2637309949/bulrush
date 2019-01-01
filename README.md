@@ -17,10 +17,19 @@ import (
 // Use attachs a Recovery middleware to the user router
 // Use attachs a LoggerWithWriter middleware to the user router
 app := bulrush.Default()
-app.LoadConfig(CONFIGPATH)
-app.Inject(&plugins.Middles{}, &routes.Routes{}, &models.Model{})
-app.DebugPrintRouteFunc(func(httpMethod, absolutePath, handlerName string, nuHandlers int) {
-    fmt.Printf("%5v %9v\n", httpMethod, absolutePath)
+app.Config(CONFIGPATH)
+app.Inject("bulrushApp")
+app.Use(override.Inject, delivery.Inject)
+app.Use(identity.Inject)
+app.Use(models.Inject, routes.Inject)
+app.Use(func(iStr string, router *gin.RouterGroup) {
+    router.GET("/bulrushApp", func (c *gin.Context) {
+        c.JSON(http.StatusOK, gin.H{
+            "data": 	iStr,
+            "errcode": 	nil,
+            "errmsg": 	nil,
+        })
+    })
 })
 app.Run()
 ```
@@ -31,11 +40,7 @@ import (
 )
 // No middlewares has been attached
 app := bulrush.New()
-app.LoadConfig(CONFIGPATH)
-app.Inject(&plugins.Middles{}, &routes.Routes{}, &models.Model{})
-app.DebugPrintRouteFunc(func(httpMethod, absolutePath, handlerName string, nuHandlers int) {
-    fmt.Printf("%5v %9v\n", httpMethod, absolutePath)
-})
+app.Config(CONFIGPATH)
 app.Run()
 ```
 3. For more details, Please reference to [bulrush_template](https://github.com/2637309949/bulrush_template). 

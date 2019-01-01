@@ -77,20 +77,21 @@ func dynamicMethodCall(target interface{}, params[]interface{}) interface {} {
 	}
 	if getValue.IsValid() && valid {
 		rs := getValue.Call(inputs)
-		if len(rs) > 0 && rs[0].IsValid() {
-			return rs[0].Interface()
-		}
-	} else {
-		panic(fmt.Errorf("invalid method: %s in inject", methodName))
+		return funk.Map(funk.Filter(rs, func(v reflect.Value) bool {
+			return v.IsValid()
+		}), func(v reflect.Value) interface {}{
+			return v.Interface()
+		})
 	}
-	return nil
+	panic(fmt.Errorf("invalid method: %s in inject", methodName))
 }
 
 // dynamicMethodsCall
 // call method by reflect
-func dynamicMethodsCall(injects []interface{}, params[]interface{}) {
+func dynamicMethodsCall(injects []interface{}, params *[]interface{}, rsCb func(interface{})) {
 	for _, target := range injects {
-		dynamicMethodCall(target, params)
+		rs := dynamicMethodCall(target, *params)
+		rsCb(rs)
 	}
 }
 

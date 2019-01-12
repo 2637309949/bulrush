@@ -8,8 +8,8 @@
 ```shell
 $ go get github.com/2637309949/juglans
 ```
-2. Init a Bulrush Instance
-```shell
+2. QuickStart
+```go
 import (
     "github.com/2637309949/bulrush"
 )
@@ -19,9 +19,9 @@ import (
 app := bulrush.Default()
 app.Config(CONFIGPATH)
 app.Inject("bulrushApp")
-app.Use(override.Inject, delivery.Inject)
-app.Use(identity.Inject)
-app.Use(models.Inject, routes.Inject)
+app.Use(plugins.Override(), delivery.Plugin)
+app.Use(identity.Plugin)
+app.Use(models.Plugin, routes.Plugin)
 app.Use(func(iStr string, router *gin.RouterGroup) {
     router.GET("/bulrushApp", func (c *gin.Context) {
         c.JSON(http.StatusOK, gin.H{
@@ -34,7 +34,7 @@ app.Use(func(iStr string, router *gin.RouterGroup) {
 app.Run()
 ```
 or
-```shell
+```go
 import (
     "github.com/2637309949/bulrush"
 )
@@ -44,6 +44,13 @@ app.Config(CONFIGPATH)
 app.Run()
 ```
 3. For more details, Please reference to [bulrush_template](https://github.com/2637309949/bulrush_template). 
+
+## API
+
+## Design Philosophy
+
+## Plugins
+
 ## MIT License
 
 Copyright (c) 2016 Freax

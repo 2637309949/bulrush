@@ -1,3 +1,11 @@
+/**
+ * @author [Double]
+ * @email [2637309949@qq.com.com]
+ * @create date 2019-01-12 22:46:31
+ * @modify date 2019-01-12 22:46:31
+ * @desc [bulrush delivery plugin]
+ */
+
 package plugins
 
 import (
@@ -10,12 +18,6 @@ import (
 
 // index html
 const index = "index.html"
-
-// DeliveryFileSystem -
-type DeliveryFileSystem interface {
-	http.FileSystem
-	Exists(prefix string, path string) bool
-}
 
 // LocalFileSystem -
 type LocalFileSystem struct {
@@ -58,17 +60,18 @@ func (local *LocalFileSystem) Exists(prefix string, filepath string) bool {
 // Delivery -
 type Delivery struct {
 	URLPrefix string
-	Fs DeliveryFileSystem
+	Path string
 }
 
-// Inject for gin
-func (delivery *Delivery) Inject(httpProxy *gin.Engine) {
-	fileserver := http.FileServer(delivery.Fs)
+// Plugin for gin
+func (delivery *Delivery) Plugin(httpProxy *gin.Engine) {
+	lf := LocalFile(delivery.Path, false)
+	fileserver := http.FileServer(lf)
 	if delivery.URLPrefix != "" {
 		fileserver = http.StripPrefix(delivery.URLPrefix, fileserver)
 	}
 	httpProxy.GET(delivery.URLPrefix + "/*any", func(c *gin.Context) {
-		if delivery.Fs.Exists(delivery.URLPrefix, c.Request.URL.Path) {
+		if lf.Exists(delivery.URLPrefix, c.Request.URL.Path) {
 			fileserver.ServeHTTP(c.Writer, c.Request)
 			c.Abort()
 		}

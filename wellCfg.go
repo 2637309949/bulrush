@@ -1,21 +1,19 @@
+/**
+ * @author [Double]
+ * @email [2637309949@qq.com.com]
+ * @create date 2019-01-12 22:46:31
+ * @modify date 2019-01-12 22:46:31
+ * @desc [bulrush cfg struct]
+ */
+
 package bulrush
 
 import (
 	"time"
-	"github.com/2637309949/bulrush/utils"
 	"errors"
 	"strings"
 	"github.com/olebedev/config"
-)
-
-const (
-	jsonSuffix = ".json"
-	yamlSuffix = ".yaml"
-)
-
-var (
-	// ErrUNSupported -
-	ErrUNSupported = errors.New("unsupported file type")
+	"github.com/2637309949/bulrush/utils"
 )
 
 // WellCfg -
@@ -26,25 +24,22 @@ type WellCfg struct {
 
 // NewWc -
 func NewWc(path string) *WellCfg{
-	wc := &WellCfg{ Path: path }
-	return utils.LeftSV(wc.LoadFile(path)).(*WellCfg)
+	wellCfg := &WellCfg{ Path: path }
+	return utils.LeftSV(wellCfg.LoadFile(path)).(*WellCfg)
 }
 
 // LoadFile -
 func (wc *WellCfg) LoadFile(path string) (*WellCfg, error) {
-	var readFile func(filename string) (*config.Config, error) 
-	if strings.HasSuffix(wc.Path, jsonSuffix) {
-		readFile = config.ParseJsonFile
-	} else if strings.HasSuffix(wc.Path, yamlSuffix) {
-		readFile = config.ParseYamlFile
-	} else {
-		return nil, ErrUNSupported
+	if strings.HasSuffix(wc.Path, ".json") {
+		if cfg, err := config.ParseJsonFile(wc.Path); err == nil {
+			return &WellCfg{ *cfg, wc.Path }, nil
+		}
+	} else if strings.HasSuffix(wc.Path, ".yaml") {
+		if cfg, err := config.ParseYamlFile(wc.Path); err == nil {
+			return &WellCfg{ *cfg, wc.Path }, nil
+		}
 	}
-	cfg, err := readFile(wc.Path)
-	if err != nil {
-		return nil, err
-	}
-	return &WellCfg{ *cfg, wc.Path }, nil
+	return nil, errors.New("unsupported file type")
 }
 
 // getString -

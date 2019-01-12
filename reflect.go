@@ -1,3 +1,11 @@
+/**
+ * @author [Double]
+ * @email [2637309949@qq.com.com]
+ * @create date 2019-01-12 22:46:31
+ * @modify date 2019-01-12 22:46:31
+ * @desc [bulrush reflect]
+ */
+
 package bulrush
 
 import (
@@ -12,9 +20,9 @@ import (
 // - injects contains injectObject
 // - ptrDyn `inject params` that be about to be injected
 func dynamicObjectsCall(injects []interface{}, ptrDyn[]interface{}) {
-	for _, target := range injects {
-		dynamicObjectCall(target, ptrDyn)
-	}
+	funk.ForEach(injects, func(x interface{}) {
+		dynamicObjectCall(x, ptrDyn)
+	})
 }
 
 // dynamicObjectCall
@@ -92,15 +100,13 @@ func dynamicMethodCall(target interface{}, params[]interface{}) interface {} {
 
 // dynamicMethodsCall
 // call method by reflect
-func dynamicMethodsCall(injects []interface{}, params *[]interface{}, rsCb func(interface{})) {
-	for _, target := range injects {
-		rs := dynamicMethodCall(target, *params)
-		rsCb(rs)
-	}
+func dynamicMethodsCall(plugins []interface{}, params *[]interface{}, cb func(interface{})) {
+	funk.ForEach(plugins, func(x interface{}) {
+		cb(dynamicMethodCall(x, *params))
+	})
 }
 
-// typeExists
-// check type if exists or not
+// typeExists -
 func typeExists(injects []interface{}, target interface{}) bool {
 	ptype  := reflect.TypeOf(target)
 	r := funk.Find(injects, func(x interface{}) bool {
@@ -112,8 +118,7 @@ func typeExists(injects []interface{}, target interface{}) bool {
 	return false
 }
 
-// createSlice
-// create slice by reflect
+// createSlice -
 func createSlice(target interface{}) interface{} {
 	tagetType 	:= reflect.TypeOf(target)
 	if tagetType.Kind() == reflect.Ptr {
@@ -123,8 +128,7 @@ func createSlice(target interface{}) interface{} {
 	return targetSlice
 }
 
-// createObject
-// create object by reflect
+// createObject -
 func createObject(target interface{}) interface{} {
 	tagetType 	 := reflect.TypeOf(target)
 	if tagetType.Kind() == reflect.Ptr {

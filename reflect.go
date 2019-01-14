@@ -100,9 +100,9 @@ func dynamicMethodCall(target interface{}, params[]interface{}) interface {} {
 
 // dynamicMethodsCall
 // call method by reflect
-func dynamicMethodsCall(plugins []interface{}, params *[]interface{}, cb func(interface{})) {
+func dynamicMethodsCall(plugins []interface{}, injects *Injects, cb func(interface{})) {
 	funk.ForEach(plugins, func(x interface{}) {
-		cb(dynamicMethodCall(x, *params))
+		cb(dynamicMethodCall(x, *injects))
 	})
 }
 

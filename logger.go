@@ -91,7 +91,7 @@ func createLog(path string) io.Writer {
 // fileName start with "0"
 // Gin Middles
 // System level
-func LoggerWithWriter(bulrush *Bulrush) gin.HandlerFunc {
+func LoggerWithWriter(bulrush *rush) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		logsDir  := utils.Some(utils.LeftV(bulrush.config.String("logs")), 	"logs").(string)
 		logsDir   = gPath.Join(".", logsDir)
@@ -116,7 +116,7 @@ func LoggerWithWriter(bulrush *Bulrush) gin.HandlerFunc {
 // LoggerWrap -
 // fileName start with "1"
 // User level
-func LoggerWrap(wc *WellCfg) func(string){
+func LoggerWrap(wc *Config) func(string){
 	return func(info string) {
 		logsDir  := utils.Some(utils.LeftV(wc.String("logs")), 	"logs").(string)
 		logsDir   = gPath.Join(".", logsDir)

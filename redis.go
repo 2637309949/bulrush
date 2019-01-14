@@ -15,11 +15,11 @@ type  rdsHooks struct {
 type Rds struct {
 	Client  *redis.Client
 	Hooks   *rdsHooks
-	config 	*WellCfg
+	config 	*Config
 }
 
 // NewRds -
-func NewRds(config *WellCfg) *Rds{
+func NewRds(config *Config) *Rds{
 	client  := obClient(config)
 	rds     := &Rds {
 		Client: client,
@@ -32,13 +32,13 @@ func NewRds(config *WellCfg) *Rds{
 }
 
 // obClient -
-func obClient(config *WellCfg) *redis.Client{
-	addrs := config.getString("redis.addrs", "")
+func obClient(config *Config) *redis.Client{
+	addrs := config.GetString("redis.addrs", "")
 	if addrs != "" {
 		options := &redis.Options{}
 		options.Addr 	 = addrs
-		options.Password = config.getString("redis.opts.password", "")
-		options.DB 	     = config.getInt("redis.opts.db", 0)
+		options.Password = config.GetString("redis.opts.password", "")
+		options.DB 	     = config.GetInt("redis.opts.db", 0)
 		client 		    := redis.NewClient(options)
 		if _, err := client.Ping().Result(); err != nil {
 			panic(err)

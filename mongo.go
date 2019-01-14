@@ -24,12 +24,12 @@ type mgoHooks struct {
 type Mgo struct {
 	Session 	*mgo.Session
 	Hooks 		*mgoHooks
-	config 		*WellCfg
+	config 		*Config
 	manifests 	[]interface{}
 }
 
 // NewMgo -
-func NewMgo(config *WellCfg) *Mgo{
+func NewMgo(config *Config) *Mgo{
 	session := obSession(config)
 	mgo		:= &Mgo{
 		Hooks: 	   &mgoHooks{},
@@ -68,7 +68,7 @@ func (mgo *Mgo)Model(name string) (*mgo.Collection, map[string]interface {}) {
 	if dbName, ok := manifest["db"]; ok && dbName.(string) != "" {
 		db = dbName.(string)
 	} else {
-		db = mgo.config.getString("mongo.opts.database", "bulrush")
+		db = mgo.config.GetString("mongo.opts.database", "bulrush")
 	}
 	
 	if ctName, ok := manifest["collection"]; ok && ctName.(string) != "" {
@@ -81,33 +81,33 @@ func (mgo *Mgo)Model(name string) (*mgo.Collection, map[string]interface {}) {
 }
 
 // obDialInfo -
-func obDialInfo(config *WellCfg) *mgo.DialInfo {
-	addrs    := config.getStrList("mongo.addrs", nil)
+func obDialInfo(config *Config) *mgo.DialInfo {
+	addrs    := config.GetStrList("mongo.addrs", nil)
 	dial := &mgo.DialInfo {}
 	dial.Addrs 			 = addrs
-	dial.Timeout  		 = config.getDurationFromSecInt("mongo.opts.timeout", 0)
-	dial.Database 		 = config.getString("mongo.opts.database", "")
-	dial.ReplicaSetName  = config.getString("mongo.opts.replicaSetName", "")
-	dial.Source     	 = config.getString("mongo.opts.source", "")
-	dial.Service     	 = config.getString("mongo.opts.service", "")
-	dial.ServiceHost     = config.getString("mongo.opts.serviceHost", "")
-	dial.Mechanism    	 = config.getString("mongo.opts.mechanism", "")
-	dial.Username    	 = config.getString("mongo.opts.username", "")
-	dial.Password   	 = config.getString("mongo.opts.password", "")
-	dial.PoolLimit 	 	 = config.getInt("mongo.opts.poolLimit", 0)
-	dial.PoolTimeout 	 = config.getDurationFromSecInt("mongo.opts.poolTimeout", 0)
-	dial.ReadTimeout 	 = config.getDurationFromSecInt("mongo.opts.readTimeout", 0)
-	dial.WriteTimeout 	 = config.getDurationFromSecInt("mongo.opts.writeTimeout", 0)
-	dial.AppName    	 = config.getString("mongo.opts.appName", "")
-	dial.FailFast    	 = config.getBool("mongo.opts.failFast", false)
-	dial.Direct    		 = config.getBool("mongo.opts.direct", false)
-	dial.MinPoolSize 	 = config.getInt("mongo.opts.minPoolSize", 0)
-	dial.MaxIdleTimeMS 	 = config.getInt("mongo.opts.maxIdleTimeMS", 0)
+	dial.Timeout  		 = config.GetDurationFromSecInt("mongo.opts.timeout", 0)
+	dial.Database 		 = config.GetString("mongo.opts.database", "")
+	dial.ReplicaSetName  = config.GetString("mongo.opts.replicaSetName", "")
+	dial.Source     	 = config.GetString("mongo.opts.source", "")
+	dial.Service     	 = config.GetString("mongo.opts.service", "")
+	dial.ServiceHost     = config.GetString("mongo.opts.serviceHost", "")
+	dial.Mechanism    	 = config.GetString("mongo.opts.mechanism", "")
+	dial.Username    	 = config.GetString("mongo.opts.username", "")
+	dial.Password   	 = config.GetString("mongo.opts.password", "")
+	dial.PoolLimit 	 	 = config.GetInt("mongo.opts.poolLimit", 0)
+	dial.PoolTimeout 	 = config.GetDurationFromSecInt("mongo.opts.poolTimeout", 0)
+	dial.ReadTimeout 	 = config.GetDurationFromSecInt("mongo.opts.readTimeout", 0)
+	dial.WriteTimeout 	 = config.GetDurationFromSecInt("mongo.opts.writeTimeout", 0)
+	dial.AppName    	 = config.GetString("mongo.opts.appName", "")
+	dial.FailFast    	 = config.GetBool("mongo.opts.failFast", false)
+	dial.Direct    		 = config.GetBool("mongo.opts.direct", false)
+	dial.MinPoolSize 	 = config.GetInt("mongo.opts.minPoolSize", 0)
+	dial.MaxIdleTimeMS 	 = config.GetInt("mongo.opts.maxIdleTimeMS", 0)
 	return dial
 }
 
 // obSession -
-func obSession(config *WellCfg) *mgo.Session {
+func obSession(config *Config) *mgo.Session {
 	addrs, _ := config.List("mongo.addrs")
 	if addrs != nil && len(addrs) > 0 {
 		dial := obDialInfo(config)

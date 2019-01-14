@@ -94,8 +94,8 @@ func (iden *Identify) verifyToken(token string) bool {
 
 // Plugin -
 func (iden *Identify) Plugin(router *gin.RouterGroup) {
-	obtainTokenRoute 	:= utils.Some(iden.Routes.ObtainTokenRoute,  "/obtainToken").(string)
-	revokeTokenRoute 	:= utils.Some(iden.Routes.RevokeTokenRoute,  "/revokeToken").(string)
+	obtainTokenRoute 	:= utils.Some(iden.Routes.ObtainTokenRoute,   "/obtainToken").(string)
+	revokeTokenRoute 	:= utils.Some(iden.Routes.RevokeTokenRoute,   "/revokeToken").(string)
 	refleshTokenRoute 	:= utils.Some(iden.Routes.RefleshTokenRoute, "/refleshToken").(string)
 	FakeURLs 			:= iden.FakeURLs
 	router.Use(func (c *gin.Context) {

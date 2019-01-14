@@ -48,7 +48,7 @@ func ToIntArray(t []interface{}) []int {
 
 // RandString -
 func RandString(n int) string {
-	const seeds = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	const seeds = "abcdefghijklmnopqrstuvwxyz1234567890"
 	bytes := make([]byte, n)
 	for i := range bytes {
 		bytes[i] = seeds[rand.Intn(len(seeds))]

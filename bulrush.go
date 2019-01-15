@@ -1,10 +1,34 @@
+/**
+ * @author [double]
+ * @email [2637309949@qq.com]
+ * @create date 2019-01-15 09:49:33
+ * @modify date 2019-01-15 09:49:33
+ * @desc [bulrush implement]
+ */
+
 package bulrush
 
 import (
+	"log"
+	"sync"
 	"reflect"
 	"github.com/gin-gonic/gin"
 	"github.com/thoas/go-funk"
 	"github.com/kataras/go-events"
+)
+
+const (
+	// Version current version number
+	Version = "0.0.1"
+	// DefaultMode default gin mode
+	DefaultMode = "debug"
+	// DefaultMaxPlugins is the number of max Plugins
+	// `Just for Learning synchronization`
+	// a matter of little interest
+	DefaultMaxPlugins = 0
+	// EnableWarning prints a warning when trying to add an plugin which it's len is equal to the maxPlugins
+	// Defaults to false, which means it does not prints a warning
+	EnableWarning = false
 )
 
 // Bulrush the framework's struct
@@ -21,69 +45,23 @@ type (
 	Injects []interface{}
 	// Bulrush interface defined
 	Bulrush interface {
+		Emit(events.EventName, ...interface{})
+		On(events.EventName, ...events.Listener)
+		SetMaxPlugins(int)
+		GetMaxPlugins() int
 		Config(string) Bulrush
 		Use(...interface{}) Bulrush
 		Inject(...interface{}) Bulrush
 		Run(func(error, *Config))
 	}
-	// rush Implement Bulrush interface
+	// rush implement bulrush interface
 	rush struct {
 		Event
 		config 		*Config
 		middles 	*Middles
 		injects 	*Injects
-	}
-)
-
-const (
-	// DebugMode -
-	DebugMode = "debug"
-	// ReleaseMode -
-	ReleaseMode = "release"
-	// TestMode -
-	TestMode = "test"
-)
-
-var (
-	// gin httpProxy
-	// maybe would be other later
-	httpProxy = func() func() *gin.Engine {
-		return func() *gin.Engine {
-			proxy := gin.New()
-			return proxy
-		}
-	}
-	// httpRouter middles
-	// gin router
-	httpRouter = func() func(httpProxy *gin.Engine, config *Config) *gin.RouterGroup {
-		return func(httpProxy *gin.Engine, config *Config) *gin.RouterGroup {
-			httpRouter := httpProxy.Group(config.GetString("prefix","/api/v1"))
-			return httpRouter
-		}
-	}
-	// listen proxy
-	// call router listen
-	runProxy = func(cb func(error, *Config)) func(httpProxy *gin.Engine, config *Config) {
-		return func(httpProxy *gin.Engine, config *Config) {
-			port := config.GetString("port",  ":8080")
-			cb(nil, config)
-			err := httpProxy.Run(port)
-			cb(err, config)
-		}
-	}
-	// log user req by http
-	// save to file and print to console
-	loggerWithWriter = func (bulrush *rush, LoggerWithWriter func(*rush) gin.HandlerFunc) func(router *gin.RouterGroup) {
-		return func(router *gin.RouterGroup) {
-			router.Use(LoggerWithWriter(bulrush))
-		}
-	}
-	// rec system from panic
-	recovery = func () func(httpProxy *gin.Engine, router *gin.RouterGroup) {
-		return func(httpProxy *gin.Engine, router *gin.RouterGroup) {
-			httpProxy.Use(gin.Recovery())
-			router.Use(gin.Recovery())
-		}
+		mu          sync.Mutex
+		maxPlugins  int
 	}
 )
 
@@ -100,6 +78,7 @@ func New() Bulrush {
 		Event: 		  emmiter,
 		middles: 	  &middles,
 		injects: 	  &injects,
+		maxPlugins:   DefaultMaxPlugins,
 	}
 	defaultMiddles := Middles {
 		httpProxy(),
@@ -109,11 +88,18 @@ func New() Bulrush {
 	return bulrush
 }
 
+var (
+	// silence the compiler
+	_   Bulrush = &rush{}
+	// defaultRush default rush
+	defaultRush = New()
+)
+
 // Default return a new bulrush with some default middles
 // --Recovery middle has been register in httpProxy and user router
 // --LoggerWithWriter middles has been register in router for print requester
 func Default() Bulrush {
-	bulrush := New()
+	bulrush := defaultRush
 	defaultMiddles := Middles {
 		recovery(),
 		loggerWithWriter(bulrush.(*rush), LoggerWithWriter),
@@ -126,6 +112,20 @@ func Default() Bulrush {
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
 func (bulrush *rush) Use(items ...interface{}) Bulrush {
+	if len(items) == 0 {
+		return nil
+	}
+	bulrush.mu.Lock()
+	defer bulrush.mu.Unlock()
+	if bulrush.maxPlugins > 0 && len(*bulrush.middles) == bulrush.maxPlugins {
+		if EnableWarning {
+			log.Printf(
+				`(events) warning: possible Plugins memory 'leak detected. %d Plugin added. '
+				 Use app.SetMaxPlugins(n int) to increase limit.
+				 `, len(*bulrush.middles))
+		}
+		return nil
+	}
 	plugins := funk.Filter(items, func(x interface{}) bool {
 		return reflect.Func == reflect.TypeOf(x).Kind()
 	}).([] interface{})
@@ -137,11 +137,7 @@ func (bulrush *rush) Use(items ...interface{}) Bulrush {
 // currently, it support loading file that end with .json or .yarm
 func (bulrush *rush) Config(path string) Bulrush {
 	bulrush.config = NewCfg(path)
-	if mode := bulrush.config.GetString("mode",  ""); mode != "" {
-		gin.SetMode(mode)
-	} else {
-		gin.SetMode(DebugMode)
-	}
+	gin.SetMode(bulrush.config.GetString("mode",  DefaultMode))
 	bulrush.Inject(bulrush.config)
 	return bulrush
 }
@@ -149,11 +145,42 @@ func (bulrush *rush) Config(path string) Bulrush {
 // Inject `inject` to bulrush
 // - inject should be someone that never be pushed in before.
 func (bulrush *rush) Inject(items ...interface{}) Bulrush {
+	if len(items) == 0 {
+		return nil
+	}
 	injects := funk.Filter(items, func(x interface{}) bool {
 		return !typeExists(*bulrush.injects, x)
 	}).([] interface{})
 	*bulrush.injects = append(*bulrush.injects, injects...)
 	return bulrush
+}
+
+// SetMaxPlugins obviously this function allows the MaxPlugins
+// to be decrease or increase. Set to zero for unlimited
+func (bulrush *rush) SetMaxPlugins(n int) {
+	if n < 0 {
+		if EnableWarning {
+			log.Printf("(events) warning: MaxPlugins must be positive number, tried to set: %d", n)
+			return
+		}
+	}
+	bulrush.maxPlugins = n
+}
+
+// SetMaxPlugins obviously this function allows the MaxPlugins
+// to be decrease or increase. Set to zero for unlimited
+func SetMaxPlugins(n int) {
+	defaultRush.SetMaxPlugins(n)
+}
+
+func (bulrush *rush) GetMaxPlugins() int{
+	return bulrush.maxPlugins
+}
+
+// GetMaxPlugins returns the max Plugins for this bulrush
+// see SetMaxPlugins
+func GetMaxPlugins() int {
+	return defaultRush.GetMaxPlugins()
 }
 
 // Run app, something has been done
@@ -162,7 +189,8 @@ func (bulrush *rush) Run(cb func(error, *Config)) {
 		runProxy(cb),
 	}
 	bulrush.Use(lastMiddles...)
-	dynamicMethodsCall(*bulrush.middles, bulrush.injects, func(rs interface{}) {
+	funk.ForEach(*bulrush.middles, func(x interface{}) {
+		rs := reflectMethodAndCall(x, *bulrush.injects)
 		bulrush.Inject(rs.([] interface{})...)
 	})
 }

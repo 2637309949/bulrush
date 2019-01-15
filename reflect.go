@@ -15,21 +15,11 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-// dynamicObjectsCall
+// reflectObjectAndCall
 // - you can call a method in object by this method
 // - injects contains injectObject
 // - ptrDyn `inject params` that be about to be injected
-func dynamicObjectsCall(injects []interface{}, ptrDyn[]interface{}) {
-	funk.ForEach(injects, func(x interface{}) {
-		dynamicObjectCall(x, ptrDyn)
-	})
-}
-
-// dynamicObjectCall
-// - you can call a method in object by this method
-// - injects contains injectObject
-// - ptrDyn `inject params` that be about to be injected
-func dynamicObjectCall(target interface{}, params[]interface{}) {
+func reflectObjectAndCall(target interface{}, params[]interface{}) {
 	getType  := reflect.TypeOf(target)
 	getValue := reflect.ValueOf(target)
 
@@ -66,9 +56,9 @@ func dynamicObjectCall(target interface{}, params[]interface{}) {
 	}
 }
 
-// dynamicMethodCall
+// reflectMethodAndCall
 // call method by reflect
-func dynamicMethodCall(target interface{}, params[]interface{}) interface {} {
+func reflectMethodAndCall(target interface{}, params[]interface{}) interface {} {
 	valid 	   := true
 	getType    := reflect.TypeOf(target)
 	methodName := getType.Name()
@@ -96,14 +86,6 @@ func dynamicMethodCall(target interface{}, params[]interface{}) interface {} {
 		})
 	}
 	panic(fmt.Errorf("invalid method: %s in inject", methodName))
-}
-
-// dynamicMethodsCall
-// call method by reflect
-func dynamicMethodsCall(plugins []interface{}, injects *Injects, cb func(interface{})) {
-	funk.ForEach(plugins, func(x interface{}) {
-		cb(dynamicMethodCall(x, *injects))
-	})
 }
 
 // typeExists -

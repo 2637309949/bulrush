@@ -9,57 +9,61 @@
 package plugins
 
 import (
-	"github.com/2637309949/bulrush/utils"
-	"path"
-	"path/filepath"
 	"fmt"
+	"path"
 	"net/http"
+	"path/filepath"
 	"github.com/gin-gonic/gin"
+	"github.com/2637309949/bulrush"
+	"github.com/2637309949/bulrush/utils"
 )
  
 // Upload -
 type Upload struct {
+	bulrush.PNBase
 	AssetPath string
 	URLPrefix string
 }
 
  // Plugin -
-func (upload *Upload) Plugin (router *gin.RouterGroup) {
-	router.POST("/upload", func(c *gin.Context) {
-		// name := c.PostForm("name")
-		// email := c.PostForm("email")
-		form, err := c.MultipartForm()
-		if err != nil {
-			c.String(http.StatusBadRequest, fmt.Sprintf("get form err: %s", err.Error()))
-			return
-		}
-		rets := make([] map[string] interface{}, 0)
-		for _, files := range form.File {
-			for _, file := range files {
-				filename := filepath.Base(file.Filename)
-				uuid := utils.RandString(32)
-				uuidFileName := utils.RandString(32) + string(filename[len(filename)-len(filepath.Ext(filename)):])
-				if err := c.SaveUploadedFile(file, path.Join(upload.AssetPath, uuidFileName)); err != nil {
-					c.JSON(http.StatusOK, gin.H{
-						"data": 	nil,
-						"errcode": 	500,
-						"errmsg": 	err.Error(),
-					})
-					return
-				}
-				ret := map[string] interface{} {
-					"uid": 	  uuid,
-					"status": "done",
-					"name":   filename,
-					"url":    upload.URLPrefix + "/" + uuidFileName,
-				}
-				rets = append(rets, ret)
+func (upload *Upload) Plugin () bulrush.PNRet {
+	return func(router *gin.RouterGroup) {
+		router.POST("/upload", func(c *gin.Context) {
+			// name := c.PostForm("name")
+			// email := c.PostForm("email")
+			form, err := c.MultipartForm()
+			if err != nil {
+				c.String(http.StatusBadRequest, fmt.Sprintf("get form err: %s", err.Error()))
+				return
 			}
-		}
-		c.JSON(http.StatusOK, gin.H{
-			"data": 	nil,
-			"errcode": 	nil,
-			"errmsg": 	rets,
+			rets := make([] map[string] interface{}, 0)
+			for _, files := range form.File {
+				for _, file := range files {
+					filename := filepath.Base(file.Filename)
+					uuid := utils.RandString(32)
+					uuidFileName := utils.RandString(32) + string(filename[len(filename)-len(filepath.Ext(filename)):])
+					if err := c.SaveUploadedFile(file, path.Join(upload.AssetPath, uuidFileName)); err != nil {
+						c.JSON(http.StatusOK, gin.H{
+							"data": 	nil,
+							"errcode": 	500,
+							"errmsg": 	err.Error(),
+						})
+						return
+					}
+					ret := map[string] interface{} {
+						"uid": 	  uuid,
+						"status": "done",
+						"name":   filename,
+						"url":    upload.URLPrefix + "/" + uuidFileName,
+					}
+					rets = append(rets, ret)
+				}
+			}
+			c.JSON(http.StatusOK, gin.H{
+				"data": 	nil,
+				"errcode": 	nil,
+				"errmsg": 	rets,
+			})
 		})
-	})
+	}
 }

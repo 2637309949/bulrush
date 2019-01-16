@@ -40,7 +40,7 @@ type (
 	// Event -
 	Event events.EventEmmiter
 	// Middles -
-	Middles []interface{}
+	Middles []PNBase
 	// Injects -
 	Injects []interface{}
 	// Bulrush interface defined
@@ -50,7 +50,7 @@ type (
 		SetMaxPlugins(int)
 		GetMaxPlugins() int
 		Config(string) Bulrush
-		Use(...interface{}) Bulrush
+		Use(...PNBase) Bulrush
 		Inject(...interface{}) Bulrush
 		Run(func(error, *Config))
 	}
@@ -60,8 +60,8 @@ type (
 		config 		*Config
 		middles 	*Middles
 		injects 	*Injects
-		mu          sync.Mutex
 		maxPlugins  int
+		mu          sync.Mutex
 	}
 )
 
@@ -81,8 +81,8 @@ func New() Bulrush {
 		maxPlugins:   DefaultMaxPlugins,
 	}
 	defaultMiddles := Middles {
-		httpProxy(),
-		httpRouter(),
+		&HTTPProxy{},
+		&HTTPRouter{},
 	}
 	bulrush.Use(defaultMiddles...)
 	return bulrush
@@ -101,8 +101,11 @@ var (
 func Default() Bulrush {
 	bulrush := defaultRush
 	defaultMiddles := Middles {
-		recovery(),
-		loggerWithWriter(bulrush.(*rush), LoggerWithWriter),
+		&Recovery{},
+		&LoggerWriter{
+			Bulrush: bulrush.(*rush),
+			LoggerWithWriter: LoggerWithWriter,
+		},
 	}
 	bulrush.Use(defaultMiddles...)
 	return bulrush
@@ -111,7 +114,7 @@ func Default() Bulrush {
 // Use attachs a global middleware to the router
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
-func (bulrush *rush) Use(items ...interface{}) Bulrush {
+func (bulrush *rush) Use(items ...PNBase) Bulrush {
 	if len(items) == 0 {
 		return nil
 	}
@@ -119,17 +122,11 @@ func (bulrush *rush) Use(items ...interface{}) Bulrush {
 	defer bulrush.mu.Unlock()
 	if bulrush.maxPlugins > 0 && len(*bulrush.middles) == bulrush.maxPlugins {
 		if EnableWarning {
-			log.Printf(
-				`(events) warning: possible Plugins memory 'leak detected. %d Plugin added. '
-				 Use app.SetMaxPlugins(n int) to increase limit.
-				 `, len(*bulrush.middles))
+			log.Printf(`warning: possible Plugins memory 'leak detected. %d Plugin added. 'Use app.SetMaxPlugins(n int) to increase limit.`, len(*bulrush.middles))
 		}
 		return nil
 	}
-	plugins := funk.Filter(items, func(x interface{}) bool {
-		return reflect.Func == reflect.TypeOf(x).Kind()
-	}).([] interface{})
-	*bulrush.middles = append(*bulrush.middles, plugins...)
+	*bulrush.middles = append(*bulrush.middles, items...)
 	return bulrush
 }
 
@@ -185,11 +182,20 @@ func GetMaxPlugins() int {
 
 // Run app, something has been done
 func (bulrush *rush) Run(cb func(error, *Config)) {
-	lastMiddles := [] interface{} {
-		runProxy(cb),
+	lastMiddles := Middles {
+		&RUNProxy{ CallBack: cb },
 	}
 	bulrush.Use(lastMiddles...)
-	funk.ForEach(*bulrush.middles, func(x interface{}) {
+	// unpack plugin to get middles
+	plugins := funk.Map(*bulrush.middles, func(x PNBase) PNRet {
+		return x.Plugin()
+	}).([] PNRet)
+	// filter middles
+	plugins  = funk.Filter(plugins, func(x PNRet) bool {
+		return reflect.Func == reflect.TypeOf(x).Kind()
+	}).([] PNRet)
+	// run all middles
+	funk.ForEach(plugins, func(x interface{}) {
 		rs := reflectMethodAndCall(x, *bulrush.injects)
 		bulrush.Inject(rs.([] interface{})...)
 	})

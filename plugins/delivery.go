@@ -7,13 +7,13 @@
  */
 
 package plugins
-
 import (
 	"os"
 	"path"
 	"strings"
 	"net/http"
 	"github.com/gin-gonic/gin"
+	"github.com/2637309949/bulrush"
 )
 
 // index html
@@ -59,21 +59,24 @@ func (local *LocalFileSystem) Exists(prefix string, filepath string) bool {
 
 // Delivery -
 type Delivery struct {
-	URLPrefix string
+	bulrush.PNBase
 	Path string
+	URLPrefix string
 }
 
 // Plugin for gin
-func (delivery *Delivery) Plugin(httpProxy *gin.Engine) {
-	lf := LocalFile(delivery.Path, false)
-	fileserver := http.FileServer(lf)
-	if delivery.URLPrefix != "" {
-		fileserver = http.StripPrefix(delivery.URLPrefix, fileserver)
-	}
-	httpProxy.GET(delivery.URLPrefix + "/*any", func(c *gin.Context) {
-		if lf.Exists(delivery.URLPrefix, c.Request.URL.Path) {
-			fileserver.ServeHTTP(c.Writer, c.Request)
-			c.Abort()
+func (delivery *Delivery) Plugin() bulrush.PNRet {
+	return func(httpProxy *gin.Engine) {
+		lf := LocalFile(delivery.Path, false)
+		fileserver := http.FileServer(lf)
+		if delivery.URLPrefix != "" {
+			fileserver = http.StripPrefix(delivery.URLPrefix, fileserver)
 		}
-	})
+		httpProxy.GET(delivery.URLPrefix + "/*any", func(c *gin.Context) {
+			if lf.Exists(delivery.URLPrefix, c.Request.URL.Path) {
+				fileserver.ServeHTTP(c.Writer, c.Request)
+				c.Abort()
+			}
+		})
+	}
 }

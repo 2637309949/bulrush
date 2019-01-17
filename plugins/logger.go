@@ -100,7 +100,6 @@ func createLog(path string) io.Writer {
 func(logger *LoggerWriter) Plugin() bulrush.PNRet {
 	return func(cfg *bulrush.Config, router *gin.RouterGroup) {
 		logger.cfg = cfg
-
 		router.Use(func(c *gin.Context){
 			logsDir  := utils.Some(utils.LeftV(cfg.String("logs")), 	"logs").(string)
 			logsDir   = gPath.Join(".", logsDir)

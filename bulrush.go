@@ -45,12 +45,12 @@ type (
 	Injects []interface{}
 	// Bulrush interface defined
 	Bulrush interface {
-		Emit(events.EventName, ...interface{})
 		On(events.EventName, ...events.Listener)
+		Emit(events.EventName, ...interface{})
 		SetMaxPlugins(int)
 		GetMaxPlugins() int
-		Config(string) Bulrush
 		Use(...PNBase) Bulrush
+		Config(string) Bulrush
 		Inject(...interface{}) Bulrush
 		Run(func(error, *Config))
 	}
@@ -96,10 +96,6 @@ func Default() Bulrush {
 	defaultMiddles := Middles {
 		&Recovery{},
 		&Override{},
-		&LoggerWriter{
-			Bulrush: bulrush.(*rush),
-			LoggerWithWriter: LoggerWithWriter,
-		},
 	}
 	bulrush.Use(defaultMiddles...)
 	return bulrush

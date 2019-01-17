@@ -7,7 +7,6 @@
  */
 
 package plugins
-
 import (
 	"fmt"
 	"path"

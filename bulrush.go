@@ -88,20 +88,14 @@ func New() Bulrush {
 	return bulrush
 }
 
-var (
-	// silence the compiler
-	_   Bulrush = &rush{}
-	// defaultRush default rush
-	defaultRush = New()
-)
-
 // Default return a new bulrush with some default middles
 // --Recovery middle has been register in httpProxy and user router
 // --LoggerWithWriter middles has been register in router for print requester
 func Default() Bulrush {
-	bulrush := defaultRush
+	bulrush := defaultApp
 	defaultMiddles := Middles {
 		&Recovery{},
+		&Override{},
 		&LoggerWriter{
 			Bulrush: bulrush.(*rush),
 			LoggerWithWriter: LoggerWithWriter,
@@ -110,6 +104,13 @@ func Default() Bulrush {
 	bulrush.Use(defaultMiddles...)
 	return bulrush
 }
+
+var (
+	// silence the compiler
+	_ Bulrush = &rush{}
+	// defaultApp default rush
+	defaultApp = New()
+)
 
 // Use attachs a global middleware to the router
 // just like function in gin, but not been inited util bulrush inited.
@@ -167,7 +168,7 @@ func (bulrush *rush) SetMaxPlugins(n int) {
 // SetMaxPlugins obviously this function allows the MaxPlugins
 // to be decrease or increase. Set to zero for unlimited
 func SetMaxPlugins(n int) {
-	defaultRush.SetMaxPlugins(n)
+	defaultApp.SetMaxPlugins(n)
 }
 
 func (bulrush *rush) GetMaxPlugins() int{
@@ -177,7 +178,7 @@ func (bulrush *rush) GetMaxPlugins() int{
 // GetMaxPlugins returns the max Plugins for this bulrush
 // see SetMaxPlugins
 func GetMaxPlugins() int {
-	return defaultRush.GetMaxPlugins()
+	return defaultApp.GetMaxPlugins()
 }
 
 // Run app, something has been done

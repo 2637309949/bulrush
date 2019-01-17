@@ -9,6 +9,7 @@
 package bulrush
 
 import (
+	"strings"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,9 +20,13 @@ type (
 	PNBase interface{
 		Plugin() PNRet
 	}
-	// PNQuick for a quickly Plugin SetUp when you dont want declare PNBase
-	PNQuick struct {
+	// PNStruct for a quickly Plugin SetUp when you dont want declare PNBase
+	PNStruct struct {
 		Quick interface{}
+	}
+	// Override Plugin
+	Override struct {
+		PNBase
 	}
 	// Recovery system rec from panic
 	Recovery struct {
@@ -50,10 +55,16 @@ type (
 
 
 // Plugin for PNQuick
-func(pnQuick *PNQuick) Plugin() PNRet {
-	return pnQuick.Quick
+func(pnStruct *PNStruct) Plugin() PNRet {
+	return pnStruct.Quick
 }
 
+// PNQuick for a quickly Plugin SetUp when you dont want declare PNBase
+func PNQuick(quick interface{}) PNBase {
+	return &PNStruct{
+		Quick: quick,
+	}
+}
 
 // Plugin for Recovery
 func(recovery *Recovery) Plugin() PNRet {
@@ -93,5 +104,45 @@ func(runProxy *RUNProxy) Plugin() PNRet {
 func(loggerWriter *LoggerWriter) Plugin() PNRet {
 	return func(router *gin.RouterGroup) {
 		router.Use(loggerWriter.LoggerWithWriter(loggerWriter.Bulrush))
+	}
+}
+
+// Plugin for gin
+func (override *Override) Plugin() PNRet {
+	return func(router *gin.RouterGroup, httpProxy *gin.Engine) {
+		httpProxy.Use(func(c *gin.Context) {
+			if c.Request.Method != "POST" {
+				c.Next()
+			} else {
+				method := c.PostForm("_method")
+				methods := [3]string{"DELETE", "PUT", "PATCH"}
+				if method != "" {
+					for _, target := range methods {
+						if(target == strings.ToUpper(method)) {
+							c.Request.Method = target
+							httpProxy.HandleContext(c)
+							break
+						}
+					}
+				}
+			}
+		})
+		router.Use(func(c *gin.Context) {
+			if c.Request.Method != "POST" {
+				c.Next()
+			} else {
+				method := c.PostForm("_method")
+				methods := [3]string{"DELETE", "PUT", "PATCH"}
+				if method != "" {
+					for _, target := range methods {
+						if(target == strings.ToUpper(method)) {
+							c.Request.Method = target
+							httpProxy.HandleContext(c)
+							break
+						}
+					}
+				}
+			}
+		})
 	}
 }

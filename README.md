@@ -19,19 +19,30 @@ import (
 app := bulrush.Default()
 app.Config(CONFIGPATH)
 app.Inject("bulrushApp")
-app.Use(plugins.Override(), delivery.Plugin)
-app.Use(identity.Plugin)
-app.Use(models.Plugin, routes.Plugin)
-app.Use(func(iStr string, router *gin.RouterGroup) {
-    router.GET("/bulrushApp", func (c *gin.Context) {
-        c.JSON(http.StatusOK, gin.H{
-            "data": 	iStr,
-            "errcode": 	nil,
-            "errmsg": 	nil,
+app.Use(&models.Model{}, &routes.Route{})
+app.Use(&bulrush.PNQuick {
+    func(iStr string, router *gin.RouterGroup) {
+        router.GET("/bulrushApp", func (c *gin.Context) {
+            c.JSON(http.StatusOK, gin.H{
+                "data": 	iStr,
+                "errcode": 	nil,
+                "errmsg": 	nil,
+            })
         })
-    })
+    },
 })
-app.Run()
+app.Run(func(err error, config *bulrush.Config) {
+    if err != nil {
+        panic(err)
+    } else {
+        name := config.GetString("name",  "")
+        port := config.GetString("port",  "")
+        fmt.Println("================================")
+        fmt.Printf("App: %s\n", name)
+        fmt.Printf("Listen on %s\n", port)
+        fmt.Println("================================")
+    }
+})
 ```
 or
 ```go

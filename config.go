@@ -16,30 +16,38 @@ import (
 	"github.com/2637309949/bulrush/utils"
 )
 
-// Config -
-type Config struct {
-	config.Config
-	Path string
-}
+type (
+	// Config -
+	Config struct {
+		*config.Config
+		Path string
+	}
+)
 
-// NewCfg -
-func NewCfg(path string) *Config{
-	wellCfg := &Config{ Path: path }
-	return utils.LeftSV(wellCfg.loadFile(path)).(*Config)
-}
-
-// loadFile -
-func (cfg *Config) loadFile(path string) (*Config, error) {
-	if strings.HasSuffix(cfg.Path, ".json") {
-		if config, err := config.ParseJsonFile(cfg.Path); err == nil {
-			return &Config{ *config, cfg.Path }, nil
+// LoadFile -
+func LoadFile(path string) (*Config, error) {
+	if strings.HasSuffix(path, ".json") {
+		if cfg, err := config.ParseJsonFile(path); err == nil {
+			return &Config{
+				Config: cfg,
+				Path:   path,
+			}, nil
 		}
-	} else if strings.HasSuffix(cfg.Path, ".yaml") {
-		if config, err := config.ParseYamlFile(cfg.Path); err == nil {
-			return &Config{ *config, cfg.Path }, nil
+	} else if strings.HasSuffix(path, ".yaml") {
+		if cfg, err := config.ParseYamlFile(path); err == nil {
+			return &Config{
+				Config: cfg,
+				Path:   path,
+			}, nil
 		}
 	}
 	return nil, errors.New("unsupported file type")
+}
+
+// NewCfg -
+func NewCfg(path string) *Config {
+	cfg, _ := LoadFile(path)
+	return cfg
 }
 
 // GetString -

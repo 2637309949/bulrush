@@ -37,8 +37,6 @@ const (
 // --injects struct instance can be reflect by bulrush
 // --middles some middles for gin self
 type (
-	// Event -
-	Event events.EventEmmiter
 	// Middles -
 	Middles []PNBase
 	// Injects -
@@ -56,12 +54,12 @@ type (
 	}
 	// rush implement bulrush interface
 	rush struct {
-		Event
-		config 		*Config
-		middles 	*Middles
-		injects 	*Injects
-		maxPlugins  int
-		mu          sync.Mutex
+		events.EventEmmiter
+		config 				*Config
+		middles 			*Middles
+		injects 			*Injects
+		maxPlugins  		int
+		mu          		sync.Mutex
 	}
 )
 
@@ -75,7 +73,7 @@ func New() Bulrush {
 	injects := make(Injects, 0)
 	emmiter := events.New()
 	bulrush := &rush {
-		Event: 		  emmiter,
+		EventEmmiter: emmiter,
 		middles: 	  &middles,
 		injects: 	  &injects,
 		maxPlugins:   DefaultMaxPlugins,
@@ -90,7 +88,7 @@ func New() Bulrush {
 
 // Default return a new bulrush with some default middles
 // --Recovery middle has been register in httpProxy and user router
-// --LoggerWithWriter middles has been register in router for print requester
+// --Override middles has been register in router for override req
 func Default() Bulrush {
 	bulrush := defaultApp
 	defaultMiddles := Middles {
@@ -183,7 +181,7 @@ func (bulrush *rush) Run(cb func(error, *Config)) {
 		&RUNProxy{ CallBack: cb },
 	}
 	bulrush.Use(lastMiddles...)
-	// unpack plugin to get middles
+	// unpack plugin to middles
 	plugins := funk.Map(*bulrush.middles, func(x PNBase) PNRet {
 		return x.Plugin()
 	}).([] PNRet)

@@ -10,12 +10,12 @@
  package plugins
 
  import (
-	"strings"
 	"io"
 	"os"
 	"fmt"
 	"time"
-	gPath "path"
+	"path"
+	"strings"
 	"path/filepath"
 	"github.com/gin-gonic/gin"
 	"github.com/2637309949/bulrush"
@@ -57,10 +57,10 @@ func levelStr(level LOGLEVEL) string {
 }
 
 // getLogFile -
-func getLogFile(level LOGLEVEL, path string) string {
+func getLogFile(level LOGLEVEL, basePath string) string {
 	var filePath string
 	levelStr := levelStr(level)
-    filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+    filepath.Walk(basePath, func(path string, info os.FileInfo, err error) error {
 		if filePath != "" {
 			return nil
 		}
@@ -85,7 +85,7 @@ func getLogFile(level LOGLEVEL, path string) string {
 	// create level log file
 	fileName := time.Now().Format("2006.01.02 15.04.05")
 	fileName  = fmt.Sprintf("%s_" + fileName + ".log", levelStr)
-	filePath  = gPath.Join(path, fileName)
+	filePath  = path.Join(basePath, fileName)
 	return filePath
 }
 
@@ -102,7 +102,7 @@ func(logger *LoggerWriter) Plugin() bulrush.PNRet {
 		logger.cfg = cfg
 		router.Use(func(c *gin.Context){
 			logsDir  := utils.Some(utils.LeftV(cfg.String("logs")), 	"logs").(string)
-			logsDir   = gPath.Join(".", logsDir)
+			logsDir   = path.Join(".", logsDir)
 			logPath  := getLogFile(SYSLEVEL, logsDir)
 			writer   := createLog(logPath)
 			out 	 := writer
@@ -128,7 +128,7 @@ func(logger *LoggerWriter) Plugin() bulrush.PNRet {
 // User level
 func(logger *LoggerWriter) Writer(info string) {
 	logsDir  := utils.Some(utils.LeftV(logger.cfg.String("logs")), 	"logs").(string)
-	logsDir   = gPath.Join(".", logsDir)
+	logsDir   = path.Join(".", logsDir)
 	logPath  := getLogFile(USERLEVEL, logsDir)
 	writer   := createLog(logPath)
 	out 	 := writer

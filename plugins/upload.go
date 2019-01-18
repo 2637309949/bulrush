@@ -8,7 +8,6 @@
 
 package plugins
 import (
-	"fmt"
 	"path"
 	"net/http"
 	"path/filepath"
@@ -28,12 +27,14 @@ type Upload struct {
 func (upload *Upload) Plugin () bulrush.PNRet {
 	return func(router *gin.RouterGroup) {
 		router.POST("/upload", func(c *gin.Context) {
-			// name := c.PostForm("name")
-			// email := c.PostForm("email")
 			form, err := c.MultipartForm()
 			if err != nil {
-				c.String(http.StatusBadRequest, fmt.Sprintf("get form err: %s", err.Error()))
-				return
+				c.JSON(http.StatusOK, gin.H{
+					"data": 	nil,
+					"errcode": 	500,
+					"errmsg": 	err.Error(),
+				})
+				c.Abort()
 			}
 			rets := make([] map[string] interface{}, 0)
 			for _, files := range form.File {

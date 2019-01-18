@@ -15,59 +15,70 @@ import (
 
 type (
 	// PNRet return a plugin after call Plugin func
-	PNRet interface{}
+	// all user custom must implement this interface{}
+	PNRet      interface{}
 	// PNBase Plugin interface defined
-	PNBase interface{
-		Plugin() PNRet
-	}
+	// all user custom must implement this interface{}
+	PNBase     interface{ Plugin() PNRet }
 	// PNStruct for a quickly Plugin SetUp when you dont want declare PNBase
-	PNStruct struct {
-		Quick interface{}
-	}
+	// PBBase minimize implement
+	PNStruct   struct { Quick interface{} }
 	// Override Plugin
-	Override struct {
-		PNBase
-	}
+	Override   struct { PNBase }
 	// Recovery system rec from panic
-	Recovery struct {
-		PNBase
-	}
+	Recovery   struct { PNBase }
 	// HTTPProxy create http proxy
-	HTTPProxy struct {
-		PNBase
-	}
+	HTTPProxy  struct { PNBase }
 	// HTTPRouter create http router
-	HTTPRouter struct {
-		PNBase
-	}
+	HTTPRouter struct { PNBase }
 	// RUNProxy run proxy
-	RUNProxy struct {
-		PNBase
-	    CallBack func(error, *Config)
-	}
-	// LoggerWriter log req
-	LoggerWriter struct {
-		PNBase
-		Bulrush 		 *rush
-		LoggerWithWriter func(*rush) gin.HandlerFunc
-	}
+	RUNProxy   struct { PNBase, CallBack func(error, *Config) }
 )
 
-
 // Plugin for PNQuick
-func(pnStruct *PNStruct) Plugin() PNRet {
-	return pnStruct.Quick
+// if your do not want to implement PNBase interface{}
+// use:
+// app.Use(bulrush.PNQuick(func(testInject string, router *gin.RouterGroup) {
+// 	router.GET("/bulrushApp", func (c *gin.Context) {
+// 		c.JSON(http.StatusOK, gin.H{
+// 			"data": 	testInject,
+// 			"errcode": 	nil,
+// 			"errmsg": 	nil,
+// 		})
+// 	})
+// }))
+func(pn *PNStruct) Plugin() PNRet {
+	return pn.Quick
 }
 
-// PNQuick for a quickly Plugin SetUp when you dont want declare PNBase
-func PNQuick(quick interface{}) PNBase {
-	return &PNStruct{
-		Quick: quick,
+// PNQuick for PNQuick
+// if your do not want to implement PNBase interface{}
+// use:
+// app.Use(bulrush.PNQuick(func(testInject string, router *gin.RouterGroup) {
+// 	router.GET("/bulrushApp", func (c *gin.Context) {
+// 		c.JSON(http.StatusOK, gin.H{
+// 			"data": 	testInject,
+// 			"errcode": 	nil,
+// 			"errmsg": 	nil,
+// 		})
+// 	})
+// }))
+func PNQuick(method interface{}) PNBase {
+	pn := &PNStruct{
+		Quick: method,
 	}
+	return pn
 }
 
 // Plugin for Recovery
-func(recovery *Recovery) Plugin() PNRet {
+// recovery from system panic
+// use:
+// defaultMiddles := Middles {
+// 	&Recovery{},
+// 	&Override{},
+// }
+// bulrush.Use(defaultMiddles...)
+func(pn *Recovery) Plugin() PNRet {
 	return func(httpProxy *gin.Engine, router *gin.RouterGroup) {
 		httpProxy.Use(gin.Recovery())
 		router.Use(gin.Recovery())
@@ -75,7 +86,7 @@ func(recovery *Recovery) Plugin() PNRet {
 }
 
 // Plugin for HTTPProxy
-func(httpProxy *HTTPProxy) Plugin() PNRet {
+func(pn *HTTPProxy) Plugin() PNRet {
 	return func() *gin.Engine {
 		proxy := gin.New()
 		return proxy
@@ -83,7 +94,7 @@ func(httpProxy *HTTPProxy) Plugin() PNRet {
 }
 
 // Plugin for HTTPRouter
-func(httpRouter *HTTPRouter) Plugin() PNRet {
+func(pn *HTTPRouter) Plugin() PNRet {
 	return func(httpProxy *gin.Engine, config *Config) *gin.RouterGroup {
 		router := httpProxy.Group(config.GetString("prefix","/api/v1"))
 		return router
@@ -91,24 +102,29 @@ func(httpRouter *HTTPRouter) Plugin() PNRet {
 }
 
 // Plugin for RUNProxy
-func(runProxy *RUNProxy) Plugin() PNRet {
+// use:
+// lastMiddles := Middles {
+// 	&RUNProxy{ CallBack: cb },
+// }
+// bulrush.Use(lastMiddles...)
+func(pn *RUNProxy) Plugin() PNRet {
 	return func(httpProxy *gin.Engine, config *Config) {
 		port := config.GetString("port",  ":8080")
-		runProxy.CallBack(nil, config)
+		pn.CallBack(nil, config)
 		err := httpProxy.Run(port)
-		runProxy.CallBack(err, config)
+		pn.CallBack(err, config)
 	}
 }
 
-// Plugin for LoggerWriter
-func(loggerWriter *LoggerWriter) Plugin() PNRet {
-	return func(router *gin.RouterGroup) {
-		router.Use(loggerWriter.LoggerWithWriter(loggerWriter.Bulrush))
-	}
-}
-
-// Plugin for gin
-func (override *Override) Plugin() PNRet {
+// Plugin for Override
+// recovery from system panic
+// use:
+// defaultMiddles := Middles {
+// 	&Recovery{},
+// 	&Override{},
+// }
+// bulrush.Use(defaultMiddles...)
+func (pn *Override) Plugin() PNRet {
 	return func(router *gin.RouterGroup, httpProxy *gin.Engine) {
 		httpProxy.Use(func(c *gin.Context) {
 			if c.Request.Method != "POST" {

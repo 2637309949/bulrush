@@ -111,7 +111,7 @@ var (
 // bulrush range these middles in order
 func (bulrush *rush) Use(items ...PNBase) Bulrush {
 	if len(items) == 0 {
-		return nil
+		return bulrush
 	}
 	bulrush.mu.Lock()
 	defer bulrush.mu.Unlock()
@@ -119,7 +119,7 @@ func (bulrush *rush) Use(items ...PNBase) Bulrush {
 		if EnableWarning {
 			log.Printf(`warning: possible Plugins memory 'leak detected. %d Plugin added. 'Use app.SetMaxPlugins(n int) to increase limit.`, len(*bulrush.middles))
 		}
-		return nil
+		return bulrush
 	}
 	*bulrush.middles = append(*bulrush.middles, items...)
 	return bulrush
@@ -138,7 +138,7 @@ func (bulrush *rush) Config(path string) Bulrush {
 // - inject should be someone that never be pushed in before.
 func (bulrush *rush) Inject(items ...interface{}) Bulrush {
 	if len(items) == 0 {
-		return nil
+		return bulrush
 	}
 	injects := funk.Filter(items, func(x interface{}) bool {
 		return !typeExists(*bulrush.injects, x)

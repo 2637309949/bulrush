@@ -29,10 +29,8 @@ func (upload *Upload) Plugin () bulrush.PNRet {
 		router.POST("/upload", func(c *gin.Context) {
 			form, err := c.MultipartForm()
 			if err != nil {
-				c.JSON(http.StatusOK, gin.H{
-					"data": 	nil,
-					"errcode": 	500,
-					"errmsg": 	err.Error(),
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"message": 	err.Error(),
 				})
 				c.Abort()
 			}
@@ -43,10 +41,8 @@ func (upload *Upload) Plugin () bulrush.PNRet {
 					uuid := utils.RandString(32)
 					uuidFileName := utils.RandString(32) + string(filename[len(filename)-len(filepath.Ext(filename)):])
 					if err := c.SaveUploadedFile(file, path.Join(upload.AssetPath, uuidFileName)); err != nil {
-						c.JSON(http.StatusOK, gin.H{
-							"data": 	nil,
-							"errcode": 	500,
-							"errmsg": 	err.Error(),
+						c.JSON(http.StatusInternalServerError, gin.H{
+							"message": 	err.Error(),
 						})
 						return
 					}
@@ -59,11 +55,7 @@ func (upload *Upload) Plugin () bulrush.PNRet {
 					rets = append(rets, ret)
 				}
 			}
-			c.JSON(http.StatusOK, gin.H{
-				"data": 	nil,
-				"errcode": 	nil,
-				"errmsg": 	rets,
-			})
+			c.JSON(http.StatusOK, rets)
 		})
 	}
 }

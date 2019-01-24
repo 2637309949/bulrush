@@ -29,9 +29,7 @@ func main() {
   app.Use(bulrush.PNQuick(func(testInject string, router *gin.RouterGroup) {
     router.GET("/", func (c *gin.Context) {
       c.JSON(http.StatusOK, gin.H{
-        "data": 	testInject,
-        "errcode": 	nil,
-        "errmsg": 	nil,
+        "message": 	testInject,
       })
     })
   }))

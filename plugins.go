@@ -39,13 +39,11 @@ type (
 // if your do not want to implement PNBase interface{}
 // use:
 // app.Use(bulrush.PNQuick(func(testInject string, router *gin.RouterGroup) {
-// 	router.GET("/bulrushApp", func (c *gin.Context) {
-// 		c.JSON(http.StatusOK, gin.H{
-// 			"data": 	testInject,
-// 			"errcode": 	nil,
-// 			"errmsg": 	nil,
+// 		router.GET("/bulrushApp", func (c *gin.Context) {
+// 			c.JSON(http.StatusOK, gin.H{
+// 			"message": 	testInject,
+//			})
 // 		})
-// 	})
 // }))
 func(pn *PNStruct) Plugin() PNRet {
 	return pn.Quick
@@ -55,13 +53,11 @@ func(pn *PNStruct) Plugin() PNRet {
 // if your do not want to implement PNBase interface{}
 // use:
 // app.Use(bulrush.PNQuick(func(testInject string, router *gin.RouterGroup) {
-// 	router.GET("/bulrushApp", func (c *gin.Context) {
-// 		c.JSON(http.StatusOK, gin.H{
-// 			"data": 	testInject,
-// 			"errcode": 	nil,
-// 			"errmsg": 	nil,
+// 		router.GET("/bulrushApp", func (c *gin.Context) {
+// 			c.JSON(http.StatusOK, gin.H{
+// 			"message": 	testInject,
+//			})
 // 		})
-// 	})
 // }))
 func PNQuick(method interface{}) PNBase {
 	pn := &PNStruct{

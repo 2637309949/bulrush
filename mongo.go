@@ -132,19 +132,15 @@ func list(mgo *Mgo) func(string) func (c *gin.Context) {
 			_range 	 := c.DefaultQuery("range", "PAGE")
 			unescapeCond, err := url.QueryUnescape(cond)
 			if err != nil {
-				c.JSON(http.StatusOK, gin.H{
-					"data": 	nil,
-					"errcode": 	500,
-					"errmsg": 	err.Error(),
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"message": 	err.Error(),
 				})
 				return
 			}
 			err = json.Unmarshal([]byte(unescapeCond), &match)
 			if err != nil {
-				c.JSON(http.StatusOK, gin.H{
-					"data": 	nil,
-					"errcode": 	500,
-					"errmsg": 	err.Error(),
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"message": 	err.Error(),
 				})
 				return
 			}
@@ -157,25 +153,19 @@ func list(mgo *Mgo) func(string) func (c *gin.Context) {
 			err = query.All(&list)
 			totalpages := math.Ceil(float64(totalrecords) / float64(size))
 			if err != nil {
-				c.JSON(http.StatusOK, gin.H{
-					"data": 	nil,
-					"errcode": 	500,
-					"errmsg": 	err.Error(),
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"message": 	err.Error(),
 				})
 				return
 			}
 			c.JSON(http.StatusOK, gin.H{
-				"data": map[string]interface{}{
-					"range": _range,
-					"page": page,
-					"totalpages": totalpages,
-					"size":  size,
-					"totalrecords": totalrecords,
-					"cond": match,
-					"list": list,
-				},
-				"errcode": 	nil,
-				"errmsg": 	nil,
+				"range": _range,
+				"page": page,
+				"totalpages": totalpages,
+				"size":  size,
+				"totalrecords": totalrecords,
+				"cond": match,
+				"list": list,
 			})
 		}
 	}
@@ -191,27 +181,19 @@ func one(mgo *Mgo) func(string) func (c *gin.Context) {
 			one := createObject(target)
 			isOj := bson.IsObjectIdHex(id)
 			if !isOj {
-				c.JSON(http.StatusOK, gin.H{
-					"data": 	nil,
-					"errcode": 	500,
-					"errmsg": 	"not a valid id",
+				c.JSON(http.StatusNotAcceptable, gin.H{
+					"message": 	"not a valid id",
 				})
 				return
 			}
 			err := Model.FindId(bson.ObjectIdHex(id)).One(one)
 			if err != nil {
-				c.JSON(http.StatusOK, gin.H{
-					"data": 	nil,
-					"errcode": 	500,
-					"errmsg": 	err.Error(),
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"message": 	err.Error(),
 				})
 				return
 			}
-			c.JSON(http.StatusOK, gin.H{
-				"data": one,
-				"errcode": 	nil,
-				"errmsg": 	nil,
-			})
+			c.JSON(http.StatusOK, one)
 		}
 	}
 }

@@ -24,9 +24,7 @@ app.Use(&bulrush.PNQuick {
     func(iStr string, router *gin.RouterGroup) {
         router.GET("/bulrushApp", func (c *gin.Context) {
             c.JSON(http.StatusOK, gin.H{
-                "data": 	iStr,
-                "errcode": 	nil,
-                "errmsg": 	nil,
+                "message": 	iStr,
             })
         })
     },

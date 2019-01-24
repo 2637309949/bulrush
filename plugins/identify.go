@@ -119,17 +119,11 @@ func (iden *Identify) Plugin() bulrush.PNRet {
 			authData, err := iden.Auth(c)
 			if authData != nil {
 				data := iden.obtainToken(authData)
-				c.JSON(http.StatusOK, gin.H{
-					"data": 	data, 
-					"errcode": 	nil,
-					"errmsg":	nil,
-				})
+				c.JSON(http.StatusOK, data)
 				c.Abort()
 			} else {
-				c.JSON(http.StatusOK, gin.H{
-					"data": 	nil,
-					"errcode": 	500,
-					"errmsg": 	err.Error(),
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"message": 	err.Error(),
 				})
 				c.Abort()
 			}
@@ -140,15 +134,11 @@ func (iden *Identify) Plugin() bulrush.PNRet {
 				result := iden.revokeToken(accessToken.(string))
 				if result {
 					c.JSON(http.StatusOK, gin.H{
-						"data": 	nil,
-						"errcode": 	nil,
-						"errmsg": 	nil,
+						"success": 	true,
 					})
 				} else {
-					c.JSON(http.StatusOK, gin.H{
-						"data": 	nil,
-						"errcode": 	500,
-						"errmsg": 	"revoke token failed, token may not exist",
+					c.JSON(http.StatusBadRequest, gin.H{
+						"message": 	"revoke token failed, token may not exist",
 					})
 				}
 			}
@@ -160,16 +150,10 @@ func (iden *Identify) Plugin() bulrush.PNRet {
 				originToken := iden.refleshToken(refreshToken.(string))
 				// reflesh and save
 				if originToken != nil {
-					c.JSON(http.StatusOK, gin.H{
-						"data": 	originToken,
-						"errcode": 	nil,
-						"errmsg": 	nil,
-					})
+					c.JSON(http.StatusOK, originToken)
 				} else {
-					c.JSON(http.StatusOK, gin.H{
-						"data": 	nil, 
-						"errcode": 	500, 
-						"errmsg": 	"reflesh token failed, token may not exist",
+					c.JSON(http.StatusBadRequest, gin.H{
+						"message": 	"reflesh token failed, token may not exist",
 					})
 				}
 			}
@@ -191,10 +175,8 @@ func (iden *Identify) Plugin() bulrush.PNRet {
 					c.Set("accessData", rawToken["extra"])
 					c.Next()
 				} else {
-					c.JSON(http.StatusOK, gin.H{
-						"data": 	nil,
-						"errcode": 	500,
-						"errmsg":   "invalid token",
+					c.JSON(http.StatusBadRequest, gin.H{
+						"message":   "invalid token",
 					})
 					c.Abort()
 				}

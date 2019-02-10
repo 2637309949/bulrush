@@ -42,7 +42,7 @@ app.Run(func(err error, config *bulrush.Config) {
     }
 })
 ```
-or
+OR
 ```go
 import (
     "github.com/2637309949/bulrush"
@@ -55,11 +55,57 @@ app.Run()
 3. For more details, Please reference to [bulrush_template](https://github.com/2637309949/bulrush_template). 
 
 ## API
-
+#### 1.Set app config
+```go
+app.Config(CONFIGPATH)
+```
+#### 2.Inject your custom injects
+All injects would be provided as plugins params next by next.  
+Init injects by Inject function
+```go
+app.Inject("bulrushApp")
+```
+Set injects by plugin ret  
+```go
+// Plugin for role
+func (role *Role) Plugin() bulrush.PNRet {
+	return func() *Role {
+		return role
+	}
+}
+```
+#### 3.Import your plugins
+```go
+app.Use(&bulrush.PNQuick {
+    func(iStr string, router *gin.RouterGroup) {
+        router.GET("/bulrushApp", func (c *gin.Context) {
+            c.JSON(http.StatusOK, gin.H{
+                "message": 	iStr,
+            })
+        })
+    },
+})
+```
+#### 4.Run app
+```go
+app.Run(func(err error, config *bulrush.Config) {
+    if err != nil {
+        panic(err)
+    } else {
+        name := config.GetString("name",  "")
+        port := config.GetString("port",  "")
+        fmt.Println("================================")
+        fmt.Printf("App: %s\n", name)
+        fmt.Printf("Listen on %s\n", port)
+        fmt.Println("================================")
+    }
+})
+```
 ## Design Philosophy
 
 ## Plugins
-
+### Built-in Plugins
+### Custom your plugins
 ## MIT License
 
 Copyright (c) 2018-2020 Double

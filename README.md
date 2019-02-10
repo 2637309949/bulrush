@@ -20,15 +20,13 @@ app := bulrush.Default()
 app.Config(CONFIGPATH)
 app.Inject("bulrushApp")
 app.Use(&models.Model{}, &routes.Route{})
-app.Use(&bulrush.PNQuick {
-    func(iStr string, router *gin.RouterGroup) {
-        router.GET("/bulrushApp", func (c *gin.Context) {
-            c.JSON(http.StatusOK, gin.H{
-                "message": 	iStr,
-            })
+app.Use(bulrush.PNQuick(func(testInject string, router *gin.RouterGroup) {
+    router.GET("/bulrushApp", func (c *gin.Context) {
+        c.JSON(http.StatusOK, gin.H{
+            "message": 	testInject,
         })
-    },
-})
+    })
+}))
 app.Run(func(err error, config *bulrush.Config) {
     if err != nil {
         panic(err)
@@ -76,15 +74,13 @@ func (role *Role) Plugin() bulrush.PNRet {
 ```
 #### 3.Import your plugins
 ```go
-app.Use(&bulrush.PNQuick {
-    func(iStr string, router *gin.RouterGroup) {
-        router.GET("/bulrushApp", func (c *gin.Context) {
-            c.JSON(http.StatusOK, gin.H{
-                "message": 	iStr,
-            })
+app.Use(bulrush.PNQuick(func(testInject string, router *gin.RouterGroup) {
+    router.GET("/bulrushApp", func (c *gin.Context) {
+        c.JSON(http.StatusOK, gin.H{
+            "message": 	testInject,
         })
-    },
-})
+    })
+}))
 ```
 #### 4.Run app
 ```go

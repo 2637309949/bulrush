@@ -24,7 +24,7 @@ type (
 	}
 )
 
-// LoadFile -
+// LoadFile reads a YAML or JSON configuration from the given filename.
 func LoadFile(path string) (*Config, error) {
 	if strings.HasSuffix(path, ".json") {
 		if cfg, err := config.ParseJsonFile(path); err == nil {
@@ -44,7 +44,7 @@ func LoadFile(path string) (*Config, error) {
 	return nil, errors.New("unsupported file type")
 }
 
-// NewCfg -
+// NewCfg create a Config instance
 func NewCfg(path string) *Config {
 	cfg, _ := LoadFile(path)
 	return cfg

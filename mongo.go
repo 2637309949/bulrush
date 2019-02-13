@@ -197,3 +197,12 @@ func one(mgo *Mgo) func(string) func (c *gin.Context) {
 		}
 	}
 }
+
+// create
+func create(mgo *Mgo) func(string) func (c *gin.Context) {
+	return func(name string) func (c *gin.Context) {
+		return func (c *gin.Context) {
+
+		}
+	}
+}

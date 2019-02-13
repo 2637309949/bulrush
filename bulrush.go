@@ -6,6 +6,10 @@
  * @desc [bulrush implement]
  */
 
+// Copyright (c) 2018-2020 Double All rights reserved.
+// Use of this source code is governed by a MIT style
+// license that can be found in the LICENSE file.
+
 package bulrush
 
 import (
@@ -52,7 +56,8 @@ type (
 		Inject(...interface{}) Bulrush
 		Run(func(error, *Config))
 	}
-	// rush implement bulrush interface
+	// Bulrush is the framework's instance, it contains the muxer, middleware and configuration settings.
+	// Create an instance of Bulrush, by using New() or Default()
 	rush struct {
 		events.EventEmmiter
 		config 				*Config
@@ -63,8 +68,8 @@ type (
 	}
 )
 
-// New returns a new blank bulrush instance
-// Bulrush is the framework's instance
+// New returns a new blank Bulrush instance without any middleware attached.
+// By default the configuration is:
 // --config json or yaml config for bulrush
 // --injects struct instance can be reflect by bulrush
 // --middles some middles for gin self
@@ -86,7 +91,7 @@ func New() Bulrush {
 	return bulrush
 }
 
-// Default return a new bulrush with some default middles
+// Default returns an Bulrush instance with the Override and Recovery middleware already attached.
 // --Recovery middle has been register in httpProxy and user router
 // --Override middles has been register in router for override req
 func Default() Bulrush {
@@ -100,7 +105,7 @@ func Default() Bulrush {
 }
 
 var (
-	// silence the compiler
+	// Silence the compiler
 	_ Bulrush = &rush{}
 	// defaultApp default rush
 	defaultApp = New()
@@ -117,7 +122,7 @@ func (bulrush *rush) Use(items ...PNBase) Bulrush {
 	defer bulrush.mu.Unlock()
 	if bulrush.maxPlugins > 0 && len(*bulrush.middles) == bulrush.maxPlugins {
 		if EnableWarning {
-			log.Printf(`warning: possible Plugins memory 'leak detected. %d Plugin added. 'Use app.SetMaxPlugins(n int) to increase limit.`, len(*bulrush.middles))
+			log.Printf(`warning: possible plugins memory 'leak detected. %d plugin added. 'Use app.SetMaxPlugins(n int) to increase limit.`, len(*bulrush.middles))
 		}
 		return bulrush
 	}
@@ -175,7 +180,8 @@ func GetMaxPlugins() int {
 	return defaultApp.GetMaxPlugins()
 }
 
-// Run app, something has been done
+// Run application, excute plugin in orderly
+// Note: this method will block the calling goroutine indefinitely unless an error happens.
 func (bulrush *rush) Run(cb func(error, *Config)) {
 	lastMiddles := Middles {
 		&RUNProxy{ CallBack: cb },

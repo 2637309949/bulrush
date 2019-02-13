@@ -51,7 +51,7 @@ app := bulrush.New()
 app.Config(CONFIGPATH)
 app.Run()
 ```
-3. For more details, Please reference to [bulrush_template](https://github.com/2637309949/bulrush_template). 
+3. For more details, Please reference to [bulrush-template](https://github.com/2637309949/bulrush-template). 
 
 ## API
 #### 1.Set app config
@@ -120,10 +120,9 @@ type (
     Override struct { PNBase }
 )
 func (pn *Override) Plugin() PNRet {
-	return func(router *gin.RouterGroup, httpProxy *gin.Engine) {
-        // TODO
-        return "inject entity"
-	}
+    return func(router *gin.RouterGroup, httpProxy *gin.Engine) {
+            return "inject entity"
+    }
 }
 ```
 ## MIT License

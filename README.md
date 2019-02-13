@@ -101,7 +101,28 @@ app.Run(func(err error, config *bulrush.Config) {
 
 ## Plugins
 ### Built-in Plugins
+- Delivery
+- Identify
+- Logger
+- Role
+- Upload
 ### Custom your plugins
+If your want to write a user-defined plugins, you should implement PNBase interface or the duck type,
+PNRet is a function, and you can get all you want through func parameter
+```go
+PNBase     interface{ Plugin() PNRet }
+```
+EXAMPLE:   
+```go
+type (
+    Override   struct { PNBase }
+)
+func (pn *Override) Plugin() PNRet {
+	return func(router *gin.RouterGroup, httpProxy *gin.Engine) {
+        // TODO
+	}
+}
+```
 ## MIT License
 
 Copyright (c) 2018-2020 Double

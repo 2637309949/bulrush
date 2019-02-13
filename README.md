@@ -111,12 +111,12 @@ If your want to write a user-defined plugins, you should implement PNBase interf
 PNRet is a function, and you can get all you want through func parameters, also you can return any type as
 `Injects` entity.
 ```go
-PNBase     interface{ Plugin() PNRet }
+PNBase interface{ Plugin() PNRet }
 ```
 EXAMPLE:   
 ```go
 type (
-    Override   struct { PNBase }
+    Override struct { PNBase }
 )
 func (pn *Override) Plugin() PNRet {
 	return func(router *gin.RouterGroup, httpProxy *gin.Engine) {

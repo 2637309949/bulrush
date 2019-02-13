@@ -108,7 +108,8 @@ app.Run(func(err error, config *bulrush.Config) {
 - Upload
 ### Custom your plugins
 If your want to write a user-defined plugins, you should implement PNBase interface or the duck type,
-PNRet is a function, and you can get all you want through func parameter
+PNRet is a function, and you can get all you want through func parameters, also you can return any type as
+`Injects` entity.
 ```go
 PNBase     interface{ Plugin() PNRet }
 ```
@@ -120,6 +121,7 @@ type (
 func (pn *Override) Plugin() PNRet {
 	return func(router *gin.RouterGroup, httpProxy *gin.Engine) {
         // TODO
+        return "inject entity"
 	}
 }
 ```

@@ -5,10 +5,9 @@
 pids
 logs
 build
-vendor
 node_modules
 
-/vendor/*
-!/vendor/vendor.json
+vendor/*
+!vendor/vendor.json
 
 /tmp/*

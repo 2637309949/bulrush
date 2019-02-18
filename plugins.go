@@ -10,29 +10,32 @@ package bulrush
 
 import (
 	"strings"
+
 	"github.com/gin-gonic/gin"
 )
 
 type (
 	// PNRet return a plugin after call Plugin func
 	// all user custom must implement this interface{}
-	PNRet      interface{}
+	PNRet interface{}
 	// PNBase Plugin interface defined
 	// all user custom must implement this interface{}
-	PNBase     interface{ Plugin() PNRet }
+	PNBase interface {
+		Plugin() PNRet
+	}
 	// PNStruct for a quickly Plugin SetUp when you dont want declare PNBase
 	// PBBase minimize implement
-	PNStruct   struct { Quick interface{} }
+	PNStruct struct{ Quick interface{} }
 	// Override Plugin
-	Override   struct { PNBase }
+	Override struct{ PNBase }
 	// Recovery system rec from panic
-	Recovery   struct { PNBase }
+	Recovery struct{ PNBase }
 	// HTTPProxy create http proxy
-	HTTPProxy  struct { PNBase }
+	HTTPProxy struct{ PNBase }
 	// HTTPRouter create http router
-	HTTPRouter struct { PNBase }
+	HTTPRouter struct{ PNBase }
 	// RUNProxy run proxy
-	RUNProxy   struct { PNBase, CallBack func(error, *Config) }
+	RUNProxy struct{ PNBase, CallBack func(error, *Config) }
 )
 
 // Plugin for PNQuick
@@ -45,7 +48,7 @@ type (
 //			})
 // 		})
 // }))
-func(pn *PNStruct) Plugin() PNRet {
+func (pn *PNStruct) Plugin() PNRet {
 	return pn.Quick
 }
 
@@ -74,7 +77,7 @@ func PNQuick(method interface{}) PNBase {
 // 	&Override{},
 // }
 // bulrush.Use(defaultMiddles...)
-func(pn *Recovery) Plugin() PNRet {
+func (pn *Recovery) Plugin() PNRet {
 	return func(httpProxy *gin.Engine, router *gin.RouterGroup) {
 		httpProxy.Use(gin.Recovery())
 		router.Use(gin.Recovery())
@@ -82,7 +85,7 @@ func(pn *Recovery) Plugin() PNRet {
 }
 
 // Plugin for HTTPProxy
-func(pn *HTTPProxy) Plugin() PNRet {
+func (pn *HTTPProxy) Plugin() PNRet {
 	return func() *gin.Engine {
 		proxy := gin.New()
 		return proxy
@@ -90,9 +93,9 @@ func(pn *HTTPProxy) Plugin() PNRet {
 }
 
 // Plugin for HTTPRouter
-func(pn *HTTPRouter) Plugin() PNRet {
+func (pn *HTTPRouter) Plugin() PNRet {
 	return func(httpProxy *gin.Engine, config *Config) *gin.RouterGroup {
-		router := httpProxy.Group(config.GetString("prefix","/api/v1"))
+		router := httpProxy.Group(config.GetString("prefix", "/api/v1"))
 		return router
 	}
 }
@@ -103,9 +106,9 @@ func(pn *HTTPRouter) Plugin() PNRet {
 // 	&RUNProxy{ CallBack: cb },
 // }
 // bulrush.Use(lastMiddles...)
-func(pn *RUNProxy) Plugin() PNRet {
+func (pn *RUNProxy) Plugin() PNRet {
 	return func(httpProxy *gin.Engine, config *Config) {
-		port := config.GetString("port",  ":8080")
+		port := config.GetString("port", ":8080")
 		pn.CallBack(nil, config)
 		err := httpProxy.Run(port)
 		pn.CallBack(err, config)
@@ -130,7 +133,7 @@ func (pn *Override) Plugin() PNRet {
 				methods := [3]string{"DELETE", "PUT", "PATCH"}
 				if method != "" {
 					for _, target := range methods {
-						if(target == strings.ToUpper(method)) {
+						if target == strings.ToUpper(method) {
 							c.Request.Method = target
 							httpProxy.HandleContext(c)
 							break
@@ -147,7 +150,7 @@ func (pn *Override) Plugin() PNRet {
 				methods := [3]string{"DELETE", "PUT", "PATCH"}
 				if method != "" {
 					for _, target := range methods {
-						if(target == strings.ToUpper(method)) {
+						if target == strings.ToUpper(method) {
 							c.Request.Method = target
 							httpProxy.HandleContext(c)
 							break

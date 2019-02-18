@@ -1,12 +1,12 @@
-package utils
+package bulrush
 
 import (
-	"math/rand"
 	"fmt"
+	"math/rand"
 )
 
 // Some get or a default value
-func Some(target interface{}, initValue interface{}) interface{}{
+func Some(target interface{}, initValue interface{}) interface{} {
 	if target != nil && target != "" && target != 0 {
 		return target
 	}
@@ -26,7 +26,6 @@ func Find(arrs []interface{}, matcher func(interface{}) bool) interface{} {
 	return target
 }
 
-
 // ToStrArray -
 func ToStrArray(t []interface{}) []string {
 	s := make([]string, len(t))
@@ -44,7 +43,6 @@ func ToIntArray(t []interface{}) []int {
 	}
 	return s
 }
-
 
 // RandString -
 func RandString(n int) string {
@@ -67,11 +65,11 @@ func RightV(left interface{}, right interface{}) interface{} {
 }
 
 // LeftOkV -
-func LeftOkV(left interface{}, right... bool) interface{} {
+func LeftOkV(left interface{}, right ...bool) interface{} {
 	var r = true
-	if len(right) != 0{
+	if len(right) != 0 {
 		r = right[0]
-	} else if(left == "" || left == nil || left == 0) {
+	} else if left == "" || left == nil || left == 0 {
 		r = false
 	}
 	if r {

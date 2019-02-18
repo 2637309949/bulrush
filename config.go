@@ -9,11 +9,11 @@
 package bulrush
 
 import (
-	"time"
 	"errors"
 	"strings"
+	"time"
+
 	"github.com/olebedev/config"
-	"github.com/2637309949/bulrush/utils"
 )
 
 type (
@@ -52,12 +52,12 @@ func NewCfg(path string) *Config {
 
 // GetString -
 func (cfg *Config) GetString(key string, init string) string {
-	return utils.Some(utils.LeftV(cfg.String(key)), init).(string)
+	return Some(LeftV(cfg.String(key)), init).(string)
 }
 
 // GetInt -
 func (cfg *Config) GetInt(key string, init int) int {
-	return utils.Some(utils.LeftV(cfg.Int(key)), init).(int)
+	return Some(LeftV(cfg.Int(key)), init).(int)
 }
 
 // GetDurationFromSecInt -
@@ -77,24 +77,23 @@ func (cfg *Config) GetDurationFromHourInt(key string, init int) time.Duration {
 
 // GetBool -
 func (cfg *Config) GetBool(key string, init bool) bool {
-	return utils.Some(utils.LeftV(cfg.Bool(key)), init).(bool)
+	return Some(LeftV(cfg.Bool(key)), init).(bool)
 }
 
 // GetStrList -
 func (cfg *Config) GetStrList(key string, init []string) []string {
-	value := utils.LeftV(cfg.List(key)).([]interface{})
+	value := LeftV(cfg.List(key)).([]interface{})
 	if value == nil {
 		return init
 	}
-	return utils.ToStrArray(value)
+	return ToStrArray(value)
 }
 
 // GetListInt -
 func (cfg *Config) GetListInt(key string, init []int) []int {
-	value := utils.LeftV(cfg.List(key)).([]interface{})
+	value := LeftV(cfg.List(key)).([]interface{})
 	if value == nil {
 		return init
 	}
-	return utils.ToIntArray(value)
+	return ToIntArray(value)
 }
-

@@ -13,12 +13,14 @@
 package bulrush
 
 import (
+	"fmt"
 	"log"
-	"sync"
 	"reflect"
+	"sync"
+
 	"github.com/gin-gonic/gin"
-	"github.com/thoas/go-funk"
 	"github.com/kataras/go-events"
+	"github.com/thoas/go-funk"
 )
 
 const (
@@ -60,11 +62,11 @@ type (
 	// Create an instance of Bulrush, by using New() or Default()
 	rush struct {
 		events.EventEmmiter
-		config 				*Config
-		middles 			*Middles
-		injects 			*Injects
-		maxPlugins  		int
-		mu          		sync.Mutex
+		config     *Config
+		middles    *Middles
+		injects    *Injects
+		maxPlugins int
+		mu         sync.Mutex
 	}
 )
 
@@ -77,13 +79,13 @@ func New() Bulrush {
 	middles := make(Middles, 0)
 	injects := make(Injects, 0)
 	emmiter := events.New()
-	bulrush := &rush {
+	bulrush := &rush{
 		EventEmmiter: emmiter,
-		middles: 	  &middles,
-		injects: 	  &injects,
+		middles:      &middles,
+		injects:      &injects,
 		maxPlugins:   DefaultMaxPlugins,
 	}
-	defaultMiddles := Middles {
+	defaultMiddles := Middles{
 		&HTTPProxy{},
 		&HTTPRouter{},
 	}
@@ -96,7 +98,7 @@ func New() Bulrush {
 // --Override middles has been register in router for override req
 func Default() Bulrush {
 	bulrush := defaultApp
-	defaultMiddles := Middles {
+	defaultMiddles := Middles{
 		&Recovery{},
 		&Override{},
 	}
@@ -134,7 +136,7 @@ func (bulrush *rush) Use(items ...PNBase) Bulrush {
 // currently, it support loading file that end with .json or .yarm
 func (bulrush *rush) Config(path string) Bulrush {
 	bulrush.config = NewCfg(path)
-	gin.SetMode(bulrush.config.GetString("mode",  DefaultMode))
+	gin.SetMode(bulrush.config.GetString("mode", DefaultMode))
 	bulrush.Inject(bulrush.config)
 	return bulrush
 }
@@ -147,7 +149,7 @@ func (bulrush *rush) Inject(items ...interface{}) Bulrush {
 	}
 	injects := funk.Filter(items, func(x interface{}) bool {
 		return !typeExists(*bulrush.injects, x)
-	}).([] interface{})
+	}).([]interface{})
 	*bulrush.injects = append(*bulrush.injects, injects...)
 	return bulrush
 }
@@ -170,7 +172,7 @@ func SetMaxPlugins(n int) {
 	defaultApp.SetMaxPlugins(n)
 }
 
-func (bulrush *rush) GetMaxPlugins() int{
+func (bulrush *rush) GetMaxPlugins() int {
 	return bulrush.maxPlugins
 }
 
@@ -183,21 +185,23 @@ func GetMaxPlugins() int {
 // Run application, excute plugin in orderly
 // Note: this method will block the calling goroutine indefinitely unless an error happens.
 func (bulrush *rush) Run(cb func(error, *Config)) {
-	lastMiddles := Middles {
-		&RUNProxy{ CallBack: cb },
+	lastMiddles := Middles{
+		&RUNProxy{CallBack: cb},
 	}
 	bulrush.Use(lastMiddles...)
 	// unpack plugin to middles
 	plugins := funk.Map(*bulrush.middles, func(x PNBase) PNRet {
 		return x.Plugin()
-	}).([] PNRet)
+	}).([]PNRet)
 	// filter middles
-	plugins  = funk.Filter(plugins, func(x PNRet) bool {
+	plugins = funk.Filter(plugins, func(x PNRet) bool {
 		return reflect.Func == reflect.TypeOf(x).Kind()
-	}).([] PNRet)
+	}).([]PNRet)
+
 	// run all middles
 	funk.ForEach(plugins, func(x interface{}) {
+		fmt.Print(x)
 		rs := reflectMethodAndCall(x, *bulrush.injects)
-		bulrush.Inject(rs.([] interface{})...)
+		bulrush.Inject(rs.([]interface{})...)
 	})
 }

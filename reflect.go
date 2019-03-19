@@ -82,7 +82,7 @@ func reflectMethodAndCall(target interface{}, params []interface{}) interface{} 
 	panic(fmt.Errorf("Invalid method in reflectMethodAndCall: %s in inject", methodName))
 }
 
-// typeExists -
+// typeExists check if type exists by reflect
 func typeExists(injects []interface{}, target interface{}) bool {
 	ptype := reflect.TypeOf(target)
 	r := funk.Find(injects, func(x interface{}) bool {
@@ -94,7 +94,7 @@ func typeExists(injects []interface{}, target interface{}) bool {
 	return false
 }
 
-// createSlice -
+// createSlice create array from target instance
 func createSlice(target interface{}) interface{} {
 	tagetType := reflect.TypeOf(target)
 	if tagetType.Kind() == reflect.Ptr {
@@ -104,7 +104,7 @@ func createSlice(target interface{}) interface{} {
 	return targetSlice
 }
 
-// createObject -
+// createObject create object from target instance
 func createObject(target interface{}) interface{} {
 	tagetType := reflect.TypeOf(target)
 	if tagetType.Kind() == reflect.Ptr {

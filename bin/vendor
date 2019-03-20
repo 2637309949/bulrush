@@ -1,0 +1,13 @@
+govendor init
+
+govendor add +e 
+
+govendor add code.byted.org/gopkg/mosaic
+
+govendor update code.byted.org/gopkg/mosaic
+
+govendor update +external
+
+govendor install +local
+
+govendor test +local

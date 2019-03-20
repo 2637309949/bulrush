@@ -1,6 +1,129 @@
 {
 	"comment": "",
 	"ignore": "test",
-	"package": [],
+	"package": [
+		{
+			"checksumSHA1": "BhMowD2DIKSd9qq8Pzh7Y3mh2/w=",
+			"path": "github.com/gin-contrib/sse",
+			"revision": "22d885f9ecc78bf4ee5d72b937e4bbcdc58e8cae",
+			"revisionTime": "2017-01-09T09:34:21Z"
+		},
+		{
+			"checksumSHA1": "mEw/6SbQ3IUrQjTy4Aau7s3pSd8=",
+			"path": "github.com/gin-gonic/gin",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "7V7gIifyhRRucnUhbw7LZfSRPMs=",
+			"path": "github.com/gin-gonic/gin/binding",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "Y8Vu2NT4c2ve963fedBxoJyiU6s=",
+			"path": "github.com/gin-gonic/gin/internal/json",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "afLqBfX9SeIP6eeTZb3WwdTFaOo=",
+			"path": "github.com/gin-gonic/gin/render",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "mK1ly7aFRjcljbB3BhHbUgtCAXk=",
+			"path": "github.com/golang/protobuf/proto",
+			"revision": "882cf97a83ad205fd22af574246a3bc647d7a7d2",
+			"revisionTime": "2018-11-20T00:18:57Z"
+		},
+		{
+			"checksumSHA1": "ZOHJwyrlDeqI9OUXEJ8PmDC72Bo=",
+			"path": "github.com/json-iterator/go",
+			"revision": "d05f387f50c0c406889b62cb5ec51c76a64d89ee",
+			"revisionTime": "2018-11-12T06:45:56Z"
+		},
+		{
+			"checksumSHA1": "DmWCnZc/you6WJ/bTNV15YlzwEk=",
+			"path": "github.com/kataras/go-events",
+			"revision": "17d67be645c3267685c0ed5a3538645004b46f21",
+			"revisionTime": "2017-06-04T00:44:42Z"
+		},
+		{
+			"checksumSHA1": "LkbotKu3JQxXEZZ9P40yhnFOycY=",
+			"path": "github.com/mattn/go-isatty",
+			"revision": "3fb116b820352b7f0c281308a4d6250c22d94e27",
+			"revisionTime": "2018-08-30T10:17:45Z"
+		},
+		{
+			"checksumSHA1": "R7UwDjqiaLRoaEanrANwPOfbgN4=",
+			"path": "github.com/modern-go/concurrent",
+			"revision": "bacd9c7ef1dd9b15be4a9909b8ac7a4e313eec94",
+			"revisionTime": "2018-03-06T01:26:44Z"
+		},
+		{
+			"checksumSHA1": "SnVnj87vJdiHFJUcwdL03T0ZMhI=",
+			"path": "github.com/modern-go/reflect2",
+			"revision": "94122c33edd36123c84d5368cfb2b69df93a0ec8",
+			"revisionTime": "2018-07-18T01:23:57Z"
+		},
+		{
+			"checksumSHA1": "0ldI7NDZCAxTmrFTLOSBzyBIUFA=",
+			"path": "github.com/olebedev/config",
+			"revision": "57f804269e64d41bfe46efb76232c47f49d40902",
+			"revisionTime": "2018-09-10T15:57:17Z"
+		},
+		{
+			"checksumSHA1": "iog1VO670Vc7gjHQpaoDkcpDZDw=",
+			"path": "github.com/thoas/go-funk",
+			"revision": "fbae87fb5b5cdb35c9682d11c420061cf41268a9",
+			"revisionTime": "2018-10-20T16:45:46Z"
+		},
+		{
+			"checksumSHA1": "hnh5o4MpoDvGj3JLGUvOZ+K4UnI=",
+			"path": "github.com/ugorji/go/codec",
+			"revision": "0165389f8c9118d6cbc1d7e120fda75c692827de",
+			"revisionTime": "2018-11-19T22:07:52Z"
+		},
+		{
+			"checksumSHA1": "Pvqkv8ZC1On7qQh9638ZfeS535w=",
+			"path": "golang.org/x/lint",
+			"revision": "c67002cb31c3a748b7688c27f20d8358b4193582",
+			"revisionTime": "2018-10-11T21:19:06Z"
+		},
+		{
+			"checksumSHA1": "4VxWcI7sP7Z+p3KrFPxCvi0VujY=",
+			"path": "golang.org/x/lint/golint",
+			"revision": "c67002cb31c3a748b7688c27f20d8358b4193582",
+			"revisionTime": "2018-10-11T21:19:06Z"
+		},
+		{
+			"checksumSHA1": "LHHkpIoYHpQiBc7y0JaTmf3VbVQ=",
+			"path": "golang.org/x/tools/go/ast/astutil",
+			"revision": "8dcb7bc8c7fe0a895995c76c721cef79419ac98a",
+			"revisionTime": "2019-02-13T16:43:12Z"
+		},
+		{
+			"checksumSHA1": "PHHLaKUlRnuGDhvOJZAXt25Smk0=",
+			"path": "golang.org/x/tools/go/gcexportdata",
+			"revision": "8dcb7bc8c7fe0a895995c76c721cef79419ac98a",
+			"revisionTime": "2019-02-13T16:43:12Z"
+		},
+		{
+			"checksumSHA1": "cEqToMNtE7HuQ2rmaDHxLjz4Fg0=",
+			"path": "golang.org/x/tools/go/internal/gcimporter",
+			"revision": "8dcb7bc8c7fe0a895995c76c721cef79419ac98a",
+			"revisionTime": "2019-02-13T16:43:12Z"
+		},
+		{
+			"checksumSHA1": "q190bL03wQok3wVwYmMub2XhOiU=",
+			"path": "gopkg.in/go-playground/validator.v8",
+			"revision": "5f1438d3fca68893a817e4a66806cea46a9e4ebf",
+			"revisionTime": "2017-07-30T05:02:35Z"
+		},
+		{
+			"checksumSHA1": "d3jYBfW+YmOxsa5o8m6XyywVbIo=",
+			"path": "gopkg.in/yaml.v2",
+			"revision": "5420a8b6744d3b0345ab293f6fcba19c978f1183",
+			"revisionTime": "2018-03-28T19:50:20Z"
+		}
+	],
 	"rootPath": "github.com/2637309949/bulrush"
 }

@@ -9,6 +9,7 @@
 package bulrush
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -62,21 +63,14 @@ func (pn *PNStruct) Plugin() PNRet {
 //			})
 // 		})
 // }))
-func PNQuick(method interface{}) PNBase {
-	pn := &PNStruct{
-		Quick: method,
+func PNQuick(q interface{}) PNBase {
+	return &PNStruct{
+		Quick: q,
 	}
-	return pn
 }
 
 // Plugin for Recovery
 // recovery from system panic
-// use:
-// defaultMiddles := Middles {
-// 	&Recovery{},
-// 	&Override{},
-// }
-// bulrush.Use(defaultMiddles...)
 func (pn *Recovery) Plugin() PNRet {
 	return func(httpProxy *gin.Engine, router *gin.RouterGroup) {
 		httpProxy.Use(gin.Recovery())
@@ -87,31 +81,34 @@ func (pn *Recovery) Plugin() PNRet {
 // Plugin for HTTPProxy
 func (pn *HTTPProxy) Plugin() PNRet {
 	return func() *gin.Engine {
-		proxy := gin.New()
-		return proxy
+		return gin.New()
 	}
 }
 
-// Plugin for HTTPRouter
+// Plugin for create http router
 func (pn *HTTPRouter) Plugin() PNRet {
 	return func(httpProxy *gin.Engine, config *Config) *gin.RouterGroup {
-		router := httpProxy.Group(config.GetString("prefix", "/api/v1"))
-		return router
+		return httpProxy.Group(config.GetString("prefix", "/api/v1"))
 	}
 }
 
 // Plugin for RUNProxy
 // use:
 // lastMiddles := Middles {
-// 	&RUNProxy{ CallBack: cb },
+// 		&RUNProxy{ CallBack: cb },
 // }
 // bulrush.Use(lastMiddles...)
 func (pn *RUNProxy) Plugin() PNRet {
 	return func(httpProxy *gin.Engine, config *Config) {
+		var err error
+		defer func() { pn.CallBack(err, config) }()
 		port := config.GetString("port", ":8080")
+		port = strings.TrimSpace(port)
+		if prefix := port[:1]; prefix != ":" {
+			port = fmt.Sprintf(":%s", port)
+		}
 		pn.CallBack(nil, config)
-		err := httpProxy.Run(port)
-		pn.CallBack(err, config)
+		err = httpProxy.Run(port)
 	}
 }
 
@@ -119,8 +116,8 @@ func (pn *RUNProxy) Plugin() PNRet {
 // recovery from system panic
 // use:
 // defaultMiddles := Middles {
-// 	&Recovery{},
-// 	&Override{},
+// 		&Recovery{},
+// 		&Override{},
 // }
 // bulrush.Use(defaultMiddles...)
 func (pn *Override) Plugin() PNRet {

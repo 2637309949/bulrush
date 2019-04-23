@@ -184,9 +184,9 @@ func GetMaxPlugins() int {
 
 // Run application, excute plugin in orderly
 // Note: this method will block the calling goroutine indefinitely unless an error happens.
-func (bulrush *rush) Run(cb func(error, *Config)) {
+func (bulrush *rush) Run(cbFunc func(error, *Config)) {
 	lastMiddles := Middles{
-		&RUNProxy{CallBack: cb},
+		&RUNProxy{CallBack: cbFunc},
 	}
 	bulrush.Use(lastMiddles...)
 	// unpack plugin to middles
@@ -197,7 +197,6 @@ func (bulrush *rush) Run(cb func(error, *Config)) {
 	plugins = funk.Filter(plugins, func(x PNRet) bool {
 		return reflect.Func == reflect.TypeOf(x).Kind()
 	}).([]PNRet)
-
 	// run all middles
 	funk.ForEach(plugins, func(x interface{}) {
 		fmt.Print(x)

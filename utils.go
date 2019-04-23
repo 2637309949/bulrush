@@ -78,7 +78,7 @@ func LeftOkV(left interface{}, right ...bool) interface{} {
 	return nil
 }
 
-// LeftSV -
+// LeftSV left value or panic
 func LeftSV(left interface{}, right error) interface{} {
 	if right != nil {
 		panic(right)

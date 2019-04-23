@@ -17,7 +17,8 @@ import (
 )
 
 type (
-	// Config -
+	// Config base on olebedev/config
+	// Provide some useful tools
 	Config struct {
 		*config.Config
 		Path string
@@ -53,37 +54,37 @@ func NewCfg(path string) *Config {
 	return cfg
 }
 
-// GetString -
+// GetString get string or from default value
 func (cfg *Config) GetString(key string, init string) string {
 	return Some(LeftV(cfg.String(key)), init).(string)
 }
 
-// GetInt -
+// GetInt get int or from default value
 func (cfg *Config) GetInt(key string, init int) int {
 	return Some(LeftV(cfg.Int(key)), init).(int)
 }
 
-// GetDurationFromSecInt -
+// GetDurationFromSecInt get duration or from default value
 func (cfg *Config) GetDurationFromSecInt(key string, init int) time.Duration {
 	return time.Duration(cfg.GetInt(key, init)) * time.Second
 }
 
-// GetDurationFromMinInt -
+// GetDurationFromMinInt get duration or from default value
 func (cfg *Config) GetDurationFromMinInt(key string, init int) time.Duration {
 	return time.Duration(cfg.GetInt(key, init)) * time.Minute
 }
 
-// GetDurationFromHourInt -
+// GetDurationFromHourInt get duration or from default value
 func (cfg *Config) GetDurationFromHourInt(key string, init int) time.Duration {
 	return time.Duration(cfg.GetInt(key, init)) * time.Hour
 }
 
-// GetBool -
+// GetBool get bool or from default value
 func (cfg *Config) GetBool(key string, init bool) bool {
 	return Some(LeftV(cfg.Bool(key)), init).(bool)
 }
 
-// GetStrList -
+// GetStrList get list or from default value
 func (cfg *Config) GetStrList(key string, init []string) []string {
 	value := LeftV(cfg.List(key)).([]interface{})
 	if value == nil {
@@ -92,7 +93,7 @@ func (cfg *Config) GetStrList(key string, init []string) []string {
 	return ToStrArray(value)
 }
 
-// GetListInt -
+// GetListInt get list or from default value
 func (cfg *Config) GetListInt(key string, init []int) []int {
 	value := LeftV(cfg.List(key)).([]interface{})
 	if value == nil {

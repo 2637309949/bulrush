@@ -6,11 +6,11 @@ import (
 )
 
 // Some get or a default value
-func Some(target interface{}, initValue interface{}) interface{} {
-	if target != nil && target != "" && target != 0 {
-		return target
+func Some(t interface{}, i interface{}) interface{} {
+	if t != nil && t != "" && t != 0 {
+		return t
 	}
-	return initValue
+	return i
 }
 
 // Find element in arrs with some match condition
@@ -44,7 +44,7 @@ func ToIntArray(t []interface{}) []int {
 	return s
 }
 
-// RandString -
+// RandString gen string
 func RandString(n int) string {
 	const seeds = "abcdefghijklmnopqrstuvwxyz1234567890"
 	bytes := make([]byte, n)

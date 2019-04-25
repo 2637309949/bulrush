@@ -21,23 +21,23 @@ import (
 // - injects contains injectObject
 // - ptrDyn `inject params` that be about to be injected
 func reflectObjectAndCall(target interface{}, params []interface{}) {
-	getType := reflect.TypeOf(target)
-	getValue := reflect.ValueOf(target)
+	objType := reflect.TypeOf(target)
+	objValue := reflect.ValueOf(target)
 
-	if getValue.Kind() != reflect.Ptr {
+	if objValue.Kind() != reflect.Ptr {
 		panic("target must be a ptr")
 	}
-	for i := 0; i < getType.NumMethod(); i++ {
+	for i := 0; i < objType.NumMethod(); i++ {
 		inputs := make([]reflect.Value, 0)
-		methodType := getType.Method(i)
-		methodName := methodType.Name
-		method := getValue.Method(i)
-		numIn := methodType.Type.NumIn()
-		if !strings.HasPrefix(methodName, "Inject") {
+		funcType := objType.Method(i)
+		funcName := funcType.Name
+		method := objValue.Method(i)
+		numIn := funcType.Type.NumIn()
+		if !strings.HasPrefix(funcName, "Inject") {
 			continue
 		}
 		for index := 1; index < numIn; index++ {
-			ptype := methodType.Type.In(index)
+			ptype := funcType.Type.In(index)
 			r := funk.Find(params, func(x interface{}) bool {
 				return ptype == reflect.TypeOf(x)
 			})
@@ -48,21 +48,20 @@ func reflectObjectAndCall(target interface{}, params []interface{}) {
 		if method.IsValid() && (numIn == len(inputs)) {
 			method.Call(inputs)
 		} else {
-			panic(fmt.Errorf("Invalid method in reflectObjectAndCall: %s in inject", methodName))
+			panic(fmt.Errorf("Invalid method in reflectObjectAndCall: %s in inject", funcName))
 		}
 	}
 }
 
-// reflectMethodAndCall
-// call method by reflect
+// reflectMethodAndCall call method by reflect
 func reflectMethodAndCall(target interface{}, params []interface{}) interface{} {
-	getType := reflect.TypeOf(target)
-	methodName := getType.Name()
-	getValue := reflect.ValueOf(target)
+	funcType := reflect.TypeOf(target)
+	funcName := funcType.Name()
+	funcValue := reflect.ValueOf(target)
 	inputs := make([]reflect.Value, 0)
-	numIn := getType.NumIn()
+	numIn := funcType.NumIn()
 	for index := 0; index < numIn; index++ {
-		ptype := getType.In(index)
+		ptype := funcType.In(index)
 		r := funk.Find(params, func(x interface{}) bool {
 			return ptype == reflect.TypeOf(x)
 		})
@@ -71,45 +70,59 @@ func reflectMethodAndCall(target interface{}, params []interface{}) interface{} 
 		}
 	}
 
-	if getValue.IsValid() && (numIn == len(inputs)) {
-		rs := getValue.Call(inputs)
+	if funcValue.IsValid() && (numIn == len(inputs)) {
+		rs := funcValue.Call(inputs)
 		return funk.Map(funk.Filter(rs, func(v reflect.Value) bool {
 			return v.IsValid()
 		}), func(v reflect.Value) interface{} {
 			return v.Interface()
 		})
 	}
-	panic(fmt.Errorf("Invalid method in reflectMethodAndCall: %s in inject", methodName))
+	panic(fmt.Errorf("Invalid method in reflectMethodAndCall: %s in inject", funcName))
 }
 
-// typeExists check if type exists by reflect
-func typeExists(injects []interface{}, target interface{}) bool {
-	ptype := reflect.TypeOf(target)
-	r := funk.Find(injects, func(x interface{}) bool {
-		return ptype == reflect.TypeOf(x)
-	})
-	if r != nil {
-		return true
+// IsIteratee returns if the argument is an iteratee.
+func IsIteratee(in interface{}) bool {
+	arrType := reflect.TypeOf(in)
+	kind := arrType.Kind()
+	return kind == reflect.Array || kind == reflect.Slice || kind == reflect.Map
+}
+
+// Find iterates over elements of collection, returning predicate returns truthy for.
+func typeExists(arr interface{}, target interface{}) bool {
+	if !IsIteratee(arr) {
+		panic("First parameter must be an iteratee")
+	}
+	ptype := reflect.ValueOf(target).Type()
+
+	arrValue := reflect.ValueOf(arr)
+
+	for i := 0; i < arrValue.Len(); i++ {
+		iEle := arrValue.Index(i).Interface()
+		iType := reflect.ValueOf(iEle).Type()
+		if iType == ptype {
+			return true
+		}
 	}
 	return false
 }
 
-// createSlice create array from target instance
+// createSlice create array from target type
 func createSlice(target interface{}) interface{} {
-	tagetType := reflect.TypeOf(target)
-	if tagetType.Kind() == reflect.Ptr {
-		tagetType = tagetType.Elem()
+	tType := reflect.ValueOf(target).Type()
+	if tType.Kind() == reflect.Ptr {
+		tType = tType.Elem()
 	}
-	targetSlice := reflect.MakeSlice(reflect.SliceOf(tagetType), 0, 0).Interface()
-	return targetSlice
+	tSlice := reflect.MakeSlice(reflect.SliceOf(tType), 0, 0).Interface()
+	return tSlice
 }
 
-// createObject create object from target instance
+// createObject create object from target type
 func createObject(target interface{}) interface{} {
-	tagetType := reflect.TypeOf(target)
-	if tagetType.Kind() == reflect.Ptr {
-		tagetType = tagetType.Elem()
+	tType := reflect.ValueOf(target).Type()
+	if tType.Kind() == reflect.Ptr {
+		tType = tType.Elem()
 	}
-	targetObject := reflect.New(tagetType).Interface()
-	return targetObject
+	tObject := reflect.New(tType).Interface()
+	return tObject
 }

@@ -60,6 +60,7 @@ func reflectMethodAndCall(target interface{}, params []interface{}) interface{} 
 	funcValue := reflect.ValueOf(target)
 	inputs := make([]reflect.Value, 0)
 	numIn := funcType.NumIn()
+
 	for index := 0; index < numIn; index++ {
 		ptype := funcType.In(index)
 		r := funk.Find(params, func(x interface{}) bool {

@@ -102,11 +102,14 @@ app.Run(func(err error, config *bulrush.Config) {
 
 ## Plugins
 ### Built-in Plugins
-- Delivery
-- Identify
-- Logger
-- Role
-- Upload
+- [bulrush-addition](https://github.com/2637309949/bulrush-addition)
+- [bulrush-captcha](https://github.com/2637309949/bulrush-captcha)
+- [bulrush-delivery](https://github.com/2637309949/bulrush-delivery)
+- [bulrush-identify](https://github.com/2637309949/bulrush-identify)
+- [bulrush-logger](https://github.com/2637309949/bulrush-logger)
+- [bulrush-proxy](https://github.com/2637309949/bulrush-proxy)
+- [bulrush-role](https://github.com/2637309949/bulrush-role)
+- [bulrush-upload](https://github.com/2637309949/bulrush-upload)
 ### Custom your plugins
 If your want to write a user-defined plugins, you should implement PNBase interface or the duck type,
 PNRet is a function, and you can get all you want through func parameters, also you can return any type as

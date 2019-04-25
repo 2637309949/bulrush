@@ -24,20 +24,11 @@ type (
 	PNBase interface {
 		Plugin() PNRet
 	}
-	// PNStruct for a quickly Plugin SetUp when you dont want declare PNBase
-	// PBBase minimize implement
-	PNStruct struct{ Quick interface{} }
-	// Override Plugin
-	Override struct{ PNBase }
-	// Recovery system rec from panic
-	Recovery struct{ PNBase }
-	// HTTPProxy create http proxy
-	HTTPProxy struct{ PNBase }
-	// HTTPRouter create http router
-	HTTPRouter struct{ PNBase }
-	// RUNProxy run proxy
-	RUNProxy struct{ PNBase, CallBack func(error, *Config) }
 )
+
+// PNStruct for a quickly Plugin SetUp when you dont want declare PNBase
+// PBBase minimize implement
+type PNStruct struct{ Quick interface{} }
 
 // Plugin for PNQuick
 // if your do not want to implement PNBase interface{}
@@ -69,14 +60,19 @@ func PNQuick(q interface{}) PNBase {
 	}
 }
 
+// Recovery system rec from panic
+type Recovery struct{ PNBase }
+
 // Plugin for Recovery
-// recovery from system panic
 func (pn *Recovery) Plugin() PNRet {
 	return func(httpProxy *gin.Engine, router *gin.RouterGroup) {
 		httpProxy.Use(gin.Recovery())
 		router.Use(gin.Recovery())
 	}
 }
+
+// HTTPProxy create http proxy
+type HTTPProxy struct{ PNBase }
 
 // Plugin for HTTPProxy
 func (pn *HTTPProxy) Plugin() PNRet {
@@ -85,6 +81,9 @@ func (pn *HTTPProxy) Plugin() PNRet {
 	}
 }
 
+// HTTPRouter create http router
+type HTTPRouter struct{ PNBase }
+
 // Plugin for create http router
 func (pn *HTTPRouter) Plugin() PNRet {
 	return func(httpProxy *gin.Engine, config *Config) *gin.RouterGroup {
@@ -92,12 +91,10 @@ func (pn *HTTPRouter) Plugin() PNRet {
 	}
 }
 
+// RUNProxy run HttpProxy
+type RUNProxy struct{ PNBase, CallBack func(error, *Config) }
+
 // Plugin for RUNProxy
-// use:
-// lastMiddles := Middles {
-// 		&RUNProxy{ CallBack: cb },
-// }
-// bulrush.Use(lastMiddles...)
 func (pn *RUNProxy) Plugin() PNRet {
 	return func(httpProxy *gin.Engine, config *Config) {
 		var err error
@@ -112,17 +109,13 @@ func (pn *RUNProxy) Plugin() PNRet {
 	}
 }
 
+// Override http methods
+type Override struct{ PNBase }
+
 // Plugin for Override
-// recovery from system panic
-// use:
-// defaultMiddles := Middles {
-// 		&Recovery{},
-// 		&Override{},
-// }
-// bulrush.Use(defaultMiddles...)
 func (pn *Override) Plugin() PNRet {
 	return func(router *gin.RouterGroup, httpProxy *gin.Engine) {
-		httpProxy.Use(func(c *gin.Context) {
+		handleContext := func(c *gin.Context) {
 			if c.Request.Method != "POST" {
 				c.Next()
 			} else {
@@ -138,23 +131,8 @@ func (pn *Override) Plugin() PNRet {
 					}
 				}
 			}
-		})
-		router.Use(func(c *gin.Context) {
-			if c.Request.Method != "POST" {
-				c.Next()
-			} else {
-				method := c.PostForm("_method")
-				methods := [3]string{"DELETE", "PUT", "PATCH"}
-				if method != "" {
-					for _, target := range methods {
-						if target == strings.ToUpper(method) {
-							c.Request.Method = target
-							httpProxy.HandleContext(c)
-							break
-						}
-					}
-				}
-			}
-		})
+		}
+		httpProxy.Use(handleContext)
+		router.Use(handleContext)
 	}
 }

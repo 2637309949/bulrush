@@ -47,9 +47,9 @@ func LoadFile(path string) (*Config, error) {
 
 // NewCfg create a Config instance
 func NewCfg(path string) *Config {
-	cfg, error := LoadFile(path)
-	if error != nil {
-		panic(error)
+	cfg, err := LoadFile(path)
+	if err != nil {
+		panic(err)
 	}
 	return cfg
 }

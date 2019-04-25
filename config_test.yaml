@@ -1,0 +1,32 @@
+name: 'config_test'
+port: '8080'
+prefix: '/api/v1'
+mode: 'debug'
+logs: '/logs'
+mongo:
+  addrs:
+    - '127.0.0.1:27017'
+  opts:
+    timeout: 60
+    database: 'test'
+    replicaSetName: ''
+    source: ''
+    service: ''
+    serviceHost: ''
+    mechanism: ''
+    username: ''
+    password: ''
+    poolLimit: 0
+    poolTimeout: 0
+    readTimeout: 0
+    writeTimeout: 0
+    appName: ''
+    failFast: false
+    direct: false
+    minPoolSize: 0
+    maxIdleTimeMS: 0
+redis:
+  addrs: '127.0.0.1:6379'
+  opts:
+    password: ''
+    db: 0

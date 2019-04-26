@@ -23,7 +23,7 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-const (
+var (
 	// Version current version number
 	Version = "0.0.1"
 	// DefaultMode default gin mode

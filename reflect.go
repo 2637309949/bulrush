@@ -16,6 +16,9 @@ import (
 	"github.com/thoas/go-funk"
 )
 
+// DuckReflect indicate inject with duck Type
+var DuckReflect = false
+
 // reflectObjectAndCall
 // - you can call a method in object by this method
 // - injects contains injectObject
@@ -43,6 +46,15 @@ func reflectObjectAndCall(target interface{}, params []interface{}) {
 			})
 			if r != nil {
 				inputs = append(inputs, reflect.ValueOf(r))
+			} else {
+				if DuckReflect {
+					rd := funk.Find(params, func(x interface{}) bool {
+						return reflect.TypeOf(x).Implements(ptype)
+					})
+					if rd != nil {
+						inputs = append(inputs, reflect.ValueOf(rd))
+					}
+				}
 			}
 		}
 		if method.IsValid() && (numIn == len(inputs)) {
@@ -54,6 +66,9 @@ func reflectObjectAndCall(target interface{}, params []interface{}) {
 }
 
 // reflectMethodAndCall call method by reflect
+// - you can call a method in func by this method
+// - injects contains injectObject
+// - ptrDyn `inject params` that be about to be injected
 func reflectMethodAndCall(target interface{}, params []interface{}) interface{} {
 	funcType := reflect.TypeOf(target)
 	funcName := funcType.Name()
@@ -68,6 +83,15 @@ func reflectMethodAndCall(target interface{}, params []interface{}) interface{} 
 		})
 		if r != nil {
 			inputs = append(inputs, reflect.ValueOf(r))
+		} else {
+			if DuckReflect {
+				rd := funk.Find(params, func(x interface{}) bool {
+					return reflect.TypeOf(x).Implements(ptype)
+				})
+				if rd != nil {
+					inputs = append(inputs, reflect.ValueOf(rd))
+				}
+			}
 		}
 	}
 

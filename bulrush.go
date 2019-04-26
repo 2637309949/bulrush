@@ -89,7 +89,11 @@ func New() Bulrush {
 		&HTTPProxy{},
 		&HTTPRouter{},
 	}
+	defaultInjects := Injects{
+		emmiter,
+	}
 	bulrush.Use(defaultMiddles...)
+	bulrush.Inject(defaultInjects...)
 	return bulrush
 }
 

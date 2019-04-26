@@ -11,7 +11,6 @@ package bulrush
 import (
 	"fmt"
 	"reflect"
-	"strings"
 
 	"github.com/thoas/go-funk"
 )
@@ -23,23 +22,17 @@ var DuckReflect = true
 func reflectObjectAndCall(target interface{}, params []interface{}) {
 	objType := reflect.TypeOf(target)
 	objValue := reflect.ValueOf(target)
-	if objValue.Kind() != reflect.Ptr {
-		panic("target must be a ptr")
-	}
 	for i := 0; i < objType.NumMethod(); i++ {
 		inputs := make([]reflect.Value, 0)
 		funcType := objType.Method(i)
-		funcName := funcType.Name
 		method := objValue.Method(i)
 		numIn := funcType.Type.NumIn()
-		if strings.HasPrefix(funcName, "Inject") {
-			for index := 1; index < numIn; index++ {
-				ptype := funcType.Type.In(index)
-				eleValue := reflectTypeMatcher(ptype, params)
-				inputs = append(inputs, eleValue.(reflect.Value))
-			}
-			methodCall(method.Interface(), inputs)
+		for index := 1; index < numIn; index++ {
+			ptype := funcType.Type.In(index)
+			eleValue := reflectTypeMatcher(ptype, params)
+			inputs = append(inputs, eleValue.(reflect.Value))
 		}
+		methodCall(method.Interface(), inputs)
 	}
 }
 

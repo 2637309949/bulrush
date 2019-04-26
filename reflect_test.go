@@ -9,6 +9,7 @@
 package bulrush
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -83,6 +84,38 @@ func Test_createSlice(t *testing.T) {
 			if got := createSlice(tt.args.target); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("createSlice() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+type testRR struct{}
+
+func (t *testRR) TestYY(num int) {
+	fmt.Println(num)
+}
+func Test_reflectObjectAndCall(t *testing.T) {
+	type args struct {
+		target interface{}
+		params []interface{}
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		struct {
+			name string
+			args args
+		}{
+			name: "createSlice",
+			args: args{
+				target: &testRR{},
+				params: []interface{}{1},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			reflectObjectAndCall(tt.args.target, tt.args.params)
 		})
 	}
 }

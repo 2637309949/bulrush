@@ -13,7 +13,6 @@
 package bulrush
 
 import (
-	"fmt"
 	"log"
 	"reflect"
 	"sync"
@@ -193,17 +192,16 @@ func (bulrush *rush) Run(cbFunc func(error, *Config)) {
 		&RUNProxy{CallBack: cbFunc},
 	}
 	bulrush.Use(lastMiddles...)
-	// unpack plugin to middles
+	// Unpack plugin to middles
 	plugins := funk.Map(*bulrush.middles, func(x PNBase) PNRet {
 		return x.Plugin()
 	}).([]PNRet)
-	// filter middles
+	// Filter middles
 	plugins = funk.Filter(plugins, func(x PNRet) bool {
 		return reflect.Func == reflect.TypeOf(x).Kind()
 	}).([]PNRet)
-	// run all middles
+	// Run all middles
 	funk.ForEach(plugins, func(x interface{}) {
-		fmt.Print(x)
 		rs := reflectMethodAndCall(x, *bulrush.injects)
 		bulrush.Inject(rs.([]interface{})...)
 	})

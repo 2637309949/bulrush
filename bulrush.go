@@ -49,6 +49,7 @@ type (
 	// Bulrush interface defined
 	Bulrush interface {
 		On(events.EventName, ...events.Listener)
+		Once(events.EventName, ...events.Listener)
 		Emit(events.EventName, ...interface{})
 		SetMaxPlugins(int)
 		GetMaxPlugins() int

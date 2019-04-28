@@ -15,8 +15,7 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-// DuckReflect indicate inject with duck Type
-// Default true
+// DuckReflect indicate inject with duck Type, default is true
 var DuckReflect = true
 
 func reflectObjectAndCall(target interface{}, params []interface{}) {

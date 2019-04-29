@@ -17,10 +17,8 @@ import (
 
 type (
 	// PNRet return a plugin after call Plugin func
-	// all user custom must implement this interface{}
 	PNRet interface{}
 	// PNBase Plugin interface defined
-	// all user custom must implement this interface{}
 	PNBase interface {
 		Plugin() PNRet
 	}
@@ -31,33 +29,15 @@ type (
 type PNStruct struct{ Quick interface{} }
 
 // Plugin for PNQuick
-// if your do not want to implement PNBase interface{}
-// use:
-// app.Use(bulrush.PNQuick(func(testInject string, router *gin.RouterGroup) {
-// 		router.GET("/bulrushApp", func (c *gin.Context) {
-// 			c.JSON(http.StatusOK, gin.H{
-// 			"message": 	testInject,
-//			})
-// 		})
-// }))
 func (pn *PNStruct) Plugin() PNRet {
 	return pn.Quick
 }
 
 // PNQuick for PNQuick
-// if your do not want to implement PNBase interface{}
-// use:
-// app.Use(bulrush.PNQuick(func(testInject string, router *gin.RouterGroup) {
-// 		router.GET("/bulrushApp", func (c *gin.Context) {
-// 			c.JSON(http.StatusOK, gin.H{
-// 			"message": 	testInject,
-//			})
-// 		})
-// }))
-func PNQuick(q interface{}) PNBase {
-	return &PNStruct{
-		Quick: q,
-	}
+func PNQuick(quick interface{}) PNBase {
+	pn := &PNStruct{}
+	pn.Quick = quick
+	return pn
 }
 
 // Recovery system rec from panic
@@ -92,19 +72,19 @@ func (pn *HTTPRouter) Plugin() PNRet {
 }
 
 // RUNProxy run HttpProxy
-type RUNProxy struct{ PNBase, CallBack func(error, *Config) }
+type RUNProxy struct{ PNBase, cbFunc func(error, *Config) }
 
 // Plugin for RUNProxy
 func (pn *RUNProxy) Plugin() PNRet {
 	return func(httpProxy *gin.Engine, config *Config) {
 		var err error
-		defer func() { pn.CallBack(err, config) }()
+		defer func() { pn.cbFunc(err, config) }()
 		port := config.GetString("port", ":8080")
 		port = strings.TrimSpace(port)
 		if prefix := port[:1]; prefix != ":" {
 			port = fmt.Sprintf(":%s", port)
 		}
-		pn.CallBack(nil, config)
+		pn.cbFunc(nil, config)
 		err = httpProxy.Run(port)
 	}
 }
@@ -115,7 +95,7 @@ type Override struct{ PNBase }
 // Plugin for Override
 func (pn *Override) Plugin() PNRet {
 	return func(router *gin.RouterGroup, httpProxy *gin.Engine) {
-		handleContext := func(c *gin.Context) {
+		hc := func(c *gin.Context) {
 			if c.Request.Method != "POST" {
 				c.Next()
 			} else {
@@ -132,7 +112,7 @@ func (pn *Override) Plugin() PNRet {
 				}
 			}
 		}
-		httpProxy.Use(handleContext)
-		router.Use(handleContext)
+		router.Use(hc)
+		httpProxy.Use(hc)
 	}
 }

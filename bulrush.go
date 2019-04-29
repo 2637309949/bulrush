@@ -112,7 +112,7 @@ func Default() Bulrush {
 
 var (
 	// Silence the compiler
-	_ Bulrush = &rush{}
+	_ = &rush{}
 	// defaultApp default rush
 	defaultApp = New()
 )

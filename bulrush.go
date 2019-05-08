@@ -91,6 +91,9 @@ func New() Bulrush {
 	}
 	defaultInjects := Injects{
 		emmiter,
+		&ReverseInject{
+			injects: bulrush.injects,
+		},
 	}
 	bulrush.Use(defaultMiddles...)
 	bulrush.Inject(defaultInjects...)

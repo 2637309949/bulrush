@@ -18,20 +18,6 @@ import (
 // DuckReflect indicate inject with duck Type, default is true
 var DuckReflect = true
 
-// ReverseInject Inject
-type ReverseInject struct {
-	injects *Injects
-}
-
-// Register function for Reverse Injects
-func (r *ReverseInject) Register(rFunc interface{}) interface{} {
-	kind := reflect.TypeOf(rFunc).Kind()
-	if kind != reflect.Func {
-		panic(fmt.Errorf("rFunc should to be func type"))
-	}
-	return reflectMethodAndCall(rFunc, *r.injects)
-}
-
 func reflectObjectAndCall(target interface{}, params []interface{}) {
 	objType := reflect.TypeOf(target)
 	objValue := reflect.ValueOf(target)

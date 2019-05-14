@@ -9,7 +9,6 @@
 package bulrush
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -68,24 +67,6 @@ type HTTPRouter struct{ PNBase }
 func (pn *HTTPRouter) Plugin() PNRet {
 	return func(httpProxy *gin.Engine, config *Config) *gin.RouterGroup {
 		return httpProxy.Group(config.GetString("prefix", "/api/v1"))
-	}
-}
-
-// RUNProxy run HttpProxy
-type RUNProxy struct{ PNBase, cbFunc func(error, *Config) }
-
-// Plugin for RUNProxy
-func (pn *RUNProxy) Plugin() PNRet {
-	return func(httpProxy *gin.Engine, config *Config) {
-		var err error
-		defer func() { pn.cbFunc(err, config) }()
-		port := config.GetString("port", ":8080")
-		port = strings.TrimSpace(port)
-		if prefix := port[:1]; prefix != ":" {
-			port = fmt.Sprintf(":%s", port)
-		}
-		pn.cbFunc(nil, config)
-		err = httpProxy.Run(port)
 	}
 }
 

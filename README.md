@@ -129,6 +129,16 @@ func (pn *Override) Plugin() PNRet {
     }
 }
 ```
+OR
+```go
+bulrush.PNQuick(func(testInject string, router *gin.RouterGroup) {
+    router.GET("/test", func (c *gin.Context) {
+        c.JSON(http.StatusOK, gin.H{
+            "message": 	testInject,
+        })
+    })
+})
+```
 ## MIT License
 
 Copyright (c) 2018-2020 Double

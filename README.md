@@ -110,6 +110,7 @@ app.Run(func(err error, config *bulrush.Config) {
 - [bulrush-logger](https://github.com/2637309949/bulrush-logger)
 - [bulrush-proxy](https://github.com/2637309949/bulrush-proxy)
 - [bulrush-role](https://github.com/2637309949/bulrush-role)
+- [bulrush-limit](https://github.com/2637309949/bulrush-limit)
 - [bulrush-upload](https://github.com/2637309949/bulrush-upload)
 ### Custom your plugins
 If your want to write a user-defined plugins, you should implement PNBase interface or the duck type,

@@ -58,7 +58,8 @@ type (
 		Inject(...interface{}) Bulrush
 		Run(interface{})
 	}
-	// Bulrush is the framework's instance, it contains the muxer, middleware and configuration settings.
+	// Bulrush is the framework's instance, it contains the muxer,
+	// middleware and configuration settings.
 	// Create an instance of Bulrush, by using New() or Default()
 	rush struct {
 		events.EventEmmiter
@@ -131,7 +132,8 @@ func (bulrush *rush) Use(items ...PNBase) Bulrush {
 	defer bulrush.mu.Unlock()
 	if bulrush.maxPlugins > 0 && len(*bulrush.middles) == bulrush.maxPlugins {
 		if EnableWarning {
-			log.Printf(`warning: possible plugins memory 'leak detected. %d plugin added. 'Use app.SetMaxPlugins(n int) to increase limit.`, len(*bulrush.middles))
+			log.Printf(`warning: possible plugins memory 'leak detected. %d plugin added.
+				'Use app.SetMaxPlugins(n int) to increase limit.`, len(*bulrush.middles))
 		}
 		return bulrush
 	}

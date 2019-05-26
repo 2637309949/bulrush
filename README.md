@@ -1,7 +1,7 @@
 # Bulrush Framework
 
 ![Bulrush flash](./assets/flash.jpg)
-
+![Bulrush flash](./assets/frame.png)
 
 ## Instruction
 Quickly build applications and customize special functions through plug-ins, Multiple base plug-ins are provided

@@ -76,7 +76,7 @@ type Override struct{ PNBase }
 // Plugin for Override
 func (pn *Override) Plugin() PNRet {
 	return func(router *gin.RouterGroup, httpProxy *gin.Engine) {
-		hc := func(c *gin.Context) {
+		router.Use(func(c *gin.Context) {
 			if c.Request.Method != "POST" {
 				c.Next()
 			} else {
@@ -92,8 +92,6 @@ func (pn *Override) Plugin() PNRet {
 					}
 				}
 			}
-		}
-		router.Use(hc)
-		httpProxy.Use(hc)
+		})
 	}
 }

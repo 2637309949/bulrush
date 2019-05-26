@@ -53,7 +53,9 @@ type (
 		Emit(events.EventName, ...interface{})
 		SetMaxPlugins(int)
 		GetMaxPlugins() int
+		PreUse(...PNBase) Bulrush
 		Use(...PNBase) Bulrush
+		PostUse(...PNBase) Bulrush
 		Config(string) Bulrush
 		Inject(...interface{}) Bulrush
 		Run(interface{})
@@ -63,11 +65,13 @@ type (
 	// Create an instance of Bulrush, by using New() or Default()
 	rush struct {
 		events.EventEmmiter
-		config     *Config
-		middles    *Middles
-		injects    *Injects
-		maxPlugins int
-		mu         sync.Mutex
+		config      *Config
+		preMiddles  *Middles
+		middles     *Middles
+		postMiddles *Middles
+		injects     *Injects
+		maxPlugins  int
+		mu          sync.Mutex
 	}
 )
 
@@ -77,12 +81,16 @@ type (
 // --injects struct instance can be reflect by bulrush
 // --middles some middles for gin self
 func New() Bulrush {
+	preMiddles := make(Middles, 0)
 	middles := make(Middles, 0)
+	postMiddles := make(Middles, 0)
 	injects := make(Injects, 0)
 	emmiter := events.New()
 	bulrush := &rush{
 		EventEmmiter: emmiter,
+		preMiddles:   &preMiddles,
 		middles:      &middles,
+		postMiddles:  &postMiddles,
 		injects:      &injects,
 		maxPlugins:   DefaultMaxPlugins,
 	}
@@ -121,6 +129,26 @@ var (
 	defaultApp = New()
 )
 
+// PreUse attachs a global middleware to the router
+// just like function in gin, but not been inited util bulrush inited.
+// bulrush range these middles in order
+func (bulrush *rush) PreUse(items ...PNBase) Bulrush {
+	if len(items) == 0 {
+		return bulrush
+	}
+	bulrush.mu.Lock()
+	defer bulrush.mu.Unlock()
+	if bulrush.maxPlugins > 0 && len(*bulrush.preMiddles) == bulrush.maxPlugins {
+		if EnableWarning {
+			log.Printf(`warning: possible plugins memory 'leak detected. %d plugin added.
+				'Use app.SetMaxPlugins(n int) to increase limit.`, len(*bulrush.preMiddles))
+		}
+		return bulrush
+	}
+	*bulrush.preMiddles = append(*bulrush.preMiddles, items...)
+	return bulrush
+}
+
 // Use attachs a global middleware to the router
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
@@ -138,6 +166,26 @@ func (bulrush *rush) Use(items ...PNBase) Bulrush {
 		return bulrush
 	}
 	*bulrush.middles = append(*bulrush.middles, items...)
+	return bulrush
+}
+
+// PostUse attachs a global middleware to the router
+// just like function in gin, but not been inited util bulrush inited.
+// bulrush range these middles in order
+func (bulrush *rush) PostUse(items ...PNBase) Bulrush {
+	if len(items) == 0 {
+		return bulrush
+	}
+	bulrush.mu.Lock()
+	defer bulrush.mu.Unlock()
+	if bulrush.maxPlugins > 0 && len(*bulrush.postMiddles) == bulrush.maxPlugins {
+		if EnableWarning {
+			log.Printf(`warning: possible plugins memory 'leak detected. %d plugin added.
+				'Use app.SetMaxPlugins(n int) to increase limit.`, len(*bulrush.postMiddles))
+		}
+		return bulrush
+	}
+	*bulrush.postMiddles = append(*bulrush.postMiddles, items...)
 	return bulrush
 }
 
@@ -195,7 +243,8 @@ func GetMaxPlugins() int {
 // Note: this method will block the calling goroutine indefinitely unless an error happens.
 func (bulrush *rush) Run(cb interface{}) {
 	bulrush.Use(PNQuick(cb))
-	plugins := funk.Map(*bulrush.middles, func(x PNBase) PNRet {
+	middles := append(append(*bulrush.preMiddles, *bulrush.middles...), *bulrush.postMiddles...)
+	plugins := funk.Map(middles, func(x PNBase) PNRet {
 		return x.Plugin()
 	})
 	plugins = funk.Filter(plugins, func(x PNRet) bool {

@@ -7,7 +7,7 @@
 Quickly build applications and customize special functions through plug-ins, Multiple base plug-ins are provided
 1. Install Bulrush
 ```shell
-$ go get github.com/2637309949/juglans
+$ go get github.com/2637309949/bulrush
 ```
 2. QuickStart
 ```go

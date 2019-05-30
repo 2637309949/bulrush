@@ -50,7 +50,9 @@ import (
 // No middlewares has been attached
 app := bulrush.New()
 app.Config(CONFIGPATH)
-app.Run()
+app.Run(func(httpProxy *gin.Engine, config *bulrush.Config) {
+    httpProxy.Run(config.GetString("port", ":8080"))
+})
 ```
 3. For more details, Please reference to [bulrush-template](https://github.com/2637309949/bulrush-template). 
 
@@ -86,17 +88,18 @@ app.Use(bulrush.PNQuick(func(testInject string, router *gin.RouterGroup) {
 ```
 #### 4.Run app
 ```go
-app.Run(func(err error, config *bulrush.Config) {
-    if err != nil {
-        panic(err)
-    } else {
-        name := config.GetString("name",  "")
-        port := config.GetString("port",  "")
-        fmt.Println("================================")
-        fmt.Printf("App: %s\n", name)
-        fmt.Printf("Listen on %s\n", port)
-        fmt.Println("================================")
+app.Run(func(httpProxy *gin.Engine, config *bulrush.Config) {
+    port := config.GetString("port", ":8080")
+    port = strings.TrimSpace(port)
+    name := config.GetString("name", "")
+    if prefix := port[:1]; prefix != ":" {
+        port = fmt.Sprintf(":%s", port)
     }
+    fmt.Println("\n\n================================")
+    fmt.Printf("App: %s\n", name)
+    fmt.Printf("Listen on %s\n", port)
+    fmt.Println("================================")
+    httpProxy.Run(port)
 })
 ```
 ## Design Philosophy

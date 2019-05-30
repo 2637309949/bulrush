@@ -1,11 +1,6 @@
-govendor init
-govendor add +e 
-govendor add code.byted.org/gopkg/mosaic
-govendor update code.byted.org/gopkg/mosaic
-govendor update +external
-govendor install +local
-govendor test +local
-
+glide create  # detect dep and create glide.yaml
+glide install # install dep and gen lockfile
+glide update  # update package
 
 git config --global http.proxy 'socks5://127.0.0.1:1080'
 git config --global https.proxy 'socks5://127.0.0.1:1080'

@@ -63,6 +63,7 @@ func methodCall(method interface{}, inputs []reflect.Value) interface{} {
 	panic(fmt.Errorf("Invalid method %s", funcName))
 }
 
+// duckMatcher match type if from target`type
 func typeMatcher(ptype reflect.Type, params []interface{}) interface{} {
 	target := funk.Find(params, func(x interface{}) bool {
 		return ptype == reflect.TypeOf(x)
@@ -73,9 +74,13 @@ func typeMatcher(ptype reflect.Type, params []interface{}) interface{} {
 	return nil
 }
 
+// duckMatcher match type if implements target`interface
 func duckMatcher(ptype reflect.Type, params []interface{}) interface{} {
 	target := funk.Find(params, func(x interface{}) bool {
-		return reflect.TypeOf(x).Implements(ptype)
+		if ptype.Kind() == reflect.Interface {
+			return reflect.TypeOf(x).Implements(ptype)
+		}
+		return false
 	})
 	if target != nil {
 		return reflect.ValueOf(target)
@@ -83,6 +88,7 @@ func duckMatcher(ptype reflect.Type, params []interface{}) interface{} {
 	return nil
 }
 
+// reflectTypeMatcher match type with type tactics or ducker tactics
 func reflectTypeMatcher(ptype reflect.Type, params []interface{}) interface{} {
 	eleValue := typeMatcher(ptype, params)
 	if eleValue == nil {

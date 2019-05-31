@@ -146,6 +146,8 @@ bulrush.PNQuick(func(testInject string, router *gin.RouterGroup) {
 })
 ```
 
+## Note
+    Note go vendor, bulrush needs to reference the same package, otherwise injection fails
 
 ## MIT License
 

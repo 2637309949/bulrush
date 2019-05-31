@@ -86,6 +86,7 @@ func New() Bulrush {
 	postMiddles := make(Middles, 0)
 	injects := make(Injects, 0)
 	emmiter := events.New()
+	status := statusStorage(emmiter)
 	bulrush := &rush{
 		EventEmmiter: emmiter,
 		preMiddles:   &preMiddles,
@@ -100,6 +101,7 @@ func New() Bulrush {
 	}
 	defaultInjects := Injects{
 		emmiter,
+		status,
 		&ReverseInject{
 			injects: bulrush.injects,
 		},

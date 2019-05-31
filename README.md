@@ -102,6 +102,31 @@ app.Run(func(httpProxy *gin.Engine, config *bulrush.Config) {
     httpProxy.Run(port)
 })
 ```
+#### 5. Share state between plug-ins
+
+##### store state
+```go
+app.Use(bulrush.PNQuick(func(status *bulrush.Status) {
+    status.Set("count", 1)
+}))
+```
+##### read state
+```go
+app.Use(bulrush.PNQuick(func(status *bulrush.Status) {
+    status.Get("count")
+    status.ALL()
+}))
+```
+#### 6. Plug in communication between plug-ins
+```go
+app.Use(bulrush.PNQuick(func(events events.EventEmmiter) {
+	events.On("hello", func(payload ...interface{}) {
+		message := payload[0].(string)
+		fmt.Println(message)
+	})
+}))
+```
+
 ## Design Philosophy
 
 ## Plugins

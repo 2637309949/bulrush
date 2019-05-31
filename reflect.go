@@ -36,15 +36,18 @@ func reflectObjectAndCall(target interface{}, params []interface{}) {
 }
 
 func reflectMethodAndCall(target interface{}, params []interface{}) interface{} {
-	funcType := reflect.TypeOf(target)
-	numIn := funcType.NumIn()
-	inputs := make([]reflect.Value, 0)
-	for index := 0; index < numIn; index++ {
-		ptype := funcType.In(index)
-		eleValue := reflectTypeMatcher(ptype, params)
-		inputs = append(inputs, eleValue.(reflect.Value))
+	if reflect.Func == reflect.TypeOf(target).Kind() {
+		funcType := reflect.TypeOf(target)
+		numIn := funcType.NumIn()
+		inputs := make([]reflect.Value, 0)
+		for index := 0; index < numIn; index++ {
+			ptype := funcType.In(index)
+			eleValue := reflectTypeMatcher(ptype, params)
+			inputs = append(inputs, eleValue.(reflect.Value))
+		}
+		return methodCall(target, inputs)
 	}
-	return methodCall(target, inputs)
+	panic(fmt.Errorf("Invalid plugin type %s", target))
 }
 
 func methodCall(method interface{}, inputs []reflect.Value) interface{} {

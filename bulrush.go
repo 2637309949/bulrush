@@ -14,7 +14,6 @@ package bulrush
 
 import (
 	"log"
-	"reflect"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -244,18 +243,16 @@ func GetMaxPlugins() int {
 
 // Exec middles, excute plugin in orderly
 // Note: this method will block the calling goroutine indefinitely unless an error happens.
-func (bulrush *rush) execMiddles() {
+func (bulrush *rush) execMiddles() Bulrush {
 	middles := append(append(*bulrush.preMiddles, *bulrush.middles...), *bulrush.postMiddles...)
 	plugins := funk.Map(middles, func(x PNBase) PNRet {
 		return x.Plugin()
-	})
-	plugins = funk.Filter(plugins, func(x PNRet) bool {
-		return reflect.Func == reflect.TypeOf(x).Kind()
 	})
 	funk.ForEach(plugins, func(x interface{}) {
 		rs := reflectMethodAndCall(x, *bulrush.injects)
 		bulrush.Inject(rs.([]interface{})...)
 	})
+	return bulrush
 }
 
 // Run application with callback, excute plugin in orderly
@@ -266,6 +263,7 @@ func (bulrush *rush) Run(cb interface{}) {
 }
 
 // RunImmediately, excute plugin in orderly
+// Quick start application
 func (bulrush *rush) RunImmediately() {
 	bulrush.PostUse(RunImmediately)
 	bulrush.execMiddles()

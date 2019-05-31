@@ -13,8 +13,10 @@
 package bulrush
 
 import (
+	"fmt"
 	"log"
 	"reflect"
+	"strings"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -58,6 +60,7 @@ type (
 		PostUse(...PNBase) Bulrush
 		Config(string) Bulrush
 		Inject(...interface{}) Bulrush
+		RunImmediately()
 		Run(interface{})
 	}
 	// Bulrush is the framework's instance, it contains the muxer,
@@ -96,8 +99,8 @@ func New() Bulrush {
 		maxPlugins:   DefaultMaxPlugins,
 	}
 	defaultMiddles := Middles{
-		&HTTPProxy{},
-		&HTTPRouter{},
+		HTTPProxy,
+		HTTPRouter,
 	}
 	defaultInjects := Injects{
 		emmiter,
@@ -117,8 +120,8 @@ func New() Bulrush {
 func Default() Bulrush {
 	bulrush := defaultApp
 	defaultMiddles := Middles{
-		&Recovery{},
-		&Override{},
+		Recovery,
+		Override,
 	}
 	bulrush.Use(defaultMiddles...)
 	return bulrush
@@ -241,10 +244,9 @@ func GetMaxPlugins() int {
 	return defaultApp.GetMaxPlugins()
 }
 
-// Run application, excute plugin in orderly
+// Exec middles, excute plugin in orderly
 // Note: this method will block the calling goroutine indefinitely unless an error happens.
-func (bulrush *rush) Run(cb interface{}) {
-	bulrush.Use(PNQuick(cb))
+func (bulrush *rush) execMiddles() {
 	middles := append(append(*bulrush.preMiddles, *bulrush.middles...), *bulrush.postMiddles...)
 	plugins := funk.Map(middles, func(x PNBase) PNRet {
 		return x.Plugin()
@@ -256,4 +258,29 @@ func (bulrush *rush) Run(cb interface{}) {
 		rs := reflectMethodAndCall(x, *bulrush.injects)
 		bulrush.Inject(rs.([]interface{})...)
 	})
+}
+
+// Run application, excute plugin in orderly
+// Note: this method will block the calling goroutine indefinitely unless an error happens.
+func (bulrush *rush) Run(cb interface{}) {
+	bulrush.PostUse(PNQuick(cb))
+	bulrush.execMiddles()
+}
+
+// RunImmediately, excute plugin in orderly
+func (bulrush *rush) RunImmediately() {
+	bulrush.PostUse(PNQuick(func(httpProxy *gin.Engine, config *Config) {
+		port := config.GetString("port", ":8080")
+		port = strings.TrimSpace(port)
+		name := config.GetString("name", "")
+		if prefix := port[:1]; prefix != ":" {
+			port = fmt.Sprintf(":%s", port)
+		}
+		fmt.Println("\n\n================================")
+		fmt.Printf("App: %s\n", name)
+		fmt.Printf("Listen on %s\n", port)
+		fmt.Println("================================")
+		httpProxy.Run(port)
+	}))
+	bulrush.execMiddles()
 }

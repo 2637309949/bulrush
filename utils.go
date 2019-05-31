@@ -85,3 +85,10 @@ func LeftSV(left interface{}, right error) interface{} {
 	}
 	return left
 }
+
+func fixedPortPrefix(port string) string {
+	if prefix := port[:1]; prefix != ":" {
+		port = fmt.Sprintf(":%s", port)
+	}
+	return port
+}

@@ -9,6 +9,7 @@
 package bulrush
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -25,17 +26,17 @@ type (
 
 // PNStruct for a quickly Plugin SetUp when you dont want declare PNBase
 // PBBase minimize implement
-type PNStruct struct{ q interface{} }
+type PNStruct struct{ pn interface{} }
 
 // Plugin for PNQuick
-func (pn *PNStruct) Plugin() PNRet {
-	return pn.q
+func (p *PNStruct) Plugin() PNRet {
+	return p.pn
 }
 
 // PNQuick for PNQuick
-var PNQuick = func(q interface{}) PNBase {
+var PNQuick = func(pn interface{}) PNBase {
 	return &PNStruct{
-		q: q,
+		pn: pn,
 	}
 }
 
@@ -74,4 +75,15 @@ var Override = PNQuick(func(router *gin.RouterGroup, httpProxy *gin.Engine) {
 			}
 		}
 	})
+})
+
+// RunImmediately run app
+var RunImmediately = PNQuick(func(httpProxy *gin.Engine, config *Config) {
+	port := fixedPortPrefix(strings.TrimSpace(config.GetString("port", ":8080")))
+	name := config.GetString("name", "")
+	fmt.Println("\n\n================================")
+	fmt.Printf("App: %s\n", name)
+	fmt.Printf("Listen on %s\n", port)
+	fmt.Println("================================")
+	httpProxy.Run(port)
 })

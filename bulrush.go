@@ -13,10 +13,8 @@
 package bulrush
 
 import (
-	"fmt"
 	"log"
 	"reflect"
-	"strings"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -260,7 +258,7 @@ func (bulrush *rush) execMiddles() {
 	})
 }
 
-// Run application, excute plugin in orderly
+// Run application with callback, excute plugin in orderly
 // Note: this method will block the calling goroutine indefinitely unless an error happens.
 func (bulrush *rush) Run(cb interface{}) {
 	bulrush.PostUse(PNQuick(cb))
@@ -269,18 +267,6 @@ func (bulrush *rush) Run(cb interface{}) {
 
 // RunImmediately, excute plugin in orderly
 func (bulrush *rush) RunImmediately() {
-	bulrush.PostUse(PNQuick(func(httpProxy *gin.Engine, config *Config) {
-		port := config.GetString("port", ":8080")
-		port = strings.TrimSpace(port)
-		name := config.GetString("name", "")
-		if prefix := port[:1]; prefix != ":" {
-			port = fmt.Sprintf(":%s", port)
-		}
-		fmt.Println("\n\n================================")
-		fmt.Printf("App: %s\n", name)
-		fmt.Printf("Listen on %s\n", port)
-		fmt.Println("================================")
-		httpProxy.Run(port)
-	}))
+	bulrush.PostUse(RunImmediately)
 	bulrush.execMiddles()
 }

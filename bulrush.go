@@ -241,17 +241,33 @@ func GetMaxPlugins() int {
 	return defaultApp.GetMaxPlugins()
 }
 
-// Exec middles, excute plugin in orderly
-// Note: this method will block the calling goroutine indefinitely unless an error happens.
-func (bulrush *rush) execMiddles() Bulrush {
+// return middles contain middles, preMiddles and postMiddles
+func (bulrush *rush) allMiddles() *Middles {
 	middles := append(append(*bulrush.preMiddles, *bulrush.middles...), *bulrush.postMiddles...)
-	plugins := funk.Map(middles, func(x PNBase) PNRet {
+	return &middles
+}
+
+// return plugins that contained in every middles
+func (bulrush *rush) middle2Plugins(middles *Middles) interface{} {
+	plugins := funk.Map(*middles, func(x PNBase) PNRet {
 		return x.Plugin()
 	})
+	return plugins
+}
+
+func (bulrush *rush) execPlugins(plugins interface{}) {
 	funk.ForEach(plugins, func(x interface{}) {
 		rs := reflectMethodAndCall(x, *bulrush.injects)
 		bulrush.Inject(rs.([]interface{})...)
 	})
+}
+
+// Exec middles, excute plugin in orderly
+// Note: this method will block the calling goroutine indefinitely unless an error happens.
+func (bulrush *rush) execMiddles() Bulrush {
+	middles := bulrush.allMiddles()
+	plugins := bulrush.middle2Plugins(middles)
+	bulrush.execPlugins(plugins)
 	return bulrush
 }
 

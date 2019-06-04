@@ -33,6 +33,8 @@ var (
 	// EnableWarning prints a warning when trying to add an plugin which it's len is equal to the maxPlugins
 	// Defaults to false, which means it does not prints a warning
 	EnableWarning = false
+	// DuckReflect indicate inject with duck Type, default is true
+	DuckReflect = true
 )
 
 // Bulrush the framework's struct

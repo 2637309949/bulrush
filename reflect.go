@@ -15,9 +15,7 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-// DuckReflect indicate inject with duck Type, default is true
-var DuckReflect = true
-
+// reflect func in struct and call it with params
 func reflectObjectAndCall(target interface{}, params []interface{}) {
 	objType := reflect.TypeOf(target)
 	objValue := reflect.ValueOf(target)
@@ -31,10 +29,11 @@ func reflectObjectAndCall(target interface{}, params []interface{}) {
 			eleValue := reflectTypeMatcher(ptype, params)
 			inputs = append(inputs, eleValue.(reflect.Value))
 		}
-		methodCall(method.Interface(), inputs)
+		reflectCall(method.Interface(), inputs)
 	}
 }
 
+// reflect func and call it with params
 func reflectMethodAndCall(target interface{}, params []interface{}) interface{} {
 	if reflect.Func == reflect.TypeOf(target).Kind() {
 		funcType := reflect.TypeOf(target)
@@ -45,12 +44,13 @@ func reflectMethodAndCall(target interface{}, params []interface{}) interface{} 
 			eleValue := reflectTypeMatcher(ptype, params)
 			inputs = append(inputs, eleValue.(reflect.Value))
 		}
-		return methodCall(target, inputs)
+		return reflectCall(target, inputs)
 	}
 	panic(fmt.Errorf("Invalid plugin type %s", target))
 }
 
-func methodCall(method interface{}, inputs []reflect.Value) interface{} {
+// relect func type and call with input args
+func reflectCall(method interface{}, inputs []reflect.Value) interface{} {
 	funcType := reflect.TypeOf(method)
 	funcName := funcType.Name()
 	funcValue := reflect.ValueOf(method)
@@ -66,11 +66,28 @@ func methodCall(method interface{}, inputs []reflect.Value) interface{} {
 	panic(fmt.Errorf("Invalid method %s", funcName))
 }
 
-// duckMatcher match type if from target`type
-func typeMatcher(ptype reflect.Type, params []interface{}) interface{} {
-	target := funk.Find(params, func(x interface{}) bool {
+// retrieve type from given types
+func retrieveType(ptype reflect.Type, types []interface{}) interface{} {
+	target := funk.Find(types, func(x interface{}) bool {
 		return ptype == reflect.TypeOf(x)
 	})
+	return target
+}
+
+// retrieve type whether to implement the interface
+func retrieveInterface(ptype reflect.Type, types []interface{}) interface{} {
+	target := funk.Find(types, func(x interface{}) bool {
+		if ptype.Kind() == reflect.Interface {
+			return reflect.TypeOf(x).Implements(ptype)
+		}
+		return false
+	})
+	return target
+}
+
+// duckMatcher match type if from target`type
+func typeMatcher(ptype reflect.Type, params []interface{}) interface{} {
+	target := retrieveType(ptype, params)
 	if target != nil {
 		return reflect.ValueOf(target)
 	}
@@ -79,12 +96,7 @@ func typeMatcher(ptype reflect.Type, params []interface{}) interface{} {
 
 // duckMatcher match type if implements target`interface
 func duckMatcher(ptype reflect.Type, params []interface{}) interface{} {
-	target := funk.Find(params, func(x interface{}) bool {
-		if ptype.Kind() == reflect.Interface {
-			return reflect.TypeOf(x).Implements(ptype)
-		}
-		return false
-	})
+	target := retrieveInterface(ptype, params)
 	if target != nil {
 		return reflect.ValueOf(target)
 	}
@@ -94,30 +106,29 @@ func duckMatcher(ptype reflect.Type, params []interface{}) interface{} {
 // reflectTypeMatcher match type with type tactics or ducker tactics
 func reflectTypeMatcher(ptype reflect.Type, params []interface{}) interface{} {
 	eleValue := typeMatcher(ptype, params)
+	if eleValue == nil && DuckReflect {
+		eleValue = duckMatcher(ptype, params)
+	}
 	if eleValue == nil {
-		if DuckReflect {
-			if eleValue = duckMatcher(ptype, params); eleValue == nil {
-				panic(fmt.Errorf("Invalid param in reflectTypeMatcher: %s", ptype))
-			}
-		} else {
-			panic(fmt.Errorf("Invalid param in reflectTypeMatcher: %s", ptype))
-		}
+		panic(fmt.Errorf("Invalid param in reflectTypeMatcher: %s", ptype))
 	}
 	return eleValue
 }
 
+// retrieve array type
 func isIteratee(in interface{}) bool {
 	arrType := reflect.TypeOf(in)
-	kind := arrType.Kind()
-	return kind == reflect.Array || kind == reflect.Slice || kind == reflect.Map
+	tpKind := arrType.Kind()
+	return tpKind == reflect.Array || tpKind == reflect.Slice || tpKind == reflect.Map
 }
 
-func typeExists(arr interface{}, target interface{}) bool {
-	if !isIteratee(arr) {
-		panic("First parameter must be an iteratee")
+// check type exists or not
+func typeExists(items interface{}, target interface{}) bool {
+	if !isIteratee(items) {
+		panic("items must be an iteratee")
 	}
 	ptype := reflect.ValueOf(target).Type()
-	arrValue := reflect.ValueOf(arr)
+	arrValue := reflect.ValueOf(items)
 	for i := 0; i < arrValue.Len(); i++ {
 		iEle := arrValue.Index(i).Interface()
 		iType := reflect.ValueOf(iEle).Type()
@@ -128,20 +139,20 @@ func typeExists(arr interface{}, target interface{}) bool {
 	return false
 }
 
+// make slice from reflect type
 func createSlice(target interface{}) interface{} {
 	tType := reflect.ValueOf(target).Type()
 	if tType.Kind() == reflect.Ptr {
 		tType = tType.Elem()
 	}
-	tSlice := reflect.MakeSlice(reflect.SliceOf(tType), 0, 0).Interface()
-	return tSlice
+	return reflect.MakeSlice(reflect.SliceOf(tType), 0, 0).Interface()
 }
 
+// make object from reflect type
 func createObject(target interface{}) interface{} {
 	tType := reflect.ValueOf(target).Type()
 	if tType.Kind() == reflect.Ptr {
 		tType = tType.Elem()
 	}
-	tObject := reflect.New(tType).Interface()
-	return tObject
+	return reflect.New(tType).Interface()
 }

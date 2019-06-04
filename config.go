@@ -27,15 +27,14 @@ type (
 
 // LoadFile reads a YAML or JSON configuration from the given filename.
 func LoadFile(path string) (*Config, error) {
+	var readFile func(filename string) (*config.Config, error)
 	if strings.HasSuffix(path, ".json") {
-		if cfg, err := config.ParseJsonFile(path); err == nil {
-			return &Config{
-				Config: cfg,
-				Path:   path,
-			}, nil
-		}
+		readFile = config.ParseJsonFile
 	} else if strings.HasSuffix(path, ".yaml") {
-		if cfg, err := config.ParseYamlFile(path); err == nil {
+		readFile = config.ParseYamlFile
+	}
+	if readFile != nil {
+		if cfg, err := readFile(path); err == nil {
 			return &Config{
 				Config: cfg,
 				Path:   path,

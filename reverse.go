@@ -19,6 +19,8 @@ type ReverseInject struct {
 }
 
 // Register function for Reverse Injects
+// If the function you're injecting is a black box,
+// then you can try this
 func (r *ReverseInject) Register(rFunc interface{}) interface{} {
 	kind := reflect.TypeOf(rFunc).Kind()
 	if kind != reflect.Func {

@@ -21,6 +21,7 @@ type ReverseInject struct {
 // Register function for Reverse Injects
 // If the function you're injecting is a black box,
 // then you can try this
+// Example: github.com/2637309949/bulrush-template/models.go
 func (r *ReverseInject) Register(rFunc interface{}) interface{} {
 	kind := reflect.TypeOf(rFunc).Kind()
 	if kind != reflect.Func {

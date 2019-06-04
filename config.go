@@ -9,94 +9,137 @@
 package bulrush
 
 import (
-	"errors"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"strings"
 	"time"
 
-	"github.com/olebedev/config"
+	"github.com/ghodss/yaml"
 )
 
-type (
-	// Config base on olebedev/config
-	// Provide some useful tools
-	Config struct {
-		*config.Config
-		Path string
+const confVer = 1
+
+// Config bulrush config struct
+type Config struct {
+	Version int    `json:"version" yaml:"version"`
+	Name    string `json:"name" yaml:"name"`
+	Prefix  string `json:"prefix" yaml:"prefix"`
+	Port    string `json:"port" yaml:"port"`
+	Mode    string `json:"mode" yaml:"mode"`
+	Log     log2
+	Mongo   mongo
+	Redis   redis
+}
+
+type log2 struct {
+	Path string `json:"path" yaml:"path"`
+}
+
+type mongo struct {
+	Addrs          []string      `json:"addrs" yaml:"addrs"`
+	Timeout        time.Duration `json:"timeout" yaml:"timeout"`
+	Database       string        `json:"database" yaml:"database"`
+	ReplicaSetName string        `json:"replicaSetName" yaml:"replicaSetName"`
+	Source         string        `json:"source" yaml:"source"`
+	Service        string        `json:"service" yaml:"service"`
+	ServiceHost    string        `json:"serviceHost" yaml:"serviceHost"`
+	Mechanism      string        `json:"mechanism" yaml:"mechanism"`
+	Username       string        `json:"username" yaml:"username"`
+	Password       string        `json:"password" yaml:"password"`
+	PoolLimit      int           `json:"poolLimit" yaml:"poolLimit"`
+	PoolTimeout    time.Duration `json:"poolTimeout" yaml:"poolTimeout"`
+	ReadTimeout    time.Duration `json:"readTimeout" yaml:"readTimeout"`
+	WriteTimeout   time.Duration `json:"writeTimeout" yaml:"writeTimeout"`
+	AppName        string        `json:"appName" yaml:"appName"`
+	FailFast       bool          `json:"failFast" yaml:"failFast"`
+	Direct         bool          `json:"direct" yaml:"direct"`
+	MinPoolSize    int           `json:"minPoolSize" yaml:"minPoolSize"`
+	MaxIdleTimeMS  int           `json:"maxIdleTimeMS" yaml:"maxIdleTimeMS"`
+}
+
+type redis struct {
+	Network            string        `json:"network" yaml:"network"`
+	Addr               string        `json:"addrs" yaml:"addrs"`
+	Password           string        `json:"password" yaml:"password"`
+	DB                 int           `json:"db" yaml:"db"`
+	MaxRetries         int           `json:"maxRetries" yaml:"maxRetries"`
+	MinRetryBackoff    time.Duration `json:"minRetryBackoff" yaml:"minRetryBackoff"`
+	MaxRetryBackoff    time.Duration `json:"maxRetryBackoff" yaml:"maxRetryBackoff"`
+	DialTimeout        time.Duration `json:"dialTimeout" yaml:"dialTimeout"`
+	ReadTimeout        time.Duration `json:"readTimeout" yaml:"readTimeout"`
+	WriteTimeout       time.Duration `json:"writeTimeout" yaml:"writeTimeout"`
+	PoolSize           int           `json:"poolSize" yaml:"poolSize"`
+	MinIdleConns       int           `json:"minIdleConns" yaml:"minIdleConns"`
+	MaxConnAge         time.Duration `json:"maxConnAge" yaml:"maxConnAge"`
+	PoolTimeout        time.Duration `json:"poolTimeout" yaml:"poolTimeout"`
+	IdleTimeout        time.Duration `json:"idleTimeout" yaml:"idleTimeout"`
+	IdleCheckFrequency time.Duration `json:"idleCheckFrequency" yaml:"idleCheckFrequency"`
+}
+
+func initConfig() *Config {
+	return &Config{
+		Version: 1,
+		Name:    "bulrush",
+		Prefix:  "/api/v1",
+		Mode:    "debug",
+		Mongo: mongo{
+			Addrs:    make([]string, 0),
+			Timeout:  0,
+			Database: "bulrush",
+		},
+		Redis: redis{
+			Password: "",
+			DB:       0,
+		},
 	}
-)
+}
 
-// LoadFile reads a YAML or JSON configuration from the given filename.
-func LoadFile(path string) (*Config, error) {
-	var readFile func(filename string) (*config.Config, error)
+// LoadConfig loads the bulrush tool configuration.
+// It looks for .yaml or .json in the current path,
+// and falls back to default configuration in case not found.
+func LoadConfig(path string) *Config {
+	conf := initConfig()
 	if strings.HasSuffix(path, ".json") {
-		readFile = config.ParseJsonFile
+		err := parseJSON(path, &conf)
+		if err != nil {
+			panic(fmt.Errorf("Failed to parse JSON file: %s", err))
+		}
 	} else if strings.HasSuffix(path, ".yaml") {
-		readFile = config.ParseYamlFile
-	}
-	if readFile != nil {
-		if cfg, err := readFile(path); err == nil {
-			return &Config{
-				Config: cfg,
-				Path:   path,
-			}, nil
+		err := parseYAML(path, &conf)
+		if err != nil {
+			panic(fmt.Errorf("Failed to parse YAML file: %s", err))
 		}
 	}
-	return nil, errors.New("unsupported file type")
+	// Check format version
+	if conf.Version != confVer {
+		panic("Check the latest version of bulrush's configuration file.")
+	}
+	return conf
 }
 
-// NewCfg create a Config instance
-func NewCfg(path string) *Config {
-	cfg, err := LoadFile(path)
+func parseJSON(path string, v interface{}) error {
+	var (
+		data []byte
+		err  error
+	)
+	data, err = ioutil.ReadFile(path)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	return cfg
+	err = json.Unmarshal(data, v)
+	return err
 }
 
-// GetString get string or from default value
-func (cfg *Config) GetString(key string, init string) string {
-	return Some(LeftV(cfg.String(key)), init).(string)
-}
-
-// GetInt get int or from default value
-func (cfg *Config) GetInt(key string, init int) int {
-	return Some(LeftV(cfg.Int(key)), init).(int)
-}
-
-// GetDurationFromSecInt get duration or from default value
-func (cfg *Config) GetDurationFromSecInt(key string, init int) time.Duration {
-	return time.Duration(cfg.GetInt(key, init)) * time.Second
-}
-
-// GetDurationFromMinInt get duration or from default value
-func (cfg *Config) GetDurationFromMinInt(key string, init int) time.Duration {
-	return time.Duration(cfg.GetInt(key, init)) * time.Minute
-}
-
-// GetDurationFromHourInt get duration or from default value
-func (cfg *Config) GetDurationFromHourInt(key string, init int) time.Duration {
-	return time.Duration(cfg.GetInt(key, init)) * time.Hour
-}
-
-// GetBool get bool or from default value
-func (cfg *Config) GetBool(key string, init bool) bool {
-	return Some(LeftV(cfg.Bool(key)), init).(bool)
-}
-
-// GetStrList get list or from default value
-func (cfg *Config) GetStrList(key string, init []string) []string {
-	value := LeftV(cfg.List(key)).([]interface{})
-	if value == nil {
-		return init
+func parseYAML(path string, v interface{}) error {
+	var (
+		data []byte
+		err  error
+	)
+	data, err = ioutil.ReadFile(path)
+	if err != nil {
+		return err
 	}
-	return ToStrArray(value)
-}
-
-// GetListInt get list or from default value
-func (cfg *Config) GetListInt(key string, init []int) []int {
-	value := LeftV(cfg.List(key)).([]interface{})
-	if value == nil {
-		return init
-	}
-	return ToIntArray(value)
+	err = yaml.Unmarshal(data, v)
+	return err
 }

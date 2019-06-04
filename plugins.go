@@ -53,7 +53,7 @@ var HTTPProxy = PNQuick(func() *gin.Engine {
 
 // HTTPRouter create http router
 var HTTPRouter = PNQuick(func(httpProxy *gin.Engine, config *Config) *gin.RouterGroup {
-	return httpProxy.Group(config.GetString("prefix", "/api/v1"))
+	return httpProxy.Group(config.Prefix)
 })
 
 // Override http methods
@@ -79,8 +79,8 @@ var Override = PNQuick(func(router *gin.RouterGroup, httpProxy *gin.Engine) {
 
 // RunImmediately run app
 var RunImmediately = PNQuick(func(httpProxy *gin.Engine, config *Config) {
-	port := fixedPortPrefix(strings.TrimSpace(config.GetString("port", ":8080")))
-	name := config.GetString("name", "")
+	port := fixedPortPrefix(strings.TrimSpace(config.Port))
+	name := config.Name
 	fmt.Println("\n\n================================")
 	fmt.Printf("App: %s\n", name)
 	fmt.Printf("Listen on %s\n", port)

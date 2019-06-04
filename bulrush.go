@@ -196,8 +196,8 @@ func (bulrush *rush) PostUse(items ...PNBase) Bulrush {
 // Config load config from string path
 // currently, it support loading file that end with .json or .yarm
 func (bulrush *rush) Config(path string) Bulrush {
-	bulrush.config = NewCfg(path)
-	gin.SetMode(bulrush.config.GetString("mode", DefaultMode))
+	bulrush.config = LoadConfig(path)
+	gin.SetMode(bulrush.config.Mode)
 	bulrush.Inject(bulrush.config)
 	return bulrush
 }

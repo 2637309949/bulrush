@@ -9,7 +9,6 @@
 package bulrush
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 )
@@ -90,9 +89,6 @@ func Test_createSlice(t *testing.T) {
 
 type testRR struct{}
 
-func (t *testRR) TestYY(num int) {
-	fmt.Println(num)
-}
 func Test_reflectObjectAndCall(t *testing.T) {
 	type args struct {
 		target interface{}

@@ -113,7 +113,7 @@ func LoadConfig(path string) *Config {
 	}
 	// Check format version
 	if conf.Version != confVer {
-		panic("Check the latest version of bulrush's configuration file.")
+		log.Info("Check the latest version of bulrush's configuration file.")
 	}
 	return conf
 }

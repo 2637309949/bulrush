@@ -1,9 +1,10 @@
 package: github.com/2637309949/bulrush
 import:
+- package: github.com/ghodss/yaml
+  version: ^1.0.0
 - package: github.com/gin-gonic/gin
-  version: v1.4.0
+  version: ^1.4.0
 - package: github.com/kataras/go-events
-  version: v0.0.2
-- package: github.com/olebedev/config
+  version: ^0.0.2
 - package: github.com/thoas/go-funk
-  version: "0.4"
+  version: ^0.4.0

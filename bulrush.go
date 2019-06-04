@@ -13,8 +13,9 @@
 package bulrush
 
 import (
-	"log"
 	"sync"
+
+	"github.com/2637309949/bulrush-addition/logger"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kataras/go-events"
@@ -35,6 +36,7 @@ var (
 	EnableWarning = false
 	// DuckReflect indicate inject with duck Type, default is true
 	DuckReflect = true
+	log         = logger.CreateConsoleLogger()
 )
 
 // Bulrush the framework's struct
@@ -144,7 +146,7 @@ func (bulrush *rush) PreUse(items ...PNBase) Bulrush {
 	defer bulrush.mu.Unlock()
 	if bulrush.maxPlugins > 0 && len(*bulrush.preMiddles) == bulrush.maxPlugins {
 		if EnableWarning {
-			log.Printf(`warning: possible plugins memory 'leak detected. %d plugin added.
+			log.Info(`warning: possible plugins memory 'leak detected. %d plugin added.
 				'Use app.SetMaxPlugins(n int) to increase limit.`, len(*bulrush.preMiddles))
 		}
 		return bulrush
@@ -164,7 +166,7 @@ func (bulrush *rush) Use(items ...PNBase) Bulrush {
 	defer bulrush.mu.Unlock()
 	if bulrush.maxPlugins > 0 && len(*bulrush.middles) == bulrush.maxPlugins {
 		if EnableWarning {
-			log.Printf(`warning: possible plugins memory 'leak detected. %d plugin added.
+			log.Info(`warning: possible plugins memory 'leak detected. %d plugin added.
 				'Use app.SetMaxPlugins(n int) to increase limit.`, len(*bulrush.middles))
 		}
 		return bulrush
@@ -184,7 +186,7 @@ func (bulrush *rush) PostUse(items ...PNBase) Bulrush {
 	defer bulrush.mu.Unlock()
 	if bulrush.maxPlugins > 0 && len(*bulrush.postMiddles) == bulrush.maxPlugins {
 		if EnableWarning {
-			log.Printf(`warning: possible plugins memory 'leak detected. %d plugin added.
+			log.Info(`warning: possible plugins memory 'leak detected. %d plugin added.
 				'Use app.SetMaxPlugins(n int) to increase limit.`, len(*bulrush.postMiddles))
 		}
 		return bulrush
@@ -220,7 +222,7 @@ func (bulrush *rush) Inject(items ...interface{}) Bulrush {
 func (bulrush *rush) SetMaxPlugins(n int) {
 	if n < 0 {
 		if EnableWarning {
-			log.Printf("(events) warning: MaxPlugins must be positive number, tried to set: %d", n)
+			log.Info("(events) warning: MaxPlugins must be positive number, tried to set: %d", n)
 			return
 		}
 	}

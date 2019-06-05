@@ -22,17 +22,18 @@ const confVer = 1
 
 // Config bulrush config struct
 type Config struct {
-	Version int    `json:"version" yaml:"version"`
-	Name    string `json:"name" yaml:"name"`
-	Prefix  string `json:"prefix" yaml:"prefix"`
-	Port    string `json:"port" yaml:"port"`
-	Mode    string `json:"mode" yaml:"mode"`
-	Log     log2
-	Mongo   mongo
-	Redis   redis
+	Version     int    `json:"version" yaml:"version"`
+	Name        string `json:"name" yaml:"name"`
+	Prefix      string `json:"prefix" yaml:"prefix"`
+	Port        string `json:"port" yaml:"port"`
+	Mode        string `json:"mode" yaml:"mode"`
+	DuckReflect bool   `json:"duckReflect" yaml:"duckReflect"`
+	Log         log
+	Mongo       mongo
+	Redis       redis
 }
 
-type log2 struct {
+type log struct {
 	Path string `json:"path" yaml:"path"`
 }
 
@@ -79,10 +80,11 @@ type redis struct {
 
 func initConfig() *Config {
 	return &Config{
-		Version: 1,
-		Name:    "bulrush",
-		Prefix:  "/api/v1",
-		Mode:    "debug",
+		Version:     1,
+		Name:        "bulrush",
+		Prefix:      "/api/v1",
+		Mode:        "debug",
+		DuckReflect: true,
 		Mongo: mongo{
 			Addrs:    make([]string, 0),
 			Timeout:  0,
@@ -113,7 +115,7 @@ func LoadConfig(path string) *Config {
 	}
 	// Check format version
 	if conf.Version != confVer {
-		log.Info("Check the latest version of bulrush's configuration file.")
+		rushLogger.Info("Check the latest version of bulrush's configuration file.")
 	}
 	return conf
 }

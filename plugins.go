@@ -9,7 +9,6 @@
 package bulrush
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -81,9 +80,9 @@ var Override = PNQuick(func(router *gin.RouterGroup, httpProxy *gin.Engine) {
 var RunImmediately = PNQuick(func(httpProxy *gin.Engine, config *Config) {
 	port := fixedPortPrefix(strings.TrimSpace(config.Port))
 	name := config.Name
-	fmt.Println("\n\n================================")
-	fmt.Printf("App: %s\n", name)
-	fmt.Printf("Listen on %s\n", port)
-	fmt.Println("================================")
+	rushLogger.Info("\n\n================================")
+	rushLogger.Info("App: %s\n", name)
+	rushLogger.Info("Listen on %s", port)
+	rushLogger.Info("================================")
 	httpProxy.Run(port)
 })

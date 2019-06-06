@@ -17,11 +17,11 @@ Transfer/sec:     24.85MB
 
 ## Instruction
 Quickly build applications and customize special functions through plug-ins, Multiple base plug-ins are provided
-1. Install Bulrush
+Install Bulrush
 ```shell
 $ go get github.com/2637309949/bulrush
 ```
-2. QuickStart
+QuickStart
 ```go
 import (
     "github.com/2637309949/bulrush"
@@ -66,7 +66,7 @@ app.Run(func(httpProxy *gin.Engine, config *bulrush.Config) {
     httpProxy.Run(config.GetString("port", ":8080"))
 })
 ```
-3. For more details, Please reference to [bulrush-template](https://github.com/2637309949/bulrush-template). 
+For more details, Please reference to [bulrush-template](https://github.com/2637309949/bulrush-template). 
 
 ## API
 #### Set app config

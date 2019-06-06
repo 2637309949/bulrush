@@ -25,6 +25,8 @@ var (
 	Version = "0.0.1"
 	// DefaultMode default gin mode
 	DefaultMode = "debug"
+	// Mode bulrush running Mode
+	Mode = "debug"
 	// DefaultMaxPlugins is the number of max Plugins
 	// `Just for Learning synchronization`
 	// a matter of little interest
@@ -196,9 +198,13 @@ func (bulrush *rush) PostUse(items ...PNBase) Bulrush {
 // currently, it support loading file that end with .json or .yarm
 func (bulrush *rush) Config(path string) Bulrush {
 	bulrush.config = LoadConfig(path)
-	gin.SetMode(bulrush.config.Mode)
 	bulrush.Inject(bulrush.config)
+
 	DuckReflect = bulrush.config.DuckReflect
+	Mode = bulrush.config.Mode
+
+	gin.SetMode(bulrush.config.Mode)
+	reloadRushLogger(bulrush.config.Mode)
 	return bulrush
 }
 

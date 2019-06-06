@@ -115,7 +115,7 @@ func LoadConfig(path string) *Config {
 	}
 	// Check format version
 	if conf.Version != confVer {
-		rushLogger.Info("Check the latest version of bulrush's configuration file.")
+		rushLogger.Warn("Check the latest version of bulrush's configuration file.")
 	}
 	return conf
 }

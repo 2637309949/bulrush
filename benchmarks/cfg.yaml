@@ -1,3 +1,4 @@
-name: 'bulrush-template'
+name: 'benchmarks'
 port: ':3333'
+mode: 'release'
 prefix: '/api/v1'

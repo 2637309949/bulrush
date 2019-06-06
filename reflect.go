@@ -107,6 +107,7 @@ func duckMatcher(ptype reflect.Type, params []interface{}) interface{} {
 func reflectTypeMatcher(ptype reflect.Type, params []interface{}) interface{} {
 	eleValue := typeMatcher(ptype, params)
 	if eleValue == nil && DuckReflect {
+		rushLogger.Verbose("Try in dockReflect injecting mode:%s", ptype)
 		eleValue = duckMatcher(ptype, params)
 	}
 	if eleValue == nil {

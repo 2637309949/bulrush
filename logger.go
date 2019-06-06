@@ -10,10 +10,23 @@ package bulrush
 
 import "github.com/2637309949/bulrush-addition/logger"
 
-var rushLogger = logger.CreateLogger(logger.INFOLevel, nil,
-	[]*logger.Transport{
-		&logger.Transport{
-			Level: logger.INFOLevel,
+// rushLogger just for console log
+var rushLogger *logger.Journal
+
+func reloadRushLogger(mode string) {
+	var level = logger.SILLYLevel
+	if mode == "release" {
+		level = logger.WARNLevel
+	}
+	rushLogger = logger.CreateLogger(level, nil,
+		[]*logger.Transport{
+			&logger.Transport{
+				Level: level,
+			},
 		},
-	},
-)
+	)
+}
+
+func init() {
+	reloadRushLogger(Mode)
+}

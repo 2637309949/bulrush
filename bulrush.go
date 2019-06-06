@@ -31,9 +31,6 @@ var (
 	// `Just for Learning synchronization`
 	// a matter of little interest
 	DefaultMaxPlugins = 0
-	// EnableWarning prints a warning when trying to add an plugin which it's len is equal to the maxPlugins
-	// Defaults to false, which means it does not prints a warning
-	EnableWarning = false
 	// DuckReflect indicate inject with duck Type, default is true
 	DuckReflect = true
 )
@@ -144,10 +141,8 @@ func (bulrush *rush) PreUse(items ...PNBase) Bulrush {
 	bulrush.mu.Lock()
 	defer bulrush.mu.Unlock()
 	if bulrush.maxPlugins > 0 && len(*bulrush.preMiddles) == bulrush.maxPlugins {
-		if EnableWarning {
-			rushLogger.Info(`warning: possible plugins memory 'leak detected. %d plugin added.
-				'Use app.SetMaxPlugins(n int) to increase limit.`, len(*bulrush.preMiddles))
-		}
+		rushLogger.Warn(`warning: possible plugins memory 'leak detected. %d plugin added.
+		'Use app.SetMaxPlugins(n int) to increase limit.`, len(*bulrush.preMiddles))
 		return bulrush
 	}
 	*bulrush.preMiddles = append(*bulrush.preMiddles, items...)
@@ -164,10 +159,8 @@ func (bulrush *rush) Use(items ...PNBase) Bulrush {
 	bulrush.mu.Lock()
 	defer bulrush.mu.Unlock()
 	if bulrush.maxPlugins > 0 && len(*bulrush.middles) == bulrush.maxPlugins {
-		if EnableWarning {
-			rushLogger.Info(`warning: possible plugins memory 'leak detected. %d plugin added.
-				'Use app.SetMaxPlugins(n int) to increase limit.`, len(*bulrush.middles))
-		}
+		rushLogger.Warn(`warning: possible plugins memory 'leak detected. %d plugin added.
+		'Use app.SetMaxPlugins(n int) to increase limit.`, len(*bulrush.middles))
 		return bulrush
 	}
 	*bulrush.middles = append(*bulrush.middles, items...)
@@ -184,10 +177,8 @@ func (bulrush *rush) PostUse(items ...PNBase) Bulrush {
 	bulrush.mu.Lock()
 	defer bulrush.mu.Unlock()
 	if bulrush.maxPlugins > 0 && len(*bulrush.postMiddles) == bulrush.maxPlugins {
-		if EnableWarning {
-			rushLogger.Info(`warning: possible plugins memory 'leak detected. %d plugin added.
-				'Use app.SetMaxPlugins(n int) to increase limit.`, len(*bulrush.postMiddles))
-		}
+		rushLogger.Warn(`warning: possible plugins memory 'leak detected. %d plugin added.
+		'Use app.SetMaxPlugins(n int) to increase limit.`, len(*bulrush.postMiddles))
 		return bulrush
 	}
 	*bulrush.postMiddles = append(*bulrush.postMiddles, items...)
@@ -225,10 +216,8 @@ func (bulrush *rush) Inject(items ...interface{}) Bulrush {
 // to be decrease or increase. Set to zero for unlimited
 func (bulrush *rush) SetMaxPlugins(n int) {
 	if n < 0 {
-		if EnableWarning {
-			rushLogger.Info("(events) warning: MaxPlugins must be positive number, tried to set: %d", n)
-			return
-		}
+		rushLogger.Warn("(events) warning: MaxPlugins must be positive number, tried to set: %d", n)
+		return
 	}
 	bulrush.maxPlugins = n
 }

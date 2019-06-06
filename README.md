@@ -69,11 +69,11 @@ app.Run(func(httpProxy *gin.Engine, config *bulrush.Config) {
 3. For more details, Please reference to [bulrush-template](https://github.com/2637309949/bulrush-template). 
 
 ## API
-#### 1.Set app config
+#### Set app config
 ```go
 app.Config(CONFIGPATH)
 ```
-#### 2.Inject your custom injects
+#### Inject your custom injects
 All injects would be provided as plugins params next by next.  
 Init injects by Inject function
 ```go
@@ -88,7 +88,7 @@ func (role *Role) Plugin() bulrush.PNRet {
 	}
 }
 ```
-#### 3.Import your plugins
+#### Import your plugins
 ```go
 app.Use(bulrush.PNQuick(func(testInject string, router *gin.RouterGroup) {
     router.GET("/bulrushApp", func (c *gin.Context) {
@@ -98,7 +98,7 @@ app.Use(bulrush.PNQuick(func(testInject string, router *gin.RouterGroup) {
     })
 }))
 ```
-#### 4.Run app
+#### Run app
 ```go
 app.Run(func(httpProxy *gin.Engine, config *bulrush.Config) {
     port := config.GetString("port", ":8080")
@@ -114,7 +114,7 @@ app.Run(func(httpProxy *gin.Engine, config *bulrush.Config) {
     httpProxy.Run(port)
 })
 ```
-#### 5. Share state between plug-ins
+#### Share state between plug-ins
 
 ##### store state
 ```go
@@ -129,7 +129,7 @@ app.Use(bulrush.PNQuick(func(status *bulrush.Status) {
     status.ALL()
 }))
 ```
-#### 6. Plug in communication between plug-ins
+#### Plug in communication between plug-ins
 ```go
 app.Use(bulrush.PNQuick(func(events events.EventEmmiter) {
 	events.On("hello", func(payload ...interface{}) {

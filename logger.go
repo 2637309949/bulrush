@@ -13,6 +13,7 @@ import "github.com/2637309949/bulrush-addition/logger"
 // rushLogger just for console log
 var rushLogger *logger.Journal
 
+// reloadUrhsLogger for reload logger level after setting pro mode
 func reloadRushLogger(mode string) {
 	var level = logger.SILLYLevel
 	if mode == "release" {

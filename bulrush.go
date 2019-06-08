@@ -124,12 +124,11 @@ func Default() Bulrush {
 	return bulrush
 }
 
-var (
-	// Silence the compiler
-	_ = &rush{}
-	// defaultApp default rush
-	defaultApp = New()
-)
+// Silence the compiler
+var _ = &rush{}
+
+// defaultApp default rush
+var defaultApp = New()
 
 // PreUse attachs a global middleware to the router
 // just like function in gin, but not been inited util bulrush inited.

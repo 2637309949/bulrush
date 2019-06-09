@@ -2,7 +2,7 @@ github.com/2637309949/bulrush v0.0.0-20190607030313-28d446049b76/go.mod h1:qPR8d
 github.com/2637309949/bulrush-addition v0.0.0-20190605141653-01e70cd1cb76/go.mod h1:Y/xV7WL+ym2DWmG86jxqrF6QMgY8SXkJMcvL4JJh8qA=
 github.com/2637309949/bulrush-addition v0.0.0-20190608111855-725ea7bbda0e h1:lUuIaoZAN/9wtbEirlUsYn6BIN+KmJysqupEBgKzG4Q=
 github.com/2637309949/bulrush-addition v0.0.0-20190608111855-725ea7bbda0e/go.mod h1:ZbbfzihQrv1AR64anFXLYhNWHKNzLFG8muQUnQ0T84w=
-
+github.com/beego/bee v1.10.0/go.mod h1:0z6z9KcOHepE/HeYTmfjJWIFZfQ9bkKqsBdgcm/6etM=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=

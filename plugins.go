@@ -80,9 +80,9 @@ var Override = PNQuick(func(router *gin.RouterGroup, httpProxy *gin.Engine) {
 var RunImmediately = PNQuick(func(httpProxy *gin.Engine, config *Config) {
 	port := fixedPortPrefix(strings.TrimSpace(config.Port))
 	name := config.Name
-	rushLogger.Info("================================")
-	rushLogger.Info("App: %s", name)
-	rushLogger.Info("Listen on %s", port)
-	rushLogger.Info("================================")
+	rushLogger.Debug("================================")
+	rushLogger.Debug("App: %s", name)
+	rushLogger.Debug("Listen on %s", port)
+	rushLogger.Debug("================================")
 	httpProxy.Run(port)
 })

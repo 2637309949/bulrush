@@ -144,6 +144,7 @@ app.Use(bulrush.PNQuick(func(events events.EventEmmiter) {
 ## Plugins
 ### Built-in Plugins
 - [bulrush-addition](https://github.com/2637309949/bulrush-addition)
+- [bulrush-openapi](https://github.com/2637309949/bulrush-openapi)
 - [bulrush-captcha](https://github.com/2637309949/bulrush-captcha)
 - [bulrush-delivery](https://github.com/2637309949/bulrush-delivery)
 - [bulrush-identify](https://github.com/2637309949/bulrush-identify)

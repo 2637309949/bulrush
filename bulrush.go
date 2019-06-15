@@ -243,6 +243,7 @@ func (bulrush *rush) middle2Plugins(middles *Middles) interface{} {
 	return plugins
 }
 
+// Exec Plugins and Inject entity
 func (bulrush *rush) execPlugins(plugins interface{}) {
 	funk.ForEach(plugins, func(x interface{}) {
 		rs := reflectMethodAndCall(x, *bulrush.injects)

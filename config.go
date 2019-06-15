@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"reflect"
 	"strings"
 
 	"github.com/ghodss/yaml"
@@ -35,14 +36,27 @@ type (
 )
 
 // Unmarshal defined Unmarshal type
-func (c *Config) Unmarshal(v interface{}) error {
+func (c *Config) Unmarshal(fieldName string, v interface{}) (interface{}, error) {
+	var err error
+	sv := createStruct([]reflect.StructField{
+		reflect.StructField{
+			Name: strings.Title(fieldName),
+			Type: reflect.TypeOf(v),
+			Tag:  reflect.StructTag(fmt.Sprintf(`json:"%s" yaml:"%s"`, fieldName, fieldName)),
+		},
+	})
 	if c.dataType == "json" {
-		return json.Unmarshal(c.data, v)
+		err = json.Unmarshal(c.data, sv)
+	} else if c.dataType == "yaml" {
+		err = yaml.Unmarshal(c.data, sv)
+	} else {
+		err = errors.New("no support")
 	}
-	if c.dataType == "yaml" {
-		return yaml.Unmarshal(c.data, v)
+	if err != nil {
+		return nil, err
 	}
-	return errors.New("no support")
+	conf := stealFieldInStruct(strings.Title(fieldName), sv)
+	return conf, nil
 }
 
 // initConfig defined return a config with default fields

@@ -153,3 +153,19 @@ func createObject(target interface{}) interface{} {
 	}
 	return reflect.New(tType).Interface()
 }
+
+// make struct from reflect type
+func createStruct(sfs []reflect.StructField) interface{} {
+	return reflect.New(reflect.StructOf(sfs)).Interface()
+}
+
+// get fieldValue by reflect
+func stealFieldInStruct(fieldName string, sv interface{}) interface{} {
+	var svv reflect.Value
+	if reflect.TypeOf(sv).Kind() == reflect.Ptr {
+		svv = reflect.ValueOf(sv).Elem()
+	} else {
+		svv = reflect.ValueOf(sv)
+	}
+	return svv.FieldByName(fieldName).Interface()
+}

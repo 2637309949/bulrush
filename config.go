@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"strings"
-	"time"
 
 	"github.com/ghodss/yaml"
 )
@@ -44,47 +43,6 @@ func (c *Config) Unmarshal(v interface{}) error {
 		return yaml.Unmarshal(c.data, v)
 	}
 	return errors.New("no support")
-}
-
-type mongo struct {
-	Addrs          []string      `json:"addrs" yaml:"addrs"`
-	Timeout        time.Duration `json:"timeout" yaml:"timeout"`
-	Database       string        `json:"database" yaml:"database"`
-	ReplicaSetName string        `json:"replicaSetName" yaml:"replicaSetName"`
-	Source         string        `json:"source" yaml:"source"`
-	Service        string        `json:"service" yaml:"service"`
-	ServiceHost    string        `json:"serviceHost" yaml:"serviceHost"`
-	Mechanism      string        `json:"mechanism" yaml:"mechanism"`
-	Username       string        `json:"username" yaml:"username"`
-	Password       string        `json:"password" yaml:"password"`
-	PoolLimit      int           `json:"poolLimit" yaml:"poolLimit"`
-	PoolTimeout    time.Duration `json:"poolTimeout" yaml:"poolTimeout"`
-	ReadTimeout    time.Duration `json:"readTimeout" yaml:"readTimeout"`
-	WriteTimeout   time.Duration `json:"writeTimeout" yaml:"writeTimeout"`
-	AppName        string        `json:"appName" yaml:"appName"`
-	FailFast       bool          `json:"failFast" yaml:"failFast"`
-	Direct         bool          `json:"direct" yaml:"direct"`
-	MinPoolSize    int           `json:"minPoolSize" yaml:"minPoolSize"`
-	MaxIdleTimeMS  int           `json:"maxIdleTimeMS" yaml:"maxIdleTimeMS"`
-}
-
-type redis struct {
-	Network            string        `json:"network" yaml:"network"`
-	Addr               string        `json:"addrs" yaml:"addrs"`
-	Password           string        `json:"password" yaml:"password"`
-	DB                 int           `json:"db" yaml:"db"`
-	MaxRetries         int           `json:"maxRetries" yaml:"maxRetries"`
-	MinRetryBackoff    time.Duration `json:"minRetryBackoff" yaml:"minRetryBackoff"`
-	MaxRetryBackoff    time.Duration `json:"maxRetryBackoff" yaml:"maxRetryBackoff"`
-	DialTimeout        time.Duration `json:"dialTimeout" yaml:"dialTimeout"`
-	ReadTimeout        time.Duration `json:"readTimeout" yaml:"readTimeout"`
-	WriteTimeout       time.Duration `json:"writeTimeout" yaml:"writeTimeout"`
-	PoolSize           int           `json:"poolSize" yaml:"poolSize"`
-	MinIdleConns       int           `json:"minIdleConns" yaml:"minIdleConns"`
-	MaxConnAge         time.Duration `json:"maxConnAge" yaml:"maxConnAge"`
-	PoolTimeout        time.Duration `json:"poolTimeout" yaml:"poolTimeout"`
-	IdleTimeout        time.Duration `json:"idleTimeout" yaml:"idleTimeout"`
-	IdleCheckFrequency time.Duration `json:"idleCheckFrequency" yaml:"idleCheckFrequency"`
 }
 
 // initConfig defined return a config with default fields

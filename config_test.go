@@ -10,5 +10,5 @@ import (
 
 func TestLoadConfig(t *testing.T) {
 	conf := LoadConfig("config_test2.yaml")
-	t.Log(conf.Mongo.ReadTimeout)
+	t.Log(conf.Version)
 }

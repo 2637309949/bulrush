@@ -35,9 +35,21 @@ type (
 	}
 )
 
+// unmarshal json or yaml
+func unmarshal(unType string, data []byte, sv interface{}) error {
+	var err error
+	if unType == "json" {
+		err = json.Unmarshal(data, sv)
+	} else if unType == "yaml" {
+		err = yaml.Unmarshal(data, sv)
+	} else {
+		err = errors.New("no support")
+	}
+	return err
+}
+
 // Unmarshal defined Unmarshal type
 func (c *Config) Unmarshal(fieldName string, v interface{}) (interface{}, error) {
-	var err error
 	sv := createStruct([]reflect.StructField{
 		reflect.StructField{
 			Name: strings.Title(fieldName),
@@ -45,13 +57,7 @@ func (c *Config) Unmarshal(fieldName string, v interface{}) (interface{}, error)
 			Tag:  reflect.StructTag(fmt.Sprintf(`json:"%s" yaml:"%s"`, fieldName, fieldName)),
 		},
 	})
-	if c.dataType == "json" {
-		err = json.Unmarshal(c.data, sv)
-	} else if c.dataType == "yaml" {
-		err = yaml.Unmarshal(c.data, sv)
-	} else {
-		err = errors.New("no support")
-	}
+	err := unmarshal(c.dataType, c.data, sv)
 	if err != nil {
 		return nil, err
 	}
@@ -60,6 +66,10 @@ func (c *Config) Unmarshal(fieldName string, v interface{}) (interface{}, error)
 }
 
 // initConfig defined return a config with default fields
+// Name:        bulrush
+// Mode:        debug
+// Prefix:      /api/v1
+// DuckReflect: true
 func initConfig() *Config {
 	return &Config{
 		Version:     1,
@@ -71,8 +81,6 @@ func initConfig() *Config {
 }
 
 // LoadConfig loads the bulrush tool configuration.
-// It looks for .yaml or .json in the current path,
-// and falls back to default configuration in case not found.
 func LoadConfig(path string) *Config {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {

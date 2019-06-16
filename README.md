@@ -185,9 +185,30 @@ bulrush.PNQuick(func(testInject string, router *gin.RouterGroup) {
 
 ```
 
-### All plugins is isolated, but Config is shareing. so you should assemble your plugin` config from bulrush Injects
+### Assemble your plugin` config from bulrush Injects
 ```go
 // Example for my mgo
+type conf struct {
+	Addrs          []string      `json:"addrs" yaml:"addrs"`
+	Timeout        time.Duration `json:"timeout" yaml:"timeout"`
+	Database       string        `json:"database" yaml:"database"`
+	ReplicaSetName string        `json:"replicaSetName" yaml:"replicaSetName"`
+	Source         string        `json:"source" yaml:"source"`
+	Service        string        `json:"service" yaml:"service"`
+	ServiceHost    string        `json:"serviceHost" yaml:"serviceHost"`
+	Mechanism      string        `json:"mechanism" yaml:"mechanism"`
+	Username       string        `json:"username" yaml:"username"`
+	Password       string        `json:"password" yaml:"password"`
+	PoolLimit      int           `json:"poolLimit" yaml:"poolLimit"`
+	PoolTimeout    time.Duration `json:"poolTimeout" yaml:"poolTimeout"`
+	ReadTimeout    time.Duration `json:"readTimeout" yaml:"readTimeout"`
+	WriteTimeout   time.Duration `json:"writeTimeout" yaml:"writeTimeout"`
+	AppName        string        `json:"appName" yaml:"appName"`
+	FailFast       bool          `json:"failFast" yaml:"failFast"`
+	Direct         bool          `json:"direct" yaml:"direct"`
+	MinPoolSize    int           `json:"minPoolSize" yaml:"minPoolSize"`
+	MaxIdleTimeMS  int           `json:"maxIdleTimeMS" yaml:"maxIdleTimeMS"`
+}
 func New(bulCfg *bulrush.Config) *Mongo {
 	cf, err := bulCfg.Unmarshal("mongo", conf{})
 	if err != nil {

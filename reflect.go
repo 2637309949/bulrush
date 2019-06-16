@@ -139,18 +139,14 @@ func typeExists(items interface{}, target interface{}) bool {
 // make slice from reflect type
 func createSlice(target interface{}) interface{} {
 	tType := reflect.ValueOf(target).Type()
-	if tType.Kind() == reflect.Ptr {
-		tType = tType.Elem()
-	}
+	tType = indirectType(tType)
 	return reflect.MakeSlice(reflect.SliceOf(tType), 0, 0).Interface()
 }
 
 // make object from reflect type
 func createObject(target interface{}) interface{} {
 	tType := reflect.ValueOf(target).Type()
-	if tType.Kind() == reflect.Ptr {
-		tType = tType.Elem()
-	}
+	tType = indirectType(tType)
 	return reflect.New(tType).Interface()
 }
 
@@ -161,11 +157,20 @@ func createStruct(sfs []reflect.StructField) interface{} {
 
 // get fieldValue by reflect
 func stealFieldInStruct(fieldName string, sv interface{}) interface{} {
-	var svv reflect.Value
-	if reflect.TypeOf(sv).Kind() == reflect.Ptr {
-		svv = reflect.ValueOf(sv).Elem()
-	} else {
-		svv = reflect.ValueOf(sv)
-	}
+	svv := indirectValue(reflect.ValueOf(sv))
 	return svv.FieldByName(fieldName).Interface()
+}
+
+func indirectValue(reflectValue reflect.Value) reflect.Value {
+	for reflectValue.Kind() == reflect.Ptr {
+		reflectValue = reflectValue.Elem()
+	}
+	return reflectValue
+}
+
+func indirectType(reflectType reflect.Type) reflect.Type {
+	for reflectType.Kind() == reflect.Ptr {
+		reflectType = reflectType.Elem()
+	}
+	return reflectType
 }

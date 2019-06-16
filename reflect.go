@@ -140,7 +140,7 @@ func typeExists(items interface{}, target interface{}) bool {
 func createSlice(target interface{}) interface{} {
 	tType := reflect.ValueOf(target).Type()
 	tType = indirectType(tType)
-	return reflect.MakeSlice(reflect.SliceOf(tType), 0, 0).Interface()
+	return reflect.New(reflect.SliceOf(tType)).Interface()
 }
 
 // make object from reflect type
@@ -161,6 +161,7 @@ func stealFieldInStruct(fieldName string, sv interface{}) interface{} {
 	return svv.FieldByName(fieldName).Interface()
 }
 
+// indirect from ptr
 func indirectValue(reflectValue reflect.Value) reflect.Value {
 	for reflectValue.Kind() == reflect.Ptr {
 		reflectValue = reflectValue.Elem()
@@ -168,6 +169,7 @@ func indirectValue(reflectValue reflect.Value) reflect.Value {
 	return reflectValue
 }
 
+// indirect from ptr
 func indirectType(reflectType reflect.Type) reflect.Type {
 	for reflectType.Kind() == reflect.Ptr {
 		reflectType = reflectType.Elem()

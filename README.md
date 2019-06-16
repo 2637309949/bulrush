@@ -182,7 +182,32 @@ bulrush.PNQuick(func(testInject string, router *gin.RouterGroup) {
         })
     })
 })
+
 ```
+
+### All plugins is isolated, but Config is shareing. so you should assemble your plugin` config from bulrush Injects
+```go
+// Example for my mgo
+func New(bulCfg *bulrush.Config) *Mongo {
+	cf, err := bulCfg.Unmarshal("mongo", conf{})
+	if err != nil {
+		panic(err)
+	}
+	conf := cf.(conf)
+	session := createSession(&conf)
+	mgo := &Mongo{
+		m:       make([]map[string]interface{}, 0),
+		cfg:     &conf,
+		API:     &api{},
+		Session: session,
+	}
+	mgo.API.mgo = mgo
+	mgo.AutoHook = autoHook(mgo)
+	return mgo
+}
+``` 
+    // Read part and assemble
+    func (c *Config) Unmarshal(fieldName string, v interface{}) (interface{}, error)
 
 ## Note
     Note go vendor, bulrush needs to reference the same package, otherwise injection fails

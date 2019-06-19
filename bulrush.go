@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kataras/go-events"
 	"github.com/thoas/go-funk"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 var (
@@ -79,6 +80,7 @@ func New() Bulrush {
 	injects := make(Injects, 0)
 	emmiter := events.New()
 	status := statusStorage(emmiter)
+	validate := validator.New()
 	bulrush := &rush{
 		EventEmmiter: emmiter,
 		preMiddles:   &preMiddles,
@@ -94,6 +96,7 @@ func New() Bulrush {
 	defaultInjects := Injects{
 		emmiter,
 		status,
+		validate,
 		&ReverseInject{
 			injects: bulrush.injects,
 		},

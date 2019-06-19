@@ -140,6 +140,13 @@ app.Use(bulrush.PNQuick(func(events events.EventEmmiter) {
 ```
 
 ## Design Philosophy
+## Injects
+### Built-in Injects
+-	EventEmmiter
+-	*Status
+-	*Validate
+-	*Jobrunner
+-	*ReverseInject
 
 ## Plugins
 ### Built-in Plugins

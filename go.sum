@@ -2,6 +2,8 @@ github.com/2637309949/bulrush v0.0.0-20190607030313-28d446049b76/go.mod h1:qPR8d
 github.com/2637309949/bulrush-addition v0.0.0-20190605141653-01e70cd1cb76/go.mod h1:Y/xV7WL+ym2DWmG86jxqrF6QMgY8SXkJMcvL4JJh8qA=
 github.com/2637309949/bulrush-addition v0.0.0-20190608111855-725ea7bbda0e h1:lUuIaoZAN/9wtbEirlUsYn6BIN+KmJysqupEBgKzG4Q=
 github.com/2637309949/bulrush-addition v0.0.0-20190608111855-725ea7bbda0e/go.mod h1:ZbbfzihQrv1AR64anFXLYhNWHKNzLFG8muQUnQ0T84w=
+github.com/bamzi/jobrunner v0.0.0-20161019143021-273175f8b6eb h1:FqF6MRJSUw9TPww3Byhk8OvQ9kUhzJCuLwth+MtaG6g=
+github.com/bamzi/jobrunner v0.0.0-20161019143021-273175f8b6eb/go.mod h1:hbN8iwOALqzoHEUsnpWKLY2WI2djW8Qhu3fuboMpsOg=
 github.com/beego/bee v1.10.0/go.mod h1:0z6z9KcOHepE/HeYTmfjJWIFZfQ9bkKqsBdgcm/6etM=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -65,6 +67,8 @@ gopkg.in/go-playground/validator.v8 v8.18.2 h1:lFB4DoMU6B626w8ny76MV7VX6W2VHct2G
 gopkg.in/go-playground/validator.v8 v8.18.2/go.mod h1:RX2a/7Ha8BgOhfk7j780h4/u/RRjR0eouCJSH80/M2Y=
 gopkg.in/go-playground/validator.v9 v9.29.0 h1:5ofssLNYgAA/inWn6rTZ4juWpRJUwEnXc1LG2IeXwgQ=
 gopkg.in/go-playground/validator.v9 v9.29.0/go.mod h1:+c9/zcJMFNgbLvly1L1V+PpxWdVbfP1avr/N00E2vyQ=
+gopkg.in/robfig/cron.v2 v2.0.0-20150107220207-be2e0b0deed5 h1:E846t8CnR+lv5nE+VuiKTDG/v1U2stad0QzddfJC7kY=
+gopkg.in/robfig/cron.v2 v2.0.0-20150107220207-be2e0b0deed5/go.mod h1:hiOFpYm0ZJbusNj2ywpbrXowU3G8U6GIQzqn2mw1UIE=
 gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7/go.mod h1:dt/ZhP58zS4L8KSrWDmTeBkI65Dw0HsyUHuEVlX15mw=
 gopkg.in/yaml.v2 v2.2.1/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
 gopkg.in/yaml.v2 v2.2.2 h1:ZCJp+EgiOT7lHqUV2J862kp8Qj64Jo6az82+3Td9dZw=

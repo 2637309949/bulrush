@@ -7,10 +7,10 @@ package bulrush
 import (
 	"sync"
 
+	"github.com/bamzi/jobrunner"
 	"github.com/gin-gonic/gin"
 	"github.com/kataras/go-events"
 	"github.com/thoas/go-funk"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 var (
@@ -79,8 +79,7 @@ func New() Bulrush {
 	postMiddles := make(Middles, 0)
 	injects := make(Injects, 0)
 	emmiter := events.New()
-	status := statusStorage(emmiter)
-	validate := validator.New()
+	jobrunner.Start(10, 5)
 	bulrush := &rush{
 		EventEmmiter: emmiter,
 		preMiddles:   &preMiddles,
@@ -93,14 +92,7 @@ func New() Bulrush {
 		HTTPProxy,
 		HTTPRouter,
 	}
-	defaultInjects := Injects{
-		emmiter,
-		status,
-		validate,
-		&ReverseInject{
-			injects: bulrush.injects,
-		},
-	}
+	defaultInjects := defaultInjects(bulrush)
 	bulrush.Use(defaultMiddles...)
 	bulrush.Inject(defaultInjects...)
 	return bulrush

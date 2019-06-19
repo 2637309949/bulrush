@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	github.com/2637309949/bulrush-addition v0.0.0-20190608111855-725ea7bbda0e
+	github.com/bamzi/jobrunner v0.0.0-20161019143021-273175f8b6eb
 	github.com/ghodss/yaml v1.0.0
 	github.com/gin-gonic/gin v1.4.0
 	github.com/go-playground/locales v0.12.1 // indirect
@@ -12,6 +13,7 @@ require (
 	github.com/leodido/go-urn v1.1.0 // indirect
 	github.com/thoas/go-funk v0.4.0
 	gopkg.in/go-playground/validator.v9 v9.29.0
+	gopkg.in/robfig/cron.v2 v2.0.0-20150107220207-be2e0b0deed5
 )
 
 replace golang.org/x/text v0.3.0 => github.com/golang/text v0.3.0

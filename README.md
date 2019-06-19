@@ -40,19 +40,7 @@ app.Use(bulrush.PNQuick(func(testInject string, router *gin.RouterGroup) {
         })
     })
 }))
-app.Run(func(httpProxy *gin.Engine, config *bulrush.Config) {
-    port := config.GetString("port", ":8080")
-    port = strings.TrimSpace(port)
-    name := config.GetString("name", "")
-    if prefix := port[:1]; prefix != ":" {
-        port = fmt.Sprintf(":%s", port)
-    }
-    fmt.Println("\n\n================================")
-    fmt.Printf("App: %s\n", name)
-    fmt.Printf("Listen on %s\n", port)
-    fmt.Println("================================")
-    httpProxy.Run(port)
-})
+app.RunImmediately()
 ```
 OR
 ```go
@@ -142,11 +130,97 @@ app.Use(bulrush.PNQuick(func(events events.EventEmmiter) {
 ## Design Philosophy
 ## Injects
 ### Built-in Injects
--	EventEmmiter
+-	EventEmmiter  
+
+The entire architecture in the system is developed around plug-ins, and communication between
+    plug-ins is done through EventEmmiter, This ensures low coupling between plug-ins  
+
+Use:
+
+```go
+// Emiter
+// @Summary Task测试
+// @Description Task测试
+// @Tags TASK
+// @Accept mpfd
+// @Produce json
+// @Param accessToken query string true "令牌"
+// @Success 200 {string} json "{"message": "ok"}"
+// @Failure 400 {string} json "{"message": "failure"}"
+// @Router /mgoTest [get]
+func calltask(router *gin.RouterGroup, event events.EventEmmiter) {
+	router.GET("/calltask", func(c *gin.Context) {
+		event.Emit("reminderEmails", "hello 2019")
+		c.JSON(http.StatusOK, gin.H{"message": "ok"})
+	})
+}
+
+// Listener
+func RegisterHello(job *bulrush.Jobrunner, emmiter events.EventEmmiter) {
+	emmiter.On("reminderEmails", func(payload ...interface{}) {
+		message := payload[0].(string)
+		job.Schedule("0/5 * * * * ?", reminderEmails{message})
+	})
+}
+```
 -	*Status
+    If you don't need database or REIDS persistence, you can achieve state consistency between plug-ins by  
+sharing state  
+```go
+// Write state
+func RegisterHello(status *bulrush.Status, emmiter events.EventEmmiter) {
+	status.Set("test", 250)
+}
+// Read state
+func RegisterHello(status *bulrush.Status, emmiter events.EventEmmiter) {
+	data, _ := status.Get("test")
+}
+```
 -	*Validate
+    At the same time provides with gin. Bind the same validator. V9
+```go
+count := reflect.ValueOf(binds).Elem().Len()
+for count > 0 {
+    count = count - 1
+    ele := reflect.ValueOf(binds).Elem().Index(count).Interface()
+    err := validate.Struct(ele)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+        return
+    }
+}
+```
 -	*Jobrunner
+    If you need some lightweight scheduling, you can consider this plug-in
+```go
+type reminderEmails struct {
+	message string
+}
+
+func (e reminderEmails) Run() {
+	addition.Logger.Info("Every 5 sec send reminder emails \n")
+}
+
+// RegisterHello defined hello task
+func RegisterHello(job *bulrush.Jobrunner, emmiter events.EventEmmiter) {
+	emmiter.On("reminderEmails", func(payload ...interface{}) {
+		message := payload[0].(string)
+		job.Schedule("0/5 * * * * ?", reminderEmails{message})
+	})
+}
+```
 -	*ReverseInject
+    If you don't know what plug-ins acceptor need injection content, then you can use *ReverseInject to
+deal with
+```go
+// Model register
+// Make sure all models are initialized here
+var Model = bulrush.PNQuick(func(router *gin.RouterGroup, ri *bulrush.ReverseInject) {
+	ri.Register(nosql.RegisterUser)
+	ri.Register(nosql.RegisterPermission)
+	ri.Register(sql.RegisterProduct)
+})
+```
 
 ## Plugins
 ### Built-in Plugins

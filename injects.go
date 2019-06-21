@@ -10,24 +10,11 @@ import (
 	"gopkg.in/robfig/cron.v2"
 )
 
-// Schedule defined Cron job
-type Schedule struct {
-	Cron *cron.Cron
-}
-
-// ScheduleJob add job and run
-func (s *Schedule) ScheduleJob(spec string, job func()) *cron.Cron {
-	c := cron.New()
-	c.AddFunc(spec, job)
-	c.Start()
-	return c
-}
-
 func defaultInjects(bul *rush) Injects {
 	emmiter := events.New()
 	status := statusStorage(emmiter)
 	validate := validator.New()
-	schedule := &Schedule{}
+	schedule := cron.New()
 	reverseInject := &ReverseInject{
 		injects: bul.injects,
 	}

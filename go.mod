@@ -11,6 +11,7 @@ require (
 	github.com/go-playground/universal-translator v0.16.0 // indirect
 	github.com/kataras/go-events v0.0.2
 	github.com/leodido/go-urn v1.1.0 // indirect
+	github.com/robfig/cron v1.2.0 // indirect
 	github.com/thoas/go-funk v0.4.0
 	gopkg.in/go-playground/validator.v9 v9.29.0
 	gopkg.in/robfig/cron.v2 v2.0.0-20150107220207-be2e0b0deed5

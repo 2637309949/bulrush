@@ -72,6 +72,7 @@ type (
 		PostUse(...PNBase) Bulrush
 		Config(string) Bulrush
 		Inject(...interface{}) Bulrush
+		RunImmediately()
 		Run(interface{})
 	}
 	// Bulrush is the framework's instance, it contains the muxer,

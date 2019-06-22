@@ -17,50 +17,23 @@ var (
 	Version = "0.0.1"
 	// DefaultMode default gin mode
 	DefaultMode = "debug"
-	// Mode bulrush running Mode
-	Mode = "debug"
+	// defaultBulrush default bulrush
+	defaultBulrush = New()
 )
 
-// PNRet return a plugin after call Plugin func
-type PNRet interface{}
-
-// PNBase defined interface for bulrush Plugin
-type PNBase interface {
-	Plugin() PNRet
-}
-
-// PNStruct for a quickly Plugin SetUp when you dont want declare PNBase
-// PBBase minimize implement
-type PNStruct struct{ ret PNRet }
-
-// Plugin for PNQuick
-func (pns *PNStruct) Plugin() PNRet {
-	return pns.ret
-}
-
-// Middles defined array of PNBase
-type Middles []PNBase
-
-// concat defined array concat
-func (mi *Middles) concat(middles *Middles) *Middles {
-	newMiddles := append(*mi, *middles...)
-	return &newMiddles
-}
-
-// toRet defined to get `ret` that plugin func return
-func (mi *Middles) toRet() []PNRet {
-	return funk.Map(*mi, func(x PNBase) PNRet {
-		return x.Plugin()
-	}).([]PNRet)
-}
-
-// Bulrush the framework's struct
-// --EventEmmiter emit and on
-// --config json or yaml config for bulrush
-// --injects struct instance can be reflect by bulrush
-// --middles some middles for gin self
 type (
-	// Injects -
+	// PNRet return a plugin func
+	PNRet interface{}
+	// PNBase defined interface for bulrush Plugin
+	PNBase interface {
+		Plugin() PNRet
+	}
+	// PNStruct for a quickly Plugin SetUp when you dont want declare PNBase
+	// PBBase minimize implement
+	PNStruct struct{ ret PNRet }
+	// Middles defined array of PNBase
+	Middles []PNBase
+	// Injects defined bulrush Inject entitys
 	Injects []interface{}
 	// Bulrush interface defined
 	Bulrush interface {
@@ -87,6 +60,36 @@ type (
 		injects     *Injects
 	}
 )
+
+// Plugin for PNQuick
+func (pns *PNStruct) Plugin() PNRet {
+	return pns.ret
+}
+
+// concat defined array concat
+func (inj *Injects) concat(target *Injects) *Injects {
+	injects := append(*inj, *target...)
+	return &injects
+}
+
+// typeExisted defined inject type is existed or not
+func (inj *Injects) typeExisted(item interface{}) bool {
+	typeExists(*inj, item)
+	return typeExists(*inj, item)
+}
+
+// concat defined array concat
+func (mi *Middles) concat(target *Middles) *Middles {
+	middles := append(*mi, *target...)
+	return &middles
+}
+
+// toRet defined to get `ret` that plugin func return
+func (mi *Middles) toRet() []PNRet {
+	return funk.Map(*mi, func(x PNBase) PNRet {
+		return x.Plugin()
+	}).([]PNRet)
+}
 
 // New returns a new blank Bulrush instance without any middleware attached.
 // By default the configuration is:
@@ -121,20 +124,26 @@ func New() Bulrush {
 // --Recovery middle has been register in httpProxy and user router
 // --Override middles has been register in router for override req
 func Default() Bulrush {
-	bulrush := defaultApp
-	defaultMiddles := Middles{
+	bulrush := defaultBulrush
+	middles := Middles{
 		Recovery,
 		Override,
 	}
-	bulrush.Use(defaultMiddles...)
+	bulrush.Use(middles...)
 	return bulrush
 }
 
-// Silence the compiler
-var _ = &rush{}
+// reloadLogger defined logger reload by diff mode
+func (bulrush *rush) reloadLogger() Bulrush {
+	reloadRushLogger(bulrush.config.Mode)
+	return bulrush
+}
 
-// defaultApp default rush
-var defaultApp = New()
+// SetMode defined httpProxy mode
+func (bulrush *rush) SetMode() Bulrush {
+	gin.SetMode(bulrush.config.Mode)
+	return bulrush
+}
 
 // PreUse attachs a global middleware to the router
 // just like function in gin, but not been inited util bulrush inited.
@@ -165,19 +174,21 @@ func (bulrush *rush) PostUse(items ...PNBase) Bulrush {
 func (bulrush *rush) Config(path string) Bulrush {
 	*bulrush.config = *LoadConfig(path)
 	bulrush.Inject(bulrush.config)
-	Mode = bulrush.config.Mode
-	gin.SetMode(bulrush.config.Mode)
-	reloadRushLogger(bulrush.config.Mode)
+	bulrush.SetMode()
+	bulrush.reloadLogger()
 	return bulrush
 }
 
 // Inject `inject` to bulrush
 // - inject should be someone that never be pushed in before.
 func (bulrush *rush) Inject(items ...interface{}) Bulrush {
-	injects := funk.Filter(items, func(x interface{}) bool {
-		return !typeExists(*bulrush.injects, x)
-	}).([]interface{})
-	*bulrush.injects = append(*bulrush.injects, injects...)
+	funk.ForEach(items, func(inject interface{}) {
+		if bulrush.injects.typeExisted(inject) {
+			rushLogger.Error("inject %v has existed", inject)
+			panic(fmt.Errorf("inject %v has existed", inject))
+		}
+	})
+	*bulrush.injects = append(*bulrush.injects, items...)
 	return bulrush
 }
 
@@ -189,7 +200,11 @@ func (bulrush *rush) Run(cb interface{}) {
 	rets := middles.toRet()
 	funk.ForEach(rets, func(ret PNRet) {
 		if isFunc(ret) {
-			injects := reflectMethodAndCall(ret, *bulrush.injects, struct{ DuckReflect bool }{bulrush.config.DuckReflect})
+			injects := reflectMethodAndCall(
+				ret,
+				*bulrush.injects,
+				struct{ DuckReflect bool }{bulrush.config.DuckReflect},
+			)
 			bulrush.Inject(injects...)
 		} else {
 			panic(fmt.Errorf("ret %v is not a func", ret))

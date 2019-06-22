@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/kataras/go-events"
 )
 
 var (
@@ -51,13 +52,14 @@ var (
 		})
 	})
 	// RunImmediately run app
-	RunImmediately = PNQuick(func(httpProxy *gin.Engine, config *Config) {
+	RunImmediately = PNQuick(func(httpProxy *gin.Engine, event events.EventEmmiter, config *Config) {
 		port := fixedPortPrefix(strings.TrimSpace(config.Port))
 		name := config.Name
 		rushLogger.Debug("================================")
 		rushLogger.Debug("App: %s", name)
 		rushLogger.Debug("Listen on %s", port)
 		rushLogger.Debug("================================")
+		event.Emit(EventSysBulrushPluginRunImmediately, EventSysBulrushPluginRunImmediately)
 		httpProxy.Run(port)
 	})
 )

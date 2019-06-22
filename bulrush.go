@@ -241,8 +241,8 @@ func (bulrush *rush) middle2Plugins(middles *Middles) interface{} {
 // Exec Plugins and Inject entity
 func (bulrush *rush) execPlugins(plugins interface{}) {
 	funk.ForEach(plugins, func(x interface{}) {
-		rs := reflectMethodAndCall(x, *bulrush.injects)
-		bulrush.Inject(rs.([]interface{})...)
+		rs := reflectMethodAndCall(x, *bulrush.injects).([]interface{})
+		bulrush.Inject(rs...)
 	})
 }
 

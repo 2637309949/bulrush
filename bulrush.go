@@ -7,7 +7,6 @@ package bulrush
 import (
 	"fmt"
 
-	"github.com/bamzi/jobrunner"
 	"github.com/gin-gonic/gin"
 	"github.com/kataras/go-events"
 	"github.com/thoas/go-funk"
@@ -100,7 +99,6 @@ func New() Bulrush {
 	postMiddles := make(Middles, 0)
 	injects := make(Injects, 0)
 	emmiter := events.New()
-	jobrunner.Start(10, 5)
 	bulrush := &rush{
 		EventEmmiter: emmiter,
 		preMiddles:   &preMiddles,

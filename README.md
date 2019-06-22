@@ -226,6 +226,7 @@ var Model = bulrush.PNQuick(func(router *gin.RouterGroup, ri *bulrush.ReverseInj
 ### Built-in Plugins
 - [bulrush-addition](https://github.com/2637309949/bulrush-addition)
 - [bulrush-openapi](https://github.com/2637309949/bulrush-openapi)
+- [bulrush-mq](https://github.com/2637309949/bulrush-mq)
 - [bulrush-captcha](https://github.com/2637309949/bulrush-captcha)
 - [bulrush-delivery](https://github.com/2637309949/bulrush-delivery)
 - [bulrush-identify](https://github.com/2637309949/bulrush-identify)

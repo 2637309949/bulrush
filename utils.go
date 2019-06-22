@@ -7,6 +7,7 @@ package bulrush
 import (
 	"fmt"
 	"math/rand"
+	"reflect"
 )
 
 // Some get or a default value
@@ -96,4 +97,9 @@ func fixedPortPrefix(port string) string {
 		port = fmt.Sprintf(":%s", port)
 	}
 	return port
+}
+
+func isFunc(target interface{}) bool {
+	retType := reflect.TypeOf(target)
+	return retType.Kind() == reflect.Func
 }

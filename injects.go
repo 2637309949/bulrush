@@ -17,6 +17,7 @@ func defaultInjects(bul *rush) Injects {
 	schedule := cron.New()
 	reverseInject := &ReverseInject{
 		injects: bul.injects,
+		config:  bul.config,
 	}
 	return Injects{
 		emmiter,

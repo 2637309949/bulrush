@@ -5,7 +5,7 @@
 package bulrush
 
 import (
-	"sync"
+	"fmt"
 
 	"github.com/bamzi/jobrunner"
 	"github.com/gin-gonic/gin"
@@ -20,13 +20,40 @@ var (
 	DefaultMode = "debug"
 	// Mode bulrush running Mode
 	Mode = "debug"
-	// DefaultMaxPlugins is the number of max Plugins
-	// `Just for Learning synchronization`
-	// a matter of little interest
-	DefaultMaxPlugins = 0
-	// DuckReflect indicate inject with duck Type, default is true
-	DuckReflect = true
 )
+
+// PNRet return a plugin after call Plugin func
+type PNRet interface{}
+
+// PNBase defined interface for bulrush Plugin
+type PNBase interface {
+	Plugin() PNRet
+}
+
+// PNStruct for a quickly Plugin SetUp when you dont want declare PNBase
+// PBBase minimize implement
+type PNStruct struct{ ret PNRet }
+
+// Plugin for PNQuick
+func (pns *PNStruct) Plugin() PNRet {
+	return pns.ret
+}
+
+// Middles defined array of PNBase
+type Middles []PNBase
+
+// concat defined array concat
+func (mi *Middles) concat(middles *Middles) *Middles {
+	newMiddles := append(*mi, *middles...)
+	return &newMiddles
+}
+
+// toRet defined to get `ret` that plugin func return
+func (mi *Middles) toRet() []PNRet {
+	return funk.Map(*mi, func(x PNBase) PNRet {
+		return x.Plugin()
+	}).([]PNRet)
+}
 
 // Bulrush the framework's struct
 // --EventEmmiter emit and on
@@ -34,8 +61,6 @@ var (
 // --injects struct instance can be reflect by bulrush
 // --middles some middles for gin self
 type (
-	// Middles -
-	Middles []PNBase
 	// Injects -
 	Injects []interface{}
 	// Bulrush interface defined
@@ -43,8 +68,6 @@ type (
 		On(events.EventName, ...events.Listener)
 		Once(events.EventName, ...events.Listener)
 		Emit(events.EventName, ...interface{})
-		SetMaxPlugins(int)
-		GetMaxPlugins() int
 		PreUse(...PNBase) Bulrush
 		Use(...PNBase) Bulrush
 		PostUse(...PNBase) Bulrush
@@ -63,8 +86,6 @@ type (
 		middles     *Middles
 		postMiddles *Middles
 		injects     *Injects
-		maxPlugins  int
-		mu          sync.Mutex
 	}
 )
 
@@ -86,7 +107,7 @@ func New() Bulrush {
 		middles:      &middles,
 		postMiddles:  &postMiddles,
 		injects:      &injects,
-		maxPlugins:   DefaultMaxPlugins,
+		config:       &Config{},
 	}
 	defaultMiddles := Middles{
 		HTTPProxy,
@@ -121,16 +142,6 @@ var defaultApp = New()
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
 func (bulrush *rush) PreUse(items ...PNBase) Bulrush {
-	if len(items) == 0 {
-		return bulrush
-	}
-	bulrush.mu.Lock()
-	defer bulrush.mu.Unlock()
-	if bulrush.maxPlugins > 0 && len(*bulrush.preMiddles) == bulrush.maxPlugins {
-		rushLogger.Warn(`warning: possible plugins memory 'leak detected. %d plugin added.
-			'Use app.SetMaxPlugins(n int) to increase limit.`, len(*bulrush.preMiddles))
-		return bulrush
-	}
 	*bulrush.preMiddles = append(*bulrush.preMiddles, items...)
 	return bulrush
 }
@@ -139,16 +150,6 @@ func (bulrush *rush) PreUse(items ...PNBase) Bulrush {
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
 func (bulrush *rush) Use(items ...PNBase) Bulrush {
-	if len(items) == 0 {
-		return bulrush
-	}
-	bulrush.mu.Lock()
-	defer bulrush.mu.Unlock()
-	if bulrush.maxPlugins > 0 && len(*bulrush.middles) == bulrush.maxPlugins {
-		rushLogger.Warn(`warning: possible plugins memory 'leak detected. %d plugin added.
-			'Use app.SetMaxPlugins(n int) to increase limit.`, len(*bulrush.middles))
-		return bulrush
-	}
 	*bulrush.middles = append(*bulrush.middles, items...)
 	return bulrush
 }
@@ -157,16 +158,6 @@ func (bulrush *rush) Use(items ...PNBase) Bulrush {
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
 func (bulrush *rush) PostUse(items ...PNBase) Bulrush {
-	if len(items) == 0 {
-		return bulrush
-	}
-	bulrush.mu.Lock()
-	defer bulrush.mu.Unlock()
-	if bulrush.maxPlugins > 0 && len(*bulrush.postMiddles) == bulrush.maxPlugins {
-		rushLogger.Warn(`warning: possible plugins memory 'leak detected. %d plugin added.
-			'Use app.SetMaxPlugins(n int) to increase limit.`, len(*bulrush.postMiddles))
-		return bulrush
-	}
 	*bulrush.postMiddles = append(*bulrush.postMiddles, items...)
 	return bulrush
 }
@@ -174,12 +165,9 @@ func (bulrush *rush) PostUse(items ...PNBase) Bulrush {
 // Config load config from string path
 // currently, it support loading file that end with .json or .yarm
 func (bulrush *rush) Config(path string) Bulrush {
-	bulrush.config = LoadConfig(path)
+	*bulrush.config = *LoadConfig(path)
 	bulrush.Inject(bulrush.config)
-
-	DuckReflect = bulrush.config.DuckReflect
 	Mode = bulrush.config.Mode
-
 	gin.SetMode(bulrush.config.Mode)
 	reloadRushLogger(bulrush.config.Mode)
 	return bulrush
@@ -188,9 +176,6 @@ func (bulrush *rush) Config(path string) Bulrush {
 // Inject `inject` to bulrush
 // - inject should be someone that never be pushed in before.
 func (bulrush *rush) Inject(items ...interface{}) Bulrush {
-	if len(items) == 0 {
-		return bulrush
-	}
 	injects := funk.Filter(items, func(x interface{}) bool {
 		return !typeExists(*bulrush.injects, x)
 	}).([]interface{})
@@ -198,73 +183,24 @@ func (bulrush *rush) Inject(items ...interface{}) Bulrush {
 	return bulrush
 }
 
-// SetMaxPlugins obviously this function allows the MaxPlugins
-// to be decrease or increase. Set to zero for unlimited
-func (bulrush *rush) SetMaxPlugins(n int) {
-	if n < 0 {
-		rushLogger.Warn("(events) warning: MaxPlugins must be positive number, tried to set: %d", n)
-		return
-	}
-	bulrush.maxPlugins = n
-}
-
-// SetMaxPlugins obviously this function allows the MaxPlugins
-// to be decrease or increase. Set to zero for unlimited
-func SetMaxPlugins(n int) {
-	defaultApp.SetMaxPlugins(n)
-}
-
-func (bulrush *rush) GetMaxPlugins() int {
-	return bulrush.maxPlugins
-}
-
-// GetMaxPlugins returns the max Plugins for this bulrush
-// see SetMaxPlugins
-func GetMaxPlugins() int {
-	return defaultApp.GetMaxPlugins()
-}
-
-// return middles contain middles, preMiddles and postMiddles
-func (bulrush *rush) allMiddles() *Middles {
-	middles := append(append(*bulrush.preMiddles, *bulrush.middles...), *bulrush.postMiddles...)
-	return &middles
-}
-
-// return plugins that contained in every middles
-func (bulrush *rush) middle2Plugins(middles *Middles) interface{} {
-	plugins := funk.Map(*middles, func(x PNBase) PNRet {
-		return x.Plugin()
-	})
-	return plugins
-}
-
-// Exec Plugins and Inject entity
-func (bulrush *rush) execPlugins(plugins interface{}) {
-	funk.ForEach(plugins, func(x interface{}) {
-		rs := reflectMethodAndCall(x, *bulrush.injects).([]interface{})
-		bulrush.Inject(rs...)
-	})
-}
-
-// Exec middles, excute plugin in orderly
-// Note: this method will block the calling goroutine indefinitely unless an error happens.
-func (bulrush *rush) execMiddles() Bulrush {
-	middles := bulrush.allMiddles()
-	plugins := bulrush.middle2Plugins(middles)
-	bulrush.execPlugins(plugins)
-	return bulrush
-}
-
 // Run application with callback, excute plugin in orderly
 // Note: this method will block the calling goroutine indefinitely unless an error happens.
 func (bulrush *rush) Run(cb interface{}) {
 	bulrush.PostUse(PNQuick(cb))
-	bulrush.execMiddles()
+	middles := bulrush.preMiddles.concat(bulrush.middles).concat(bulrush.postMiddles)
+	rets := middles.toRet()
+	funk.ForEach(rets, func(ret PNRet) {
+		if isFunc(ret) {
+			injects := reflectMethodAndCall(ret, *bulrush.injects, struct{ DuckReflect bool }{bulrush.config.DuckReflect})
+			bulrush.Inject(injects...)
+		} else {
+			panic(fmt.Errorf("ret %v is not a func", ret))
+		}
+	})
 }
 
 // RunImmediately, excute plugin in orderly
 // Quick start application
 func (bulrush *rush) RunImmediately() {
-	bulrush.PostUse(RunImmediately)
-	bulrush.execMiddles()
+	bulrush.Run(RunImmediately.Plugin())
 }

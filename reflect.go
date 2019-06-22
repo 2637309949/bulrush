@@ -12,7 +12,7 @@ import (
 )
 
 // reflect func in struct and call it with params
-func reflectObjectAndCall(target interface{}, params []interface{}) {
+func reflectObjectAndCall(target interface{}, params []interface{}, options struct{ DuckReflect bool }) {
 	objType := reflect.TypeOf(target)
 	objValue := reflect.ValueOf(target)
 	for i := 0; i < objType.NumMethod(); i++ {
@@ -22,7 +22,7 @@ func reflectObjectAndCall(target interface{}, params []interface{}) {
 		numIn := funcType.Type.NumIn()
 		for index := 1; index < numIn; index++ {
 			ptype := funcType.Type.In(index)
-			eleValue := reflectTypeMatcher(ptype, params)
+			eleValue := reflectTypeMatcher(ptype, params, options)
 			inputs = append(inputs, eleValue.(reflect.Value))
 		}
 		reflectCall(method.Interface(), inputs)
@@ -30,14 +30,14 @@ func reflectObjectAndCall(target interface{}, params []interface{}) {
 }
 
 // reflect func and call it with params
-func reflectMethodAndCall(target interface{}, params []interface{}) interface{} {
+func reflectMethodAndCall(target interface{}, params []interface{}, options struct{ DuckReflect bool }) []interface{} {
 	if reflect.Func == reflect.TypeOf(target).Kind() {
 		funcType := reflect.TypeOf(target)
 		numIn := funcType.NumIn()
 		inputs := make([]reflect.Value, 0)
 		for index := 0; index < numIn; index++ {
 			ptype := funcType.In(index)
-			eleValue := reflectTypeMatcher(ptype, params)
+			eleValue := reflectTypeMatcher(ptype, params, options)
 			inputs = append(inputs, eleValue.(reflect.Value))
 		}
 		return reflectCall(target, inputs)
@@ -46,7 +46,7 @@ func reflectMethodAndCall(target interface{}, params []interface{}) interface{} 
 }
 
 // relect func type and call with input args
-func reflectCall(method interface{}, inputs []reflect.Value) interface{} {
+func reflectCall(method interface{}, inputs []reflect.Value) []interface{} {
 	funcType := reflect.TypeOf(method)
 	funcName := funcType.Name()
 	funcValue := reflect.ValueOf(method)
@@ -57,7 +57,7 @@ func reflectCall(method interface{}, inputs []reflect.Value) interface{} {
 			return v.IsValid()
 		}), func(v reflect.Value) interface{} {
 			return v.Interface()
-		})
+		}).([]interface{})
 	}
 	panic(fmt.Errorf("Invalid method %s", funcName))
 }
@@ -100,9 +100,9 @@ func duckMatcher(ptype reflect.Type, params []interface{}) interface{} {
 }
 
 // reflectTypeMatcher match type with type tactics or ducker tactics
-func reflectTypeMatcher(ptype reflect.Type, params []interface{}) interface{} {
+func reflectTypeMatcher(ptype reflect.Type, params []interface{}, options struct{ DuckReflect bool }) interface{} {
 	eleValue := typeMatcher(ptype, params)
-	if eleValue == nil && DuckReflect {
+	if eleValue == nil && options.DuckReflect {
 		rushLogger.Verbose("Try in dockReflect injecting mode:%s", ptype)
 		eleValue = duckMatcher(ptype, params)
 	}

@@ -11,6 +11,7 @@ import (
 
 // ReverseInject Inject
 type ReverseInject struct {
+	config  *Config
 	injects *Injects
 }
 
@@ -23,5 +24,5 @@ func (r *ReverseInject) Register(rFunc interface{}) interface{} {
 	if kind != reflect.Func {
 		panic(fmt.Errorf("rFunc should to be func type"))
 	}
-	return reflectMethodAndCall(rFunc, *r.injects)
+	return reflectMethodAndCall(rFunc, *r.injects, struct{ DuckReflect bool }{r.config.DuckReflect})
 }

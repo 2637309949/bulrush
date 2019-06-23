@@ -33,7 +33,8 @@ type (
 	PNStruct struct{ ret PNRet }
 	// Middles defined array of PNBase
 	Middles []PNBase
-
+	// Injects defined bulrush Inject entitys
+	Injects []interface{}
 	// Bulrush is the framework's instance, it contains the muxer,
 	// middleware and configuration settings.
 	// Create an instance of Bulrush, by using New() or Default()
@@ -63,6 +64,17 @@ type (
 // Plugin for PNQuick
 func (pns *PNStruct) Plugin() PNRet {
 	return pns.ret
+}
+
+// concat defined array concat
+func (inj *Injects) concat(target *Injects) *Injects {
+	injects := append(*inj, *target...)
+	return &injects
+}
+
+// typeExisted defined inject type is existed or not
+func (inj *Injects) typeExisted(item interface{}) bool {
+	return typeExists(*inj, item)
 }
 
 // concat defined array concat

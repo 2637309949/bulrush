@@ -11,24 +11,11 @@ import (
 type (
 	// Callables defined func array
 	Callables []PNRet
-	// Injects defined bulrush Inject entitys
-	Injects  []interface{}
-	executor struct {
+	executor  struct {
 		callables Callables
 		injects   *Injects
 	}
 )
-
-// concat defined array concat
-func (inj *Injects) concat(target *Injects) *Injects {
-	injects := append(*inj, *target...)
-	return &injects
-}
-
-// typeExisted defined inject type is existed or not
-func (inj *Injects) typeExisted(item interface{}) bool {
-	return typeExists(*inj, item)
-}
 
 func (call Callables) toValues() []reflect.Value {
 	values := []reflect.Value{}

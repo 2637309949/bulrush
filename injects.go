@@ -18,6 +18,9 @@ func defaultInjects(bul *rush) Injects {
 	reverseInject := &ReverseInject{
 		injects: bul.injects,
 		config:  bul.config,
+		inspect: func(ret ...interface{}) {
+			bul.Inject(ret...)
+		},
 	}
 	return Injects{
 		emmiter,

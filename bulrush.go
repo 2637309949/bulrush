@@ -33,8 +33,18 @@ type (
 	PNStruct struct{ ret PNRet }
 	// Middles defined array of PNBase
 	Middles []PNBase
-	// Injects defined bulrush Inject entitys
-	Injects []interface{}
+
+	// Bulrush is the framework's instance, it contains the muxer,
+	// middleware and configuration settings.
+	// Create an instance of Bulrush, by using New() or Default()
+	rush struct {
+		events.EventEmmiter
+		config      *Config
+		preMiddles  *Middles
+		middles     *Middles
+		postMiddles *Middles
+		injects     *Injects
+	}
 	// Bulrush interface defined
 	Bulrush interface {
 		On(events.EventName, ...events.Listener)
@@ -48,34 +58,11 @@ type (
 		RunImmediately()
 		Run(interface{})
 	}
-	// Bulrush is the framework's instance, it contains the muxer,
-	// middleware and configuration settings.
-	// Create an instance of Bulrush, by using New() or Default()
-	rush struct {
-		events.EventEmmiter
-		config      *Config
-		preMiddles  *Middles
-		middles     *Middles
-		postMiddles *Middles
-		injects     *Injects
-	}
 )
 
 // Plugin for PNQuick
 func (pns *PNStruct) Plugin() PNRet {
 	return pns.ret
-}
-
-// concat defined array concat
-func (inj *Injects) concat(target *Injects) *Injects {
-	injects := append(*inj, *target...)
-	return &injects
-}
-
-// typeExisted defined inject type is existed or not
-func (inj *Injects) typeExisted(item interface{}) bool {
-	typeExists(*inj, item)
-	return typeExists(*inj, item)
 }
 
 // concat defined array concat
@@ -85,10 +72,10 @@ func (mi *Middles) concat(target *Middles) *Middles {
 }
 
 // toRet defined to get `ret` that plugin func return
-func (mi *Middles) toRet() []PNRet {
+func (mi *Middles) toRet() interface{} {
 	return funk.Map(*mi, func(x PNBase) PNRet {
 		return x.Plugin()
-	}).([]PNRet)
+	})
 }
 
 // New returns a new blank Bulrush instance without any middleware attached.
@@ -192,28 +179,25 @@ func (bulrush *rush) Inject(items ...interface{}) Bulrush {
 	return bulrush
 }
 
+// RunImmediately, excute plugin in orderly
+// Quick start application
+func (bulrush *rush) RunImmediately() {
+	bulrush.Run(RunImmediately.Plugin())
+}
+
 // Run application with callback, excute plugin in orderly
 // Note: this method will block the calling goroutine indefinitely unless an error happens.
 func (bulrush *rush) Run(cb interface{}) {
 	bulrush.PostUse(PNQuick(cb))
 	middles := bulrush.preMiddles.concat(bulrush.middles).concat(bulrush.postMiddles)
-	rets := middles.toRet()
-	funk.ForEach(rets, func(ret PNRet) {
-		if isFunc(ret) {
-			injects := reflectMethodAndCall(
-				ret,
-				*bulrush.injects,
-				struct{ DuckReflect bool }{bulrush.config.DuckReflect},
-			)
-			bulrush.Inject(injects...)
-		} else {
-			panic(fmt.Errorf("ret %v is not a func", ret))
-		}
+	callables := Callables{}
+	ret := middles.toRet().([]PNRet)
+	callables = append(callables, ret...)
+	exec := &executor{
+		callables: callables,
+		injects:   bulrush.injects,
+	}
+	exec.execute(func(ret ...interface{}) {
+		bulrush.Inject(ret...)
 	})
-}
-
-// RunImmediately, excute plugin in orderly
-// Quick start application
-func (bulrush *rush) RunImmediately() {
-	bulrush.Run(RunImmediately.Plugin())
 }

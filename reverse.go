@@ -13,16 +13,22 @@ import (
 type ReverseInject struct {
 	config  *Config
 	injects *Injects
+	inspect func(items ...interface{})
 }
 
 // Register function for Reverse Injects
 // If the function you're injecting is a black box,
 // then you can try this
 // Example: github.com/2637309949/bulrush-template/models.go
-func (r *ReverseInject) Register(rFunc interface{}) interface{} {
+func (r *ReverseInject) Register(rFunc interface{}) {
 	kind := reflect.TypeOf(rFunc).Kind()
 	if kind != reflect.Func {
 		panic(fmt.Errorf("rFunc should to be func type"))
 	}
-	return reflectMethodAndCall(rFunc, *r.injects, struct{ DuckReflect bool }{r.config.DuckReflect})
+	funcValue := funcValue{
+		value: reflect.ValueOf(rFunc),
+	}
+	funcValue.inputsFrom(*r.injects)
+	rets := funcValue.call()
+	r.inspect(rets.([]interface{})...)
 }

@@ -91,7 +91,6 @@ func LeftSV(left interface{}, right error) interface{} {
 	return left
 }
 
-// fixed port with ':'
 func fixedPortPrefix(port string) string {
 	if prefix := port[:1]; prefix != ":" {
 		port = fmt.Sprintf(":%s", port)
@@ -102,4 +101,68 @@ func fixedPortPrefix(port string) string {
 func isFunc(target interface{}) bool {
 	retType := reflect.TypeOf(target)
 	return retType.Kind() == reflect.Func
+}
+
+func typeExists(items interface{}, target interface{}) bool {
+	if !isIteratee(items) {
+		panic("items must be an iteratee")
+	}
+	ptype := reflect.ValueOf(target).Type()
+	arrValue := reflect.ValueOf(items)
+	for i := 0; i < arrValue.Len(); i++ {
+		iEle := arrValue.Index(i).Interface()
+		iType := reflect.ValueOf(iEle).Type()
+		if iType == ptype {
+			return true
+		}
+	}
+	return false
+}
+
+// retrieve array type
+func isIteratee(in interface{}) bool {
+	arrType := reflect.TypeOf(in)
+	tpKind := arrType.Kind()
+	return tpKind == reflect.Array || tpKind == reflect.Slice || tpKind == reflect.Map
+}
+
+// make slice from reflect type
+func createSlice(target interface{}) interface{} {
+	tType := reflect.ValueOf(target).Type()
+	tType = indirectType(tType)
+	return reflect.New(reflect.SliceOf(tType)).Interface()
+}
+
+// make object from reflect type
+func createObject(target interface{}) interface{} {
+	tType := reflect.ValueOf(target).Type()
+	tType = indirectType(tType)
+	return reflect.New(tType).Interface()
+}
+
+// make struct from reflect type
+func createStruct(sfs []reflect.StructField) interface{} {
+	return reflect.New(reflect.StructOf(sfs)).Interface()
+}
+
+// get fieldValue by reflect
+func stealFieldInStruct(fieldName string, sv interface{}) interface{} {
+	svv := indirectValue(reflect.ValueOf(sv))
+	return svv.FieldByName(fieldName).Interface()
+}
+
+// indirect from ptr
+func indirectValue(reflectValue reflect.Value) reflect.Value {
+	for reflectValue.Kind() == reflect.Ptr {
+		reflectValue = reflectValue.Elem()
+	}
+	return reflectValue
+}
+
+// indirect from ptr
+func indirectType(reflectType reflect.Type) reflect.Type {
+	for reflectType.Kind() == reflect.Ptr {
+		reflectType = reflectType.Elem()
+	}
+	return reflectType
 }

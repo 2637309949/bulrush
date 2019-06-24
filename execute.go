@@ -12,7 +12,7 @@ type (
 	// Callables defined func array
 	Callables []PNRet
 	executor  struct {
-		callables Callables
+		callables *Callables
 		injects   *Injects
 	}
 )

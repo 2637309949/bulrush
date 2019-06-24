@@ -81,11 +81,14 @@ func (mi *Middles) concat(target *Middles) *Middles {
 	return &middles
 }
 
-// toRet defined to get `ret` that plugin func return
-func (mi *Middles) toRet() interface{} {
-	return funk.Map(*mi, func(x PNBase) PNRet {
+// toCallables defined to get `ret` that plugin func return
+func (mi *Middles) toCallables() *Callables {
+	callables := &Callables{}
+	rets := funk.Map(*mi, func(x PNBase) PNRet {
 		return x.Plugin()
-	})
+	}).([]PNRet)
+	*callables = append(*callables, rets...)
+	return callables
 }
 
 // New returns a new blank Bulrush instance without any middleware attached.
@@ -200,14 +203,12 @@ func (bulrush *rush) RunImmediately() {
 func (bulrush *rush) Run(cb interface{}) {
 	bulrush.PostUse(PNQuick(cb))
 	middles := bulrush.preMiddles.concat(bulrush.middles).concat(bulrush.postMiddles)
-	callables := Callables{}
-	ret := middles.toRet().([]PNRet)
-	callables = append(callables, ret...)
-	exec := &executor{
+	callables := middles.toCallables()
+	executor := &executor{
 		callables: callables,
 		injects:   bulrush.injects,
 	}
-	exec.execute(func(ret ...interface{}) {
+	executor.execute(func(ret ...interface{}) {
 		bulrush.Inject(ret...)
 	})
 }

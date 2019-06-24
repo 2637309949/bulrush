@@ -34,7 +34,7 @@ type Config struct {
 
 // Conf defined inited conf
 var Conf = Config{
-	Version: 1,
+	Version: 1.0,
 	Name:    "bulrush",
 	Prefix:  "/api/v1",
 	Mode:    "debug",

@@ -25,5 +25,5 @@ func reloadRushLogger(mode string) {
 }
 
 func init() {
-	reloadRushLogger(DefaultMode)
+	reloadRushLogger(Conf.Mode)
 }

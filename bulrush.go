@@ -13,8 +13,6 @@ import (
 )
 
 var (
-	// Version current version number
-	Version = "0.0.1"
 	// DefaultMode default gin mode
 	DefaultMode = "debug"
 	// defaultBulrush default bulrush
@@ -171,7 +169,7 @@ func (bulrush *rush) PostUse(items ...PNBase) Bulrush {
 // Config load config from string path
 // currently, it support loading file that end with .json or .yarm
 func (bulrush *rush) Config(path string) Bulrush {
-	*bulrush.config = *LoadConfig(path)
+	*bulrush.config = *Conf.LoadConfig(path)
 	bulrush.Inject(bulrush.config)
 	bulrush.SetMode()
 	bulrush.reloadLogger()

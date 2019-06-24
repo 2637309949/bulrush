@@ -5,9 +5,13 @@
 package bulrush
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"math/rand"
 	"reflect"
+
+	"github.com/ghodss/yaml"
 )
 
 // Some get or a default value
@@ -165,4 +169,17 @@ func indirectType(reflectType reflect.Type) reflect.Type {
 		reflectType = reflectType.Elem()
 	}
 	return reflectType
+}
+
+// unmarshal json or yaml
+func unmarshal(unType string, data []byte, sv interface{}) error {
+	var err error
+	if unType == "json" {
+		err = json.Unmarshal(data, sv)
+	} else if unType == "yaml" {
+		err = yaml.Unmarshal(data, sv)
+	} else {
+		err = errors.New("no support")
+	}
+	return err
 }

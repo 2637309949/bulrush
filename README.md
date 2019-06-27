@@ -292,15 +292,15 @@ type conf struct {
 	MaxIdleTimeMS  int           `json:"maxIdleTimeMS" yaml:"maxIdleTimeMS"`
 }
 func New(bulCfg *bulrush.Config) *Mongo {
-	cf, err := bulCfg.Unmarshal("mongo", conf{})
+	conf := &conf{}
+	cf, err := bulCfg.Unmarshal("mongo", conf)
 	if err != nil {
 		panic(err)
 	}
-	conf := cf.(conf)
-	session := createSession(&conf)
+	session := createSession(conf)
 	mgo := &Mongo{
 		m:       make([]map[string]interface{}, 0),
-		cfg:     &conf,
+		cfg:     conf,
 		API:     &api{},
 		Session: session,
 	}
@@ -310,7 +310,7 @@ func New(bulCfg *bulrush.Config) *Mongo {
 }
 ``` 
     // Read part and assemble
-    func (c *Config) Unmarshal(fieldName string, v interface{}) (interface{}, error)
+    func (c *Config) Unmarshal(fieldName string, v interface{}) error
 
 ## Note
     Note go vendor, bulrush needs to reference the same package, otherwise injection fails

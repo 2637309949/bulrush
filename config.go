@@ -6,6 +6,7 @@ package bulrush
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"reflect"
@@ -69,18 +70,28 @@ func (c Config) LoadConfig(path string) *Config {
 }
 
 // Unmarshal defined Unmarshal type
-func (c *Config) Unmarshal(fieldName string, v interface{}) (interface{}, error) {
+func (c *Config) Unmarshal(fieldName string, v interface{}) error {
+	vType := reflect.TypeOf(v)
+	if vType.Kind() == reflect.Ptr || vType.Kind() == reflect.Slice {
+		vType = vType.Elem()
+	}
 	sv := createStruct([]reflect.StructField{
 		reflect.StructField{
 			Name: strings.Title(fieldName),
-			Type: reflect.TypeOf(v),
+			Type: vType,
 			Tag:  reflect.StructTag(fmt.Sprintf(`json:"%s" yaml:"%s"`, fieldName, fieldName)),
 		},
 	})
-	err := unmarshal(c.dataType, c.data, sv)
-	if err != nil {
-		return nil, err
+	if err := unmarshal(c.dataType, c.data, sv); err != nil {
+		return err
 	}
 	conf := stealFieldInStruct(strings.Title(fieldName), sv)
-	return conf, nil
+	if reflect.TypeOf(v).Kind() == reflect.Ptr || reflect.TypeOf(v).Kind() == reflect.Slice {
+		elem := reflect.ValueOf(v).Elem()
+		if elem.CanSet() {
+			elem.Set(reflect.ValueOf(conf))
+			return nil
+		}
+	}
+	return errors.New("can not unmarshal this type")
 }

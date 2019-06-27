@@ -6,13 +6,11 @@ package bulrush
 
 import "github.com/kataras/go-events"
 
-type (
-	// Status store and share status Between different plug-ins
-	Status struct {
-		events events.EventEmmiter
-		data   map[string]interface{}
-	}
-)
+// Status store and share status Between different plug-ins
+type Status struct {
+	events events.EventEmmiter
+	data   map[string]interface{}
+}
 
 // Get value
 func (s *Status) Get(key string) (interface{}, bool) {

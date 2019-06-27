@@ -4,9 +4,7 @@
 
 package bulrush
 
-import (
-	"reflect"
-)
+import "reflect"
 
 type (
 	// Callables defined func array

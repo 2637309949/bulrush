@@ -3,7 +3,7 @@ module github.com/2637309949/bulrush
 go 1.12
 
 require (
-	github.com/2637309949/bulrush-addition v0.0.0-20190608111855-725ea7bbda0e
+	github.com/2637309949/bulrush-addition v0.0.0-20190627072903-fc73b3176242
 	github.com/bamzi/jobrunner v0.0.0-20161019143021-273175f8b6eb
 	github.com/ghodss/yaml v1.0.0
 	github.com/gin-gonic/gin v1.4.0
@@ -12,6 +12,8 @@ require (
 	github.com/jinzhu/copier v0.0.0-20180308034124-7e38e58719c3
 	github.com/kataras/go-events v0.0.2
 	github.com/leodido/go-urn v1.1.0 // indirect
+	github.com/onsi/ginkgo v1.8.0 // indirect
+	github.com/onsi/gomega v1.5.0 // indirect
 	github.com/robfig/cron v1.2.0 // indirect
 	github.com/thoas/go-funk v0.4.0
 	gopkg.in/go-playground/validator.v9 v9.29.0

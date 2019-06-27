@@ -133,12 +133,6 @@ func Default() Bulrush {
 	return bulrush
 }
 
-// reloadLogger defined logger reload by diff mode
-func (bulrush *rush) reloadLogger() Bulrush {
-	reloadRushLogger(bulrush.config.Mode)
-	return bulrush
-}
-
 // SetMode defined httpProxy mode
 func (bulrush *rush) SetMode() Bulrush {
 	gin.SetMode(bulrush.config.Mode)
@@ -175,7 +169,6 @@ func (bulrush *rush) Config(path string) Bulrush {
 	*bulrush.config = *Conf.LoadConfig(path)
 	bulrush.Inject(bulrush.config)
 	bulrush.SetMode()
-	bulrush.reloadLogger()
 	return bulrush
 }
 

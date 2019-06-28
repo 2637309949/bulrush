@@ -166,7 +166,17 @@ func (bulrush *rush) PostUse(items ...PNBase) Bulrush {
 // Config load config from string path
 // currently, it support loading file that end with .json or .yarm
 func (bulrush *rush) Config(path string) Bulrush {
-	*bulrush.config = *Conf.LoadConfig(path)
+	conf := LoadConfig(path)
+	conf.Version = conf.version()
+	conf.Name = conf.name()
+	conf.Prefix = conf.prefix()
+	conf.Mode = conf.mode()
+
+	if conf.Version != Version {
+		rushLogger.Warn("Please check the latest version of bulrush's configuration file")
+	}
+
+	*bulrush.config = *conf
 	bulrush.Inject(bulrush.config)
 	bulrush.SetMode()
 	return bulrush

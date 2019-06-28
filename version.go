@@ -4,4 +4,5 @@
 
 package bulrush
 
+// Version defined bulrush current version
 var Version = 1.0

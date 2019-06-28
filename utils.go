@@ -6,7 +6,6 @@ package bulrush
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math/rand"
 	"reflect"
@@ -171,15 +170,19 @@ func indirectType(reflectType reflect.Type) reflect.Type {
 	return reflectType
 }
 
-// unmarshal json or yaml
-func unmarshal(unType string, data []byte, sv interface{}) error {
-	var err error
-	if unType == "json" {
-		err = json.Unmarshal(data, sv)
-	} else if unType == "yaml" {
-		err = yaml.Unmarshal(data, sv)
-	} else {
-		err = errors.New("no support")
+// unmarshalByFileType defined unmarshal by diff file type
+func unmarshalByFileType(data []byte, v interface{}, dataType string) error {
+	switch true {
+	case dataType == "json":
+		err := json.Unmarshal(data, v)
+		if err != nil {
+			return err
+		}
+	case dataType == "yaml":
+		err := yaml.Unmarshal(data, v)
+		if err != nil {
+			return err
+		}
 	}
-	return err
+	return nil
 }

@@ -171,11 +171,9 @@ func (bulrush *rush) Config(path string) Bulrush {
 	conf.Name = conf.name()
 	conf.Prefix = conf.prefix()
 	conf.Mode = conf.mode()
-
 	if conf.Version != Version {
 		rushLogger.Warn("Please check the latest version of bulrush's configuration file")
 	}
-
 	*bulrush.config = *conf
 	bulrush.Inject(bulrush.config)
 	bulrush.SetMode()

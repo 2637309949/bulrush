@@ -5,11 +5,14 @@
 package bulrush
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"reflect"
 	"strings"
+
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -38,6 +41,22 @@ type Config struct {
 	Log         log
 	dataType    string
 	data        []byte
+}
+
+// LoadConfig loads the bulrush tool configuration.
+func LoadConfig(path string) *Config {
+	var data []byte
+	var err error
+	if data, err = ioutil.ReadFile(path); err != nil {
+		panic(fmt.Errorf("failed to load file %s", err))
+	}
+	conf := &Config{data: data}
+	conf.dataType = conf.dataTypeByPath(path)
+
+	if err := unmarshalByFileType(conf.data, conf, conf.dataType); err != nil {
+		panic(fmt.Errorf("failed to parse yaml file type: %v", err))
+	}
+	return conf
 }
 
 func (c *Config) version() float64 {
@@ -78,30 +97,12 @@ func (c *Config) dataTypeByPath(path string) string {
 	return dataType
 }
 
-// LoadConfig loads the bulrush tool configuration.
-func LoadConfig(path string) *Config {
-	var data []byte
-	var err error
-	if data, err = ioutil.ReadFile(path); err != nil {
-		panic(fmt.Errorf("failed to load file %s", err))
-	}
-	conf := &Config{data: data}
-	conf.dataType = conf.dataTypeByPath(path)
-
-	if err := unmarshalByFileType(conf.data, conf, conf.dataType); err != nil {
-		panic(fmt.Errorf("failed to parse yaml file type: %v", err))
-	}
-	return conf
-}
-
 // Unmarshal defined Unmarshal type
 func (c *Config) Unmarshal(fieldName string, v interface{}) error {
 	vType := reflect.TypeOf(v)
-
 	if vType.Kind() == reflect.Ptr || vType.Kind() == reflect.Slice {
 		vType = vType.Elem()
 	}
-
 	sv := createStruct([]reflect.StructField{
 		reflect.StructField{
 			Name: strings.Title(fieldName),
@@ -109,11 +110,9 @@ func (c *Config) Unmarshal(fieldName string, v interface{}) error {
 			Tag:  reflect.StructTag(fmt.Sprintf(`json:"%s" yaml:"%s"`, fieldName, fieldName)),
 		},
 	})
-
 	if err := unmarshalByFileType(c.data, sv, c.dataType); err != nil {
 		return err
 	}
-
 	conf := stealFieldInStruct(strings.Title(fieldName), sv)
 	if reflect.TypeOf(v).Kind() == reflect.Ptr || reflect.TypeOf(v).Kind() == reflect.Slice {
 		elem := reflect.ValueOf(v).Elem()
@@ -123,4 +122,21 @@ func (c *Config) Unmarshal(fieldName string, v interface{}) error {
 		}
 	}
 	return errors.New("can not unmarshal this type")
+}
+
+// unmarshalByFileType defined unmarshal by diff file type
+func unmarshalByFileType(data []byte, v interface{}, dataType string) error {
+	switch true {
+	case dataType == "json":
+		err := json.Unmarshal(data, v)
+		if err != nil {
+			return err
+		}
+	case dataType == "yaml":
+		err := yaml.Unmarshal(data, v)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

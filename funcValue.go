@@ -46,7 +46,7 @@ func (fv *funcValue) inputsFrom(inputs []interface{}) {
 			eleValue = duckMatcher(ptype, inputs)
 		}
 		if eleValue == nil {
-			panic(fmt.Errorf("inputsFrom %v call with %v error", fv.value, inputs))
+			panic(fmt.Errorf("inputsFrom %v call with %v error", ptype, reflect.TypeOf(inputs[7])))
 		}
 		fv.inputs = append(fv.inputs, eleValue.(reflect.Value))
 	}

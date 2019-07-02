@@ -20,15 +20,8 @@ var (
 )
 
 type (
-	// PNBase defined interface for bulrush Plugin
-	PNBase interface {
-		Plugin() interface{}
-	}
-	// PNStruct for a quickly Plugin SetUp when you dont want declare PNBase
-	// PBBase minimize implement
-	PNStruct struct{ ret interface{} }
 	// Middles defined array of PNBase
-	Middles []PNBase
+	Middles []interface{}
 	// Injects defined bulrush Inject entitys
 	Injects []interface{}
 	// Bulrush is the framework's instance, it contains the muxer,
@@ -47,20 +40,15 @@ type (
 		On(events.EventName, ...events.Listener)
 		Once(events.EventName, ...events.Listener)
 		Emit(events.EventName, ...interface{})
-		PreUse(...PNBase) Bulrush
-		Use(...PNBase) Bulrush
-		PostUse(...PNBase) Bulrush
+		PreUse(...interface{}) Bulrush
+		Use(...interface{}) Bulrush
+		PostUse(...interface{}) Bulrush
 		Config(string) Bulrush
 		Inject(...interface{}) Bulrush
 		RunImmediately()
 		Run(interface{})
 	}
 )
-
-// Plugin for PNQuick
-func (pns *PNStruct) Plugin() interface{} {
-	return pns.ret
-}
 
 // concat defined array concat
 func (inj *Injects) concat(target *Injects) *Injects {
@@ -82,10 +70,7 @@ func (mi *Middles) concat(target *Middles) *Middles {
 // toCallables defined to get `ret` that plugin func return
 func (mi *Middles) toCallables() *Callables {
 	callables := &Callables{}
-	rets := funk.Map(*mi, func(x PNBase) interface{} {
-		return x.Plugin()
-	}).([]interface{})
-	*callables = append(*callables, rets...)
+	*callables = append(*callables, *mi...)
 	return callables
 }
 
@@ -140,24 +125,33 @@ func (bulrush *rush) SetMode() Bulrush {
 // PreUse attachs a global middleware to the router
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
-func (bulrush *rush) PreUse(items ...PNBase) Bulrush {
-	*bulrush.preMiddles = append(*bulrush.preMiddles, items...)
+func (bulrush *rush) PreUse(items ...interface{}) Bulrush {
+	funk.ForEach(items, func(item interface{}) {
+		value := indirectPlugin(item)
+		*bulrush.preMiddles = append(*bulrush.preMiddles, value)
+	})
 	return bulrush
 }
 
 // Use attachs a global middleware to the router
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
-func (bulrush *rush) Use(items ...PNBase) Bulrush {
-	*bulrush.middles = append(*bulrush.middles, items...)
+func (bulrush *rush) Use(items ...interface{}) Bulrush {
+	funk.ForEach(items, func(item interface{}) {
+		value := indirectPlugin(item)
+		*bulrush.middles = append(*bulrush.middles, value)
+	})
 	return bulrush
 }
 
 // PostUse attachs a global middleware to the router
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
-func (bulrush *rush) PostUse(items ...PNBase) Bulrush {
-	*bulrush.postMiddles = append(*bulrush.postMiddles, items...)
+func (bulrush *rush) PostUse(items ...interface{}) Bulrush {
+	funk.ForEach(items, func(item interface{}) {
+		value := indirectPlugin(item)
+		*bulrush.postMiddles = append(*bulrush.postMiddles, value)
+	})
 	return bulrush
 }
 
@@ -194,13 +188,13 @@ func (bulrush *rush) Inject(items ...interface{}) Bulrush {
 // RunImmediately, excute plugin in orderly
 // Quick start application
 func (bulrush *rush) RunImmediately() {
-	bulrush.Run(RunImmediately.Plugin())
+	bulrush.Run(RunImmediately)
 }
 
 // Run application with callback, excute plugin in orderly
 // Note: this method will block the calling goroutine indefinitely unless an error happens.
 func (bulrush *rush) Run(cb interface{}) {
-	bulrush.PostUse(PNQuick(cb))
+	bulrush.PostUse(cb)
 	middles := bulrush.preMiddles.concat(bulrush.middles).concat(bulrush.postMiddles)
 	callables := middles.toCallables()
 	executor := &executor{

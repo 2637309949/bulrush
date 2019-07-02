@@ -166,3 +166,24 @@ func indirectType(reflectType reflect.Type) reflect.Type {
 	}
 	return reflectType
 }
+
+func indirectPlugin(item interface{}) interface{} {
+	value := reflect.ValueOf(item)
+	if value.Kind() == reflect.Interface && value.Elem().Kind() == reflect.Interface {
+		value = value.Elem().Elem()
+	}
+	if value.Kind() == reflect.Ptr && value.Elem().Kind() == reflect.Struct {
+		if value.MethodByName("Plugin").IsValid() {
+			value = value.MethodByName("Plugin")
+		} else {
+			value = value.Elem()
+		}
+	}
+	if value.Kind() == reflect.Struct {
+		value = value.MethodByName("Plugin")
+	}
+	if !(value.IsValid() && value.Kind() == reflect.Func) {
+		panic(fmt.Errorf("%v can not be used as plugin", value))
+	}
+	return value.Interface()
+}

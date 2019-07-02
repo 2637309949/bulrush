@@ -12,27 +12,21 @@ import (
 )
 
 var (
-	// PNQuick for PNQuick
-	PNQuick = func(ret interface{}) PNBase {
-		return &PNStruct{
-			ret: ret,
-		}
-	}
 	// Recovery system rec from panic
-	Recovery = PNQuick(func(httpProxy *gin.Engine, router *gin.RouterGroup) {
+	Recovery = func(httpProxy *gin.Engine, router *gin.RouterGroup) {
 		httpProxy.Use(gin.Recovery())
 		router.Use(gin.Recovery())
-	})
+	}
 	// HTTPProxy create http proxy
-	HTTPProxy = PNQuick(func() *gin.Engine {
+	HTTPProxy = func() *gin.Engine {
 		return gin.New()
-	})
+	}
 	// HTTPRouter create http router
-	HTTPRouter = PNQuick(func(httpProxy *gin.Engine, config *Config) *gin.RouterGroup {
+	HTTPRouter = func(httpProxy *gin.Engine, config *Config) *gin.RouterGroup {
 		return httpProxy.Group(config.Prefix)
-	})
+	}
 	// Override http methods
-	Override = PNQuick(func(router *gin.RouterGroup, httpProxy *gin.Engine) {
+	Override = func(router *gin.RouterGroup, httpProxy *gin.Engine) {
 		router.Use(func(c *gin.Context) {
 			if c.Request.Method != "POST" {
 				c.Next()
@@ -50,9 +44,9 @@ var (
 				}
 			}
 		})
-	})
+	}
 	// RunImmediately run app
-	RunImmediately = PNQuick(func(httpProxy *gin.Engine, event events.EventEmmiter, config *Config) {
+	RunImmediately = func(httpProxy *gin.Engine, event events.EventEmmiter, config *Config) {
 		port := fixedPortPrefix(strings.TrimSpace(config.Port))
 		name := config.Name
 		rushLogger.Debug("================================")
@@ -61,5 +55,5 @@ var (
 		rushLogger.Debug("================================")
 		event.Emit(EventSysBulrushPluginRunImmediately, EventSysBulrushPluginRunImmediately)
 		httpProxy.Run(port)
-	})
+	}
 )

@@ -13,7 +13,7 @@ import (
 
 var (
 	// PNQuick for PNQuick
-	PNQuick = func(ret PNRet) PNBase {
+	PNQuick = func(ret interface{}) PNBase {
 		return &PNStruct{
 			ret: ret,
 		}

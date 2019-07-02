@@ -20,15 +20,13 @@ var (
 )
 
 type (
-	// PNRet return a plugin func
-	PNRet interface{}
 	// PNBase defined interface for bulrush Plugin
 	PNBase interface {
-		Plugin() PNRet
+		Plugin() interface{}
 	}
 	// PNStruct for a quickly Plugin SetUp when you dont want declare PNBase
 	// PBBase minimize implement
-	PNStruct struct{ ret PNRet }
+	PNStruct struct{ ret interface{} }
 	// Middles defined array of PNBase
 	Middles []PNBase
 	// Injects defined bulrush Inject entitys
@@ -60,7 +58,7 @@ type (
 )
 
 // Plugin for PNQuick
-func (pns *PNStruct) Plugin() PNRet {
+func (pns *PNStruct) Plugin() interface{} {
 	return pns.ret
 }
 
@@ -84,9 +82,9 @@ func (mi *Middles) concat(target *Middles) *Middles {
 // toCallables defined to get `ret` that plugin func return
 func (mi *Middles) toCallables() *Callables {
 	callables := &Callables{}
-	rets := funk.Map(*mi, func(x PNBase) PNRet {
+	rets := funk.Map(*mi, func(x PNBase) interface{} {
 		return x.Plugin()
-	}).([]PNRet)
+	}).([]interface{})
 	*callables = append(*callables, rets...)
 	return callables
 }

@@ -8,7 +8,7 @@ import "reflect"
 
 type (
 	// Callables defined func array
-	Callables []PNRet
+	Callables []interface{}
 	executor  struct {
 		callables *Callables
 		injects   *Injects

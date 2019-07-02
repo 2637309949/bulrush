@@ -70,7 +70,7 @@ app.Inject("bulrushApp")
 Set injects by plugin ret  
 ```go
 // Plugin for role
-func (role *Role) Plugin() bulrush.PNRet {
+func (role *Role) Plugin() interface{} {
 	return func() *Role {
 		return role
 	}
@@ -239,17 +239,17 @@ var Model = bulrush.PNQuick(func(router *gin.RouterGroup, ri *bulrush.ReverseInj
 
 ### Custom your plugins
 If your want to write a user-defined plugins, you should implement PNBase interface or the duck type,
-PNRet is a function, and you can get all you want through func parameters, also you can return any type as
+interface{} is a function, and you can get all you want through func parameters, also you can return any type as
 `Injects` entity.
 ```go
-PNBase interface{ Plugin() PNRet }
+PNBase interface{ Plugin() interface{} }
 ```
 EXAMPLE:   
 ```go
 type (
     Override struct { PNBase }
 )
-func (pn *Override) Plugin() PNRet {
+func (pn *Override) Plugin() interface{} {
     return func(router *gin.RouterGroup, httpProxy *gin.Engine) {
             return "inject entity"
     }

@@ -249,11 +249,9 @@ EXAMPLE:
 type (
     Override struct { PNBase }
 )
-func (pn *Override) Plugin() interface{} {
-    return func(router *gin.RouterGroup, httpProxy *gin.Engine) {
+func (pn *Override) Plugin(router *gin.RouterGroup, httpProxy *gin.Engine) {
             return "inject entity"
     }
-}
 ```
 OR
 ```go

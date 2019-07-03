@@ -236,27 +236,30 @@ var Model = func(router *gin.RouterGroup, ri *bulrush.ReverseInject) {
 
 
 ### Custom your plugins
-If your want to write a user-defined plugins, you should implement PNBase interface or the duck type,
+If your want to write a user-defined plugins, you should implement the plugin duck type,
 interface{} is a function, and you can get all you want through func parameters, also you can return any type as
 `Injects` entity.
 ```go
-PNBase interface{ Plugin(...interface{}) interface{} }
+type myPlugin interface{} { Plugin(...interface{}) interface{} }
 ```
 EXAMPLE:   
 ```go
 type Override struct {}
-func (pn *Override) Plugin(router *gin.RouterGroup, httpProxy *gin.Engine) {
+func (pn *Override) Plugin(router *gin.RouterGroup, httpProxy *gin.Engine) string {
     return "inject entity"
 }
 ```
 OR
 ```go
-var Override = func(testInject string, router *gin.RouterGroup) {
-    router.GET("/test", func (c *gin.Context) {
-        c.JSON(http.StatusOK, gin.H{
-            "message": 	testInject,
-        })
-    })
+type Override struct {}
+func (pn Override) Plugin(router *gin.RouterGroup, httpProxy *gin.Engine) string {
+    return "inject entity"
+}
+```
+OR
+```go
+var Override = func(testInject string, router *gin.RouterGroup) string {
+    return "inject entity"
 }
 
 ```

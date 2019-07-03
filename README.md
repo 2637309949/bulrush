@@ -104,9 +104,9 @@ app.Run(func(httpProxy *gin.Engine, config *bulrush.Config) {
 
 ##### store state
 ```go
-app.Use(bulrush.PNQuick(func(status *bulrush.Status) {
+app.Use(func(status *bulrush.Status) {
     status.Set("count", 1)
-}))
+})
 ```
 ##### read state
 ```go

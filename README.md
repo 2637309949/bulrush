@@ -242,26 +242,24 @@ If your want to write a user-defined plugins, you should implement PNBase interf
 interface{} is a function, and you can get all you want through func parameters, also you can return any type as
 `Injects` entity.
 ```go
-PNBase interface{ Plugin() interface{} }
+PNBase interface{ Plugin(...interface{}) interface{} }
 ```
 EXAMPLE:   
 ```go
-type (
-    Override struct { PNBase }
-)
+type Override struct {}
 func (pn *Override) Plugin(router *gin.RouterGroup, httpProxy *gin.Engine) {
-            return "inject entity"
-    }
+    return "inject entity"
+}
 ```
 OR
 ```go
-bulrush.PNQuick(func(testInject string, router *gin.RouterGroup) {
+var Override = func(testInject string, router *gin.RouterGroup) {
     router.GET("/test", func (c *gin.Context) {
         c.JSON(http.StatusOK, gin.H{
             "message": 	testInject,
         })
     })
-})
+}
 
 ```
 
@@ -291,7 +289,7 @@ type conf struct {
 }
 func New(bulCfg *bulrush.Config) *Mongo {
 	conf := &conf{}
-	cf, err := bulCfg.Unmarshal("mongo", conf)
+	err := bulCfg.Unmarshal("mongo", conf)
 	if err != nil {
 		panic(err)
 	}

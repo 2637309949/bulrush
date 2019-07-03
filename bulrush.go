@@ -13,11 +13,15 @@ import (
 )
 
 type (
-	// Middles defined plugin
+	// middles defined those that can be call by reflect
+	// , middles passby func or a struct that has `Plugin` func
 	middles []interface{}
-	// Injects defined inject entitys
+	// injects defined some entitys that can be inject to middle
+	// , inject would panic if repetition
+	// , inject can be go base tyle or struct or ptr or interface{}
 	injects []interface{}
-	// Bulrush interface defined Bulrush
+	// Bulrush interface{} defined all framework should be
+	// , also sys provide a default Bulrush - `rush`
 	Bulrush interface {
 		On(events.EventName, ...events.Listener)
 		Once(events.EventName, ...events.Listener)
@@ -30,6 +34,7 @@ type (
 		RunImmediately()
 		Run(interface{})
 	}
+	// rush implement Bulrush std
 	rush struct {
 		events.EventEmmiter
 		config      *Config

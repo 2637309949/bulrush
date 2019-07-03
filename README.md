@@ -33,13 +33,13 @@ app := bulrush.Default()
 app.Config(CONFIGPATH)
 app.Inject("bulrushApp")
 app.Use(&models.Model{}, &routes.Route{})
-app.Use(bulrush.PNQuick(func(testInject string, router *gin.RouterGroup) {
+app.Use(func(testInject string, router *gin.RouterGroup) {
     router.GET("/bulrushApp", func (c *gin.Context) {
         c.JSON(http.StatusOK, gin.H{
             "message": 	testInject,
         })
     })
-}))
+})
 app.RunImmediately()
 ```
 OR
@@ -78,13 +78,13 @@ func (role *Role) Plugin() interface{} {
 ```
 #### Import your plugins
 ```go
-app.Use(bulrush.PNQuick(func(testInject string, router *gin.RouterGroup) {
+app.Use(func(testInject string, router *gin.RouterGroup) {
     router.GET("/bulrushApp", func (c *gin.Context) {
         c.JSON(http.StatusOK, gin.H{
             "message": 	testInject,
         })
     })
-}))
+})
 ```
 #### Run app
 ```go
@@ -112,19 +112,19 @@ app.Use(bulrush.PNQuick(func(status *bulrush.Status) {
 ```
 ##### read state
 ```go
-app.Use(bulrush.PNQuick(func(status *bulrush.Status) {
+app.Use(func(status *bulrush.Status) {
     status.Get("count")
     status.ALL()
-}))
+})
 ```
 #### Plug in communication between plug-ins
 ```go
-app.Use(bulrush.PNQuick(func(events events.EventEmmiter) {
+app.Use(func(events events.EventEmmiter) {
 	events.On("hello", func(payload ...interface{}) {
 		message := payload[0].(string)
 		fmt.Println(message)
 	})
-}))
+})
 ```
 
 ## Design Philosophy
@@ -215,11 +215,11 @@ deal with
 ```go
 // Model register
 // Make sure all models are initialized here
-var Model = bulrush.PNQuick(func(router *gin.RouterGroup, ri *bulrush.ReverseInject) {
+var Model = func(router *gin.RouterGroup, ri *bulrush.ReverseInject) {
 	ri.Register(nosql.RegisterUser)
 	ri.Register(nosql.RegisterPermission)
 	ri.Register(sql.RegisterProduct)
-})
+}
 ```
 
 ## Plugins

@@ -248,6 +248,7 @@ type Override struct {}
 func (pn *Override) Plugin(router *gin.RouterGroup, httpProxy *gin.Engine) string {
     return "inject entity"
 }
+app.Use(&Override{})
 ```
 OR
 ```go
@@ -255,13 +256,14 @@ type Override struct {}
 func (pn Override) Plugin(router *gin.RouterGroup, httpProxy *gin.Engine) string {
     return "inject entity"
 }
+app.Use(Override{})
 ```
 OR
 ```go
 var Override = func(testInject string, router *gin.RouterGroup) string {
     return "inject entity"
 }
-
+app.Use(Override)
 ```
 
 ### Assemble your plugin` config from bulrush Injects

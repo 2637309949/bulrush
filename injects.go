@@ -10,7 +10,7 @@ import (
 	"gopkg.in/robfig/cron.v2"
 )
 
-func defaultInjects(bul *rush) Injects {
+func defaultInjects(bul *rush) injects {
 	emmiter := events.New()
 	status := statusStorage(emmiter)
 	validate := validator.New()
@@ -22,7 +22,7 @@ func defaultInjects(bul *rush) Injects {
 			bul.Inject(ret...)
 		},
 	}
-	return Injects{
+	return injects{
 		emmiter,
 		status,
 		validate,

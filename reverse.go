@@ -12,7 +12,7 @@ import (
 // ReverseInject Inject
 type ReverseInject struct {
 	config  *Config
-	injects *Injects
+	injects *injects
 	inspect func(items ...interface{})
 }
 

@@ -12,30 +12,12 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-var (
-	// DefaultMode default gin mode
-	DefaultMode = "debug"
-	// defaultBulrush default bulrush
-	defaultBulrush = New()
-)
-
 type (
-	// Middles defined array of PNBase
-	Middles []interface{}
-	// Injects defined bulrush Inject entitys
-	Injects []interface{}
-	// Bulrush is the framework's instance, it contains the muxer,
-	// middleware and configuration settings.
-	// Create an instance of Bulrush, by using New() or Default()
-	rush struct {
-		events.EventEmmiter
-		config      *Config
-		preMiddles  *Middles
-		middles     *Middles
-		postMiddles *Middles
-		injects     *Injects
-	}
-	// Bulrush interface defined
+	// Middles defined plugin
+	middles []interface{}
+	// Injects defined inject entitys
+	injects []interface{}
+	// Bulrush interface defined Bulrush
 	Bulrush interface {
 		On(events.EventName, ...events.Listener)
 		Once(events.EventName, ...events.Listener)
@@ -48,30 +30,38 @@ type (
 		RunImmediately()
 		Run(interface{})
 	}
+	rush struct {
+		events.EventEmmiter
+		config      *Config
+		injects     *injects
+		preMiddles  *middles
+		middles     *middles
+		postMiddles *middles
+	}
 )
 
 // concat defined array concat
-func (inj *Injects) concat(target *Injects) *Injects {
-	injects := append(*inj, *target...)
+func (src *injects) concat(target *injects) *injects {
+	injects := append(*src, *target...)
 	return &injects
 }
 
 // typeExisted defined inject type is existed or not
-func (inj *Injects) typeExisted(item interface{}) bool {
-	return typeExists(*inj, item)
+func (src *injects) typeExisted(item interface{}) bool {
+	return typeExists(*src, item)
 }
 
 // concat defined array concat
-func (mi *Middles) concat(target *Middles) *Middles {
-	middles := append(*mi, *target...)
+func (src *middles) concat(target *middles) *middles {
+	middles := append(*src, *target...)
 	return &middles
 }
 
 // toCallables defined to get `ret` that plugin func return
-func (mi *Middles) toCallables() *Callables {
-	callables := &Callables{}
-	*callables = append(*callables, *mi...)
-	return callables
+func (src *middles) toCallables() *callables {
+	cbs := &callables{}
+	*cbs = append(*cbs, *src...)
+	return cbs
 }
 
 // New returns a new blank Bulrush instance without any middleware attached.
@@ -80,20 +70,20 @@ func (mi *Middles) toCallables() *Callables {
 // --injects struct instance can be reflect by bulrush
 // --middles some middles for gin self
 func New() Bulrush {
-	preMiddles := make(Middles, 0)
-	middles := make(Middles, 0)
-	postMiddles := make(Middles, 0)
-	injects := make(Injects, 0)
+	preMid := make(middles, 0)
+	poMid := make(middles, 0)
+	mid := make(middles, 0)
+	injects := make(injects, 0)
 	emmiter := events.New()
 	bulrush := &rush{
 		EventEmmiter: emmiter,
-		preMiddles:   &preMiddles,
-		middles:      &middles,
-		postMiddles:  &postMiddles,
-		injects:      &injects,
 		config:       &Config{},
+		injects:      &injects,
+		preMiddles:   &preMid,
+		middles:      &mid,
+		postMiddles:  &poMid,
 	}
-	defaultMiddles := Middles{
+	defaultMiddles := middles{
 		HTTPProxy,
 		HTTPRouter,
 	}
@@ -107,57 +97,56 @@ func New() Bulrush {
 // --Recovery middle has been register in httpProxy and user router
 // --Override middles has been register in router for override req
 func Default() Bulrush {
-	bulrush := defaultBulrush
-	middles := Middles{
+	bul := New()
+	bul.Use(middles{
 		Recovery,
 		Override,
-	}
-	bulrush.Use(middles...)
-	return bulrush
+	}...)
+	return bul
 }
 
 // SetMode defined httpProxy mode
-func (bulrush *rush) SetMode() Bulrush {
-	gin.SetMode(bulrush.config.Mode)
-	return bulrush
+func (bul *rush) SetMode() Bulrush {
+	gin.SetMode(bul.config.Mode)
+	return bul
 }
 
 // PreUse attachs a global middleware to the router
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
-func (bulrush *rush) PreUse(items ...interface{}) Bulrush {
+func (bul *rush) PreUse(items ...interface{}) Bulrush {
 	funk.ForEach(items, func(item interface{}) {
 		value := indirectPlugin(item)
-		*bulrush.preMiddles = append(*bulrush.preMiddles, value)
+		*bul.preMiddles = append(*bul.preMiddles, value)
 	})
-	return bulrush
+	return bul
 }
 
 // Use attachs a global middleware to the router
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
-func (bulrush *rush) Use(items ...interface{}) Bulrush {
+func (bul *rush) Use(items ...interface{}) Bulrush {
 	funk.ForEach(items, func(item interface{}) {
 		value := indirectPlugin(item)
-		*bulrush.middles = append(*bulrush.middles, value)
+		*bul.middles = append(*bul.middles, value)
 	})
-	return bulrush
+	return bul
 }
 
 // PostUse attachs a global middleware to the router
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
-func (bulrush *rush) PostUse(items ...interface{}) Bulrush {
+func (bul *rush) PostUse(items ...interface{}) Bulrush {
 	funk.ForEach(items, func(item interface{}) {
 		value := indirectPlugin(item)
-		*bulrush.postMiddles = append(*bulrush.postMiddles, value)
+		*bul.postMiddles = append(*bul.postMiddles, value)
 	})
-	return bulrush
+	return bul
 }
 
 // Config load config from string path
 // currently, it support loading file that end with .json or .yarm
-func (bulrush *rush) Config(path string) Bulrush {
+func (bul *rush) Config(path string) Bulrush {
 	conf := LoadConfig(path)
 	conf.Version = conf.version()
 	conf.Name = conf.name()
@@ -166,42 +155,42 @@ func (bulrush *rush) Config(path string) Bulrush {
 	if conf.Version != Version {
 		rushLogger.Warn("Please check the latest version of bulrush's configuration file")
 	}
-	*bulrush.config = *conf
-	bulrush.Inject(bulrush.config)
-	bulrush.SetMode()
-	return bulrush
+	*bul.config = *conf
+	bul.Inject(bul.config)
+	bul.SetMode()
+	return bul
 }
 
 // Inject `inject` to bulrush
 // - inject should be someone that never be pushed in before.
-func (bulrush *rush) Inject(items ...interface{}) Bulrush {
+func (bul *rush) Inject(items ...interface{}) Bulrush {
 	funk.ForEach(items, func(inject interface{}) {
-		if bulrush.injects.typeExisted(inject) {
+		if bul.injects.typeExisted(inject) {
 			rushLogger.Error("inject %v has existed", inject)
 			panic(fmt.Errorf("inject %v has existed", inject))
 		}
 	})
-	*bulrush.injects = append(*bulrush.injects, items...)
-	return bulrush
+	*bul.injects = append(*bul.injects, items...)
+	return bul
 }
 
 // RunImmediately, excute plugin in orderly
 // Quick start application
-func (bulrush *rush) RunImmediately() {
-	bulrush.Run(RunImmediately)
+func (bul *rush) RunImmediately() {
+	bul.Run(RunImmediately)
 }
 
 // Run application with callback, excute plugin in orderly
 // Note: this method will block the calling goroutine indefinitely unless an error happens.
-func (bulrush *rush) Run(cb interface{}) {
-	bulrush.PostUse(cb)
-	middles := bulrush.preMiddles.concat(bulrush.middles).concat(bulrush.postMiddles)
+func (bul *rush) Run(cb interface{}) {
+	bul.PostUse(cb)
+	middles := bul.preMiddles.concat(bul.middles).concat(bul.postMiddles)
 	callables := middles.toCallables()
 	executor := &executor{
 		callables: callables,
-		injects:   bulrush.injects,
+		injects:   bul.injects,
 	}
 	executor.execute(func(ret ...interface{}) {
-		bulrush.Inject(ret...)
+		bul.Inject(ret...)
 	})
 }

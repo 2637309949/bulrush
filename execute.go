@@ -8,14 +8,14 @@ import "reflect"
 
 type (
 	// Callables defined func array
-	Callables []interface{}
+	callables []interface{}
 	executor  struct {
-		callables *Callables
-		injects   *Injects
+		callables *callables
+		injects   *injects
 	}
 )
 
-func (call Callables) toValues() []reflect.Value {
+func (call callables) toValues() []reflect.Value {
 	values := []reflect.Value{}
 	for _, ret := range call {
 		values = append(values, reflect.ValueOf(ret))

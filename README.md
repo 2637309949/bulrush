@@ -70,10 +70,8 @@ app.Inject("bulrushApp")
 Set injects by plugin ret  
 ```go
 // Plugin for role
-func (role *Role) Plugin() interface{} {
-	return func() *Role {
-		return role
-	}
+func (role *Role) Plugin() *Role {
+	return role
 }
 ```
 #### Import your plugins

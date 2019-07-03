@@ -111,7 +111,7 @@ func Default() Bulrush {
 }
 
 // SetMode defined httpProxy mode
-func (bul *rush) SetMode() Bulrush {
+func (bul *rush) setMode() Bulrush {
 	gin.SetMode(bul.config.Mode)
 	return bul
 }
@@ -162,7 +162,7 @@ func (bul *rush) Config(path string) Bulrush {
 	}
 	*bul.config = *conf
 	bul.Inject(bul.config)
-	bul.SetMode()
+	bul.setMode()
 	return bul
 }
 

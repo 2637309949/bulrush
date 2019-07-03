@@ -11,33 +11,57 @@ import (
 	"github.com/thoas/go-funk"
 )
 
+const (
+	preHookName    = "Pre"
+	postHookName   = "Post"
+	pluginHookName = "Plugin"
+)
+
 type funcValue struct {
 	value  reflect.Value
 	inputs []reflect.Value
 }
 
-func (fv *funcValue) call() interface{} {
-	fvType := fv.value.Type()
-	numFvIn := fvType.NumIn()
-	numPutIn := len(fv.inputs)
-	if fv.value.IsValid() && (numFvIn == numPutIn) {
-		ret := fv.value.Call(fv.inputs)
-		ret = funk.Filter(ret, func(v reflect.Value) bool {
-			return v.IsValid()
-		}).([]reflect.Value)
-		results := funk.Map(ret, func(v reflect.Value) interface{} {
-			return v.Interface()
-		})
-		return results
+func (fv *funcValue) runPre() {
+	pre, fromStruct := indirectFunc(fv.value.Interface(), preHookName)
+	if pre != nil && fromStruct {
+		value := reflect.ValueOf(pre)
+		if value.IsValid() {
+			value.Call([]reflect.Value{})
+		}
 	}
-	panic(fmt.Sprintf("funcValue %v call with %v error", fv.value, fv.inputs))
+}
+
+func (fv *funcValue) runPlugin() interface{} {
+	funcItem := indirectPlugin(fv.value.Interface())
+	funcValue := reflect.ValueOf(funcItem)
+	ret := funcValue.Call(fv.inputs)
+	ret = funk.Filter(ret, func(v reflect.Value) bool {
+		return v.IsValid()
+	}).([]reflect.Value)
+	results := funk.Map(ret, func(v reflect.Value) interface{} {
+		return v.Interface()
+	})
+	return results
+}
+
+func (fv *funcValue) runPost() {
+	pre, fromStruct := indirectFunc(fv.value.Interface(), postHookName)
+	if pre != nil && fromStruct {
+		value := reflect.ValueOf(pre)
+		if value.IsValid() {
+			value.Call([]reflect.Value{})
+		}
+	}
 }
 
 func (fv *funcValue) inputsFrom(inputs []interface{}) {
-	if fv.value.Type().Kind() != reflect.Func {
-		panic(fmt.Errorf("inputsFrom %v call with %v error", fv.value.Type().Kind() == reflect.Func, inputs))
+	funcItem := indirectPlugin(fv.value.Interface())
+	funcValue := reflect.ValueOf(funcItem)
+	if funcValue.Type().Kind() != reflect.Func {
+		panic(fmt.Errorf(" %v inputsFrom call with %v error", funcItem, inputs))
 	}
-	funcType := fv.value.Type()
+	funcType := funcValue.Type()
 	numIn := funcType.NumIn()
 	for index := 0; index < numIn; index++ {
 		ptype := funcType.In(index)

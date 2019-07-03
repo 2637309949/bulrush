@@ -28,7 +28,9 @@ func (exec *executor) execute(inspect func(...interface{})) {
 	for _, value := range values {
 		funcValue := funcValue{value: value}
 		funcValue.inputsFrom(*exec.injects)
-		ret := funcValue.call().([]interface{})
+		funcValue.runPre()
+		ret := funcValue.runPlugin().([]interface{})
+		funcValue.runPost()
 		inspect(ret...)
 	}
 }

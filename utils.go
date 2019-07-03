@@ -167,23 +167,55 @@ func indirectType(reflectType reflect.Type) reflect.Type {
 	return reflectType
 }
 
-func indirectPlugin(item interface{}) interface{} {
+func indirectFunc(item interface{}, funcName string) (interface{}, bool) {
+	fromStruct := false
 	value := reflect.ValueOf(item)
 	if value.Kind() == reflect.Interface && value.Elem().Kind() == reflect.Interface {
 		value = value.Elem().Elem()
 	}
 	if value.Kind() == reflect.Ptr && value.Elem().Kind() == reflect.Struct {
-		if value.MethodByName("Plugin").IsValid() {
-			value = value.MethodByName("Plugin")
+		if value.MethodByName(funcName).IsValid() {
+			value = value.MethodByName(funcName)
+			fromStruct = true
 		} else {
 			value = value.Elem()
 		}
 	}
 	if value.Kind() == reflect.Struct {
-		value = value.MethodByName("Plugin")
+		value = value.MethodByName(funcName)
+		fromStruct = true
 	}
-	if !(value.IsValid() && value.Kind() == reflect.Func) {
-		panic(fmt.Errorf("%v can not be used as plugin", value))
+	if value.Kind() == reflect.Func && value.IsValid() {
+		return value.Interface(), fromStruct
 	}
-	return value.Interface()
+	return nil, fromStruct
+}
+
+func indirectPlugin(item interface{}) interface{} {
+	value, _ := indirectFunc(item, pluginHookName)
+	if value == nil {
+		panic(fmt.Errorf("%v can not be used as plugin", item))
+	}
+	return value
+}
+
+func indirectPre(item interface{}) interface{} {
+	value, fromStruct := indirectFunc(item, preHookName)
+	if !fromStruct {
+		return value
+	}
+	return nil
+}
+
+func indirectPost(item interface{}) interface{} {
+	value, fromStruct := indirectFunc(item, postHookName)
+	if !fromStruct {
+		return value
+	}
+	return nil
+}
+
+func isPlugin(item interface{}) bool {
+	value, _ := indirectFunc(item, pluginHookName)
+	return value != nil
 }

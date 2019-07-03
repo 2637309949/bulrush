@@ -29,6 +29,6 @@ func (r *ReverseInject) Register(rFunc interface{}) {
 		value: reflect.ValueOf(rFunc),
 	}
 	funcValue.inputsFrom(*r.injects)
-	rets := funcValue.call()
+	rets := funcValue.runPlugin()
 	r.inspect(rets.([]interface{})...)
 }

@@ -9,6 +9,7 @@ require (
 	github.com/gin-gonic/gin v1.4.0
 	github.com/go-playground/locales v0.12.1 // indirect
 	github.com/go-playground/universal-translator v0.16.0 // indirect
+	github.com/google/go-cmp v0.2.0
 	github.com/jinzhu/copier v0.0.0-20180308034124-7e38e58719c3
 	github.com/kataras/go-events v0.0.2
 	github.com/leodido/go-urn v1.1.0 // indirect

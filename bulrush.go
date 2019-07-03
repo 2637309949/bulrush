@@ -121,8 +121,10 @@ func (bul *rush) setMode() Bulrush {
 // bulrush range these middles in order
 func (bul *rush) PreUse(items ...interface{}) Bulrush {
 	funk.ForEach(items, func(item interface{}) {
-		value := indirectPlugin(item)
-		*bul.preMiddles = append(*bul.preMiddles, value)
+		if !isPlugin(item) {
+			panic(fmt.Errorf("%v can not be used as plugin", item))
+		}
+		*bul.preMiddles = append(*bul.preMiddles, item)
 	})
 	return bul
 }
@@ -132,8 +134,10 @@ func (bul *rush) PreUse(items ...interface{}) Bulrush {
 // bulrush range these middles in order
 func (bul *rush) Use(items ...interface{}) Bulrush {
 	funk.ForEach(items, func(item interface{}) {
-		value := indirectPlugin(item)
-		*bul.middles = append(*bul.middles, value)
+		if !isPlugin(item) {
+			panic(fmt.Errorf("%v can not be used as plugin", item))
+		}
+		*bul.middles = append(*bul.middles, item)
 	})
 	return bul
 }
@@ -143,8 +147,10 @@ func (bul *rush) Use(items ...interface{}) Bulrush {
 // bulrush range these middles in order
 func (bul *rush) PostUse(items ...interface{}) Bulrush {
 	funk.ForEach(items, func(item interface{}) {
-		value := indirectPlugin(item)
-		*bul.postMiddles = append(*bul.postMiddles, value)
+		if !isPlugin(item) {
+			panic(fmt.Errorf("%v can not be used as plugin", item))
+		}
+		*bul.postMiddles = append(*bul.postMiddles, item)
 	})
 	return bul
 }

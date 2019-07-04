@@ -18,45 +18,61 @@ const (
 )
 
 type funcValue struct {
-	value  reflect.Value
+	pre    reflect.Value
+	post   reflect.Value
+	plugin reflect.Value
 	inputs []reflect.Value
 }
 
-func (fv *funcValue) runPre() {
-	pre, fromStruct := indirectFunc(fv.value.Interface(), preHookName)
+func parseValue(value reflect.Value) *funcValue {
+	funcValue := &funcValue{}
+	pre, fromStruct := indirectFunc(value.Interface(), preHookName)
 	if pre != nil && fromStruct {
-		value := reflect.ValueOf(pre)
-		if value.IsValid() {
-			value.Call([]reflect.Value{})
+		preValue := reflect.ValueOf(pre)
+		if preValue.IsValid() {
+			funcValue.pre = preValue
 		}
+	}
+
+	plugin := indirectPlugin(value.Interface())
+	if plugin != nil {
+		pluginValue := reflect.ValueOf(plugin)
+		if pluginValue.IsValid() {
+			funcValue.plugin = pluginValue
+		}
+	}
+
+	post, fromStruct := indirectFunc(value.Interface(), postHookName)
+	if pre != nil && fromStruct {
+		postValue := reflect.ValueOf(post)
+		if postValue.IsValid() {
+			funcValue.post = postValue
+		}
+	}
+	return funcValue
+}
+
+func (fv *funcValue) runPre() {
+	if fv.pre.IsValid() {
+		fv.pre.Call([]reflect.Value{})
 	}
 }
 
-func (fv *funcValue) runPlugin() interface{} {
-	funcItem := indirectPlugin(fv.value.Interface())
-	funcValue := reflect.ValueOf(funcItem)
-	ret := funcValue.Call(fv.inputs)
-	ret = funk.Filter(ret, func(v reflect.Value) bool {
-		return v.IsValid()
-	}).([]reflect.Value)
-	results := funk.Map(ret, func(v reflect.Value) interface{} {
+func (fv *funcValue) runPlugin() []interface{} {
+	ret := fv.plugin.Call(fv.inputs)
+	return funk.Map(ret, func(v reflect.Value) interface{} {
 		return v.Interface()
-	})
-	return results
+	}).([]interface{})
 }
 
 func (fv *funcValue) runPost() {
-	pre, fromStruct := indirectFunc(fv.value.Interface(), postHookName)
-	if pre != nil && fromStruct {
-		value := reflect.ValueOf(pre)
-		if value.IsValid() {
-			value.Call([]reflect.Value{})
-		}
+	if fv.post.IsValid() {
+		fv.post.Call([]reflect.Value{})
 	}
 }
 
 func (fv *funcValue) inputsFrom(inputs []interface{}) {
-	funcItem := indirectPlugin(fv.value.Interface())
+	funcItem := indirectPlugin(fv.plugin.Interface())
 	funcValue := reflect.ValueOf(funcItem)
 	if funcValue.Type().Kind() != reflect.Func {
 		panic(fmt.Errorf(" %v inputsFrom call with %v error", funcItem, inputs))

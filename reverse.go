@@ -25,10 +25,8 @@ func (r *ReverseInject) Register(rFunc interface{}) {
 	if kind != reflect.Func {
 		panic(fmt.Errorf("rFunc should to be func type"))
 	}
-	funcValue := funcValue{
-		value: reflect.ValueOf(rFunc),
-	}
+	funcValue := parseValue(reflect.ValueOf(rFunc))
 	funcValue.inputsFrom(*r.injects)
 	rets := funcValue.runPlugin()
-	r.inspect(rets.([]interface{})...)
+	r.inspect(rets...)
 }

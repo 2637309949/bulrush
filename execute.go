@@ -4,10 +4,13 @@
 
 package bulrush
 
-import "reflect"
+import (
+	"reflect"
+
+	"github.com/thoas/go-funk"
+)
 
 type (
-	// Callables defined func array
 	callables []interface{}
 	executor  struct {
 		callables *callables
@@ -17,20 +20,19 @@ type (
 
 func (call callables) toValues() []reflect.Value {
 	values := []reflect.Value{}
-	for _, ret := range call {
-		values = append(values, reflect.ValueOf(ret))
-	}
+	funk.ForEach(call, func(item interface{}) {
+		values = append(values, reflect.ValueOf(item))
+	})
 	return values
 }
 
 func (exec *executor) execute(inspect func(...interface{})) {
 	values := exec.callables.toValues()
 	for _, value := range values {
-		funcValue := funcValue{value: value}
-		funcValue.inputsFrom(*exec.injects)
-		funcValue.runPre()
-		ret := funcValue.runPlugin().([]interface{})
-		funcValue.runPost()
-		inspect(ret...)
+		fv := parseValue(value)
+		fv.inputsFrom(*exec.injects)
+		fv.runPre()
+		inspect(fv.runPlugin()...)
+		fv.runPost()
 	}
 }

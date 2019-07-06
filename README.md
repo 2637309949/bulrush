@@ -1,35 +1,34 @@
+![Bulrush flash](./assets/flash.jpg)
+![Bulrush flash](./assets/frame.png)
 
 <!-- TOC -->
 
-- [Bulrush Framework](#bulrush-framework)
-    - [Benchmarks](#benchmarks)
-    - [Instruction](#instruction)
-    - [API](#api)
-            - [Set app config](#set-app-config)
-            - [Inject your custom injects](#inject-your-custom-injects)
-            - [Import your plugins](#import-your-plugins)
-            - [Run app](#run-app)
-            - [Share state between plug-ins](#share-state-between-plug-ins)
-                - [store state](#store-state)
-                - [read state](#read-state)
-            - [Plug in communication between plug-ins](#plug-in-communication-between-plug-ins)
-    - [Design Philosophy](#design-philosophy)
-    - [Injects](#injects)
-        - [Built-in Injects](#built-in-injects)
-    - [Plugins](#plugins)
-        - [Built-in Plugins](#built-in-plugins)
-        - [Custom your plugins](#custom-your-plugins)
-        - [Assemble your plugin` config from bulrush Injects](#assemble-your-plugin-config-from-bulrush-injects)
-    - [Note](#note)
-    - [MIT License](#mit-license)
+- [Benchmarks](#benchmarks)
+- [Instruction](#instruction)
+- [API](#api)
+    - [Set app config](#set-app-config)
+    - [Inject your custom injects](#inject-your-custom-injects)
+    - [Import your plugins](#import-your-plugins)
+    - [Run app](#run-app)
+    - [Share state between plug-ins](#share-state-between-plug-ins)
+    - [store state](#store-state)
+    - [read state](#read-state)
+    - [Plug in communication between plug-ins](#plug-in-communication-between-plug-ins)
+- [Design Philosophy](#design-philosophy)
+- [Injects](#injects)
+    - [Built-in Injects](#built-in-injects)
+        - [EventEmmiter](#eventemmiter)
+        - [*Status](#status)
+        - [*Validate](#validate)
+        - [*Jobrunner](#jobrunner)
+- [Plugins](#plugins)
+    - [Built-in Plugins](#built-in-plugins)
+    - [Custom your plugins](#custom-your-plugins)
+    - [Assemble your plugin` config from bulrush Injects](#assemble-your-plugin-config-from-bulrush-injects)
+- [Note](#note)
+- [MIT License](#mit-license)
 
 <!-- /TOC -->
-
-
-# Bulrush Framework
-
-![Bulrush flash](./assets/flash.jpg)
-![Bulrush flash](./assets/frame.png)
 
 ## Benchmarks
 ```cmd
@@ -44,6 +43,7 @@ Transfer/sec:     24.85MB
 ```
 
 ## Instruction
+
 Quickly build applications and customize special functions through plug-ins, Multiple base plug-ins are provided
 Install Bulrush
 ```shell
@@ -85,11 +85,11 @@ app.Run(func(httpProxy *gin.Engine, config *bulrush.Config) {
 For more details, Please reference to [bulrush-template](https://github.com/2637309949/bulrush-template). 
 
 ## API
-#### Set app config
+### Set app config
 ```go
 app.Config(CONFIGPATH)
 ```
-#### Inject your custom injects
+### Inject your custom injects
 All injects would be provided as plugins params next by next.  
 Init injects by Inject function
 ```go
@@ -102,7 +102,8 @@ func (role *Role) Plugin() *Role {
 	return role
 }
 ```
-#### Import your plugins
+
+### Import your plugins
 ```go
 app.Use(func(testInject string, router *gin.RouterGroup) {
     router.GET("/bulrushApp", func (c *gin.Context) {
@@ -112,7 +113,8 @@ app.Use(func(testInject string, router *gin.RouterGroup) {
     })
 })
 ```
-#### Run app
+
+### Run app
 ```go
 app.Run(func(httpProxy *gin.Engine, config *bulrush.Config) {
     port := config.GetString("port", ":8080")
@@ -128,22 +130,22 @@ app.Run(func(httpProxy *gin.Engine, config *bulrush.Config) {
     httpProxy.Run(port)
 })
 ```
-#### Share state between plug-ins
+### Share state between plug-ins
 
-##### store state
+### store state
 ```go
 app.Use(func(status *bulrush.Status) {
     status.Set("count", 1)
 })
 ```
-##### read state
+### read state
 ```go
 app.Use(func(status *bulrush.Status) {
     status.Get("count")
     status.ALL()
 })
 ```
-#### Plug in communication between plug-ins
+### Plug in communication between plug-ins
 ```go
 app.Use(func(events events.EventEmmiter) {
 	events.On("hello", func(payload ...interface{}) {
@@ -154,9 +156,10 @@ app.Use(func(events events.EventEmmiter) {
 ```
 
 ## Design Philosophy
+
 ## Injects
 ### Built-in Injects
--	EventEmmiter  
+#### EventEmmiter  
 
 The entire architecture in the system is developed around plug-ins, and communication between
     plug-ins is done through EventEmmiter, This ensures low coupling between plug-ins  
@@ -189,7 +192,7 @@ func RegisterHello(job *bulrush.Jobrunner, emmiter events.EventEmmiter) {
 	})
 }
 ```
--	*Status
+#### *Status
     If you don't need database or REIDS persistence, you can achieve state consistency between plug-ins by  
 sharing state  
 ```go
@@ -202,7 +205,7 @@ func RegisterHello(status *bulrush.Status, emmiter events.EventEmmiter) {
 	data, _ := status.Get("test")
 }
 ```
--	*Validate
+#### *Validate
     At the same time provides with gin. Bind the same validator. V9
 ```go
 count := reflect.ValueOf(binds).Elem().Len()
@@ -216,7 +219,7 @@ for count > 0 {
     }
 }
 ```
--	*Jobrunner
+#### *Jobrunner
     If you need some lightweight scheduling, you can consider this plug-in
 ```go
 type reminderEmails struct {

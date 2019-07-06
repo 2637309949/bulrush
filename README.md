@@ -14,6 +14,7 @@ Thread Stats   Avg      Stdev     Max   +/- Stdev
 Requests/sec: 177249.36
 Transfer/sec:     24.85MB
 ```
+<!-- TOC -->autoauto- [Bulrush Framework](#bulrush-framework)auto    - [Benchmarks](#benchmarks)auto    - [Instruction](#instruction)auto    - [API](#api)auto            - [Set app config](#set-app-config)auto            - [Inject your custom injects](#inject-your-custom-injects)auto            - [Import your plugins](#import-your-plugins)auto            - [Run app](#run-app)auto            - [Share state between plug-ins](#share-state-between-plug-ins)auto                - [store state](#store-state)auto                - [read state](#read-state)auto            - [Plug in communication between plug-ins](#plug-in-communication-between-plug-ins)auto    - [Design Philosophy](#design-philosophy)auto    - [Injects](#injects)auto        - [Built-in Injects](#built-in-injects)auto    - [Plugins](#plugins)auto        - [Built-in Plugins](#built-in-plugins)auto        - [Custom your plugins](#custom-your-plugins)auto        - [Assemble your plugin` config from bulrush Injects](#assemble-your-plugin-config-from-bulrush-injects)auto    - [Note](#note)auto    - [MIT License](#mit-license)autoauto<!-- /TOC -->
 
 ## Instruction
 Quickly build applications and customize special functions through plug-ins, Multiple base plug-ins are provided

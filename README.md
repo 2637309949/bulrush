@@ -1,19 +1,3 @@
-# Bulrush Framework
-
-![Bulrush flash](./assets/flash.jpg)
-![Bulrush flash](./assets/frame.png)
-
-## Benchmarks
-```cmd
-Running 3s test @ http://127.0.0.1:3333/api/v1/
-8 threads and 50 connections
-Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency   374.51us  504.86us   8.45ms   89.96%
-    Req/Sec    22.71k     4.36k   60.90k    97.94%
-549392 requests in 3.10s, 77.02MB read
-Requests/sec: 177249.36
-Transfer/sec:     24.85MB
-```
 
 <!-- TOC -->
 
@@ -40,6 +24,24 @@ Transfer/sec:     24.85MB
     - [MIT License](#mit-license)
 
 <!-- /TOC -->
+
+
+# Bulrush Framework
+
+![Bulrush flash](./assets/flash.jpg)
+![Bulrush flash](./assets/frame.png)
+
+## Benchmarks
+```cmd
+Running 3s test @ http://127.0.0.1:3333/api/v1/
+8 threads and 50 connections
+Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   374.51us  504.86us   8.45ms   89.96%
+    Req/Sec    22.71k     4.36k   60.90k    97.94%
+549392 requests in 3.10s, 77.02MB read
+Requests/sec: 177249.36
+Transfer/sec:     24.85MB
+```
 
 ## Instruction
 Quickly build applications and customize special functions through plug-ins, Multiple base plug-ins are provided

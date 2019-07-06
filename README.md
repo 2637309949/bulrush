@@ -1,5 +1,5 @@
-![Bulrush flash](./assets/flash.jpg)
-![Bulrush flash](./assets/frame.png)
+
+
 
 <!-- TOC -->
 
@@ -43,9 +43,11 @@ Transfer/sec:     24.85MB
 ```
 
 ## Instruction
+![Bulrush flash](./assets/frame.png)
 
 Quickly build applications and customize special functions through plug-ins, Multiple base plug-ins are provided
 Install Bulrush
+
 ```shell
 $ go get github.com/2637309949/bulrush
 ```

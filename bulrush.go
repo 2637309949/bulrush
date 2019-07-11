@@ -88,13 +88,18 @@ func New() Bulrush {
 		middles:      &mid,
 		postMiddles:  &poMid,
 	}
-	defaultMiddles := middles{
+	dMiddles := middles{}
+	dpreMiddles := middles{
 		HTTPProxy,
 		HTTPRouter,
 	}
+	dpostMiddles := middles{}
 	defaultInjects := defaultInjects(bulrush)
-	bulrush.Use(defaultMiddles...)
+
 	bulrush.Inject(defaultInjects...)
+	bulrush.PreUse(dpreMiddles...)
+	bulrush.Use(dMiddles...)
+	bulrush.PostUse(dpostMiddles...)
 	return bulrush
 }
 

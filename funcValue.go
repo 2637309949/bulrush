@@ -29,7 +29,7 @@ func parseValue(value reflect.Value) *funcValue {
 	pre, fromStruct := indirectFunc(value.Interface(), preHookName)
 	if pre != nil && fromStruct {
 		preValue := reflect.ValueOf(pre)
-		if preValue.IsValid() {
+		if preValue.IsValid() && preValue.Type().NumIn() == 0 {
 			funcValue.pre = preValue
 		}
 	}
@@ -45,7 +45,7 @@ func parseValue(value reflect.Value) *funcValue {
 	post, fromStruct := indirectFunc(value.Interface(), postHookName)
 	if pre != nil && fromStruct {
 		postValue := reflect.ValueOf(post)
-		if postValue.IsValid() {
+		if postValue.IsValid() && postValue.Type().NumIn() == 0 {
 			funcValue.post = postValue
 		}
 	}

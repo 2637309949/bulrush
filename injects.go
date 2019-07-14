@@ -10,7 +10,23 @@ import (
 	"gopkg.in/robfig/cron.v2"
 )
 
-func defaultInjects(bul *rush) injects {
+// Injects defined some entitys that can be inject to middle
+// , Injects would panic if repetition
+// , Injects can be go base tyle or struct or ptr or interface{}
+type Injects []interface{}
+
+// Append defined array concat
+func (src *Injects) Append(target *Injects) *Injects {
+	injects := append(*src, *target...)
+	return &injects
+}
+
+// Has defined inject type is existed or not
+func (src *Injects) Has(item interface{}) bool {
+	return typeExists(*src, item)
+}
+
+func preInjects(bul *rush) Injects {
 	emmiter := events.New()
 	status := statusStorage(emmiter)
 	validate := validator.New()
@@ -22,7 +38,7 @@ func defaultInjects(bul *rush) injects {
 			bul.Inject(ret...)
 		},
 	}
-	return injects{
+	return Injects{
 		emmiter,
 		status,
 		validate,

@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	github.com/2637309949/bulrush-addition v0.0.0-20190627072903-fc73b3176242
+	github.com/2637309949/bulrush-utils v0.0.0-20190713031957-0a43e2c4a4e6
 	github.com/bamzi/jobrunner v0.0.0-20161019143021-273175f8b6eb
 	github.com/ghodss/yaml v1.0.0
 	github.com/gin-gonic/gin v1.4.0

@@ -12,7 +12,7 @@ import (
 // ReverseInject Inject
 type ReverseInject struct {
 	config  *Config
-	injects *injects
+	injects *Injects
 	inspect func(items ...interface{})
 }
 
@@ -25,8 +25,9 @@ func (r *ReverseInject) Register(rFunc interface{}) {
 	if kind != reflect.Func {
 		panic(fmt.Errorf("rFunc should to be func type"))
 	}
-	funcValue := parseValue(reflect.ValueOf(rFunc))
-	funcValue.inputsFrom(*r.injects)
-	rets := funcValue.runPlugin()
-	r.inspect(rets...)
+	pv := NewPluginValue(rFunc)
+	pv.inputsFrom(*r.injects)
+	pv.runPre()
+	r.inspect(pv.runPlugin()...)
+	pv.runPost()
 }

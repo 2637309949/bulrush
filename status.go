@@ -4,31 +4,39 @@
 
 package bulrush
 
-import "github.com/kataras/go-events"
+import (
+	"sync"
+
+	"github.com/kataras/go-events"
+)
 
 // Status store and share status Between different plug-ins
 type Status struct {
 	events events.EventEmmiter
-	data   map[string]interface{}
+	m      map[string]interface{}
+	l      *sync.RWMutex
 }
 
 // Get value
 func (s *Status) Get(key string) (interface{}, bool) {
-	ret, ok := s.data[key]
-	s.events.Emit("bulrush:status:get", key, ret)
+	s.l.RLock()
+	defer s.l.RUnlock()
+	ret, ok := s.m[key]
 	return ret, ok
 }
 
 // ALL value
 func (s *Status) ALL() map[string]interface{} {
-	s.events.Emit("bulrush:status:all", s.data)
-	return s.data
+	s.l.RLock()
+	defer s.l.RUnlock()
+	return s.m
 }
 
 // Set value
 func (s *Status) Set(key string, value interface{}) *Status {
-	s.events.Emit("bulrush:status:set", key, value)
-	s.data[key] = value
+	s.l.Lock()
+	defer s.l.Unlock()
+	s.m[key] = value
 	return s
 }
 
@@ -36,6 +44,6 @@ func (s *Status) Set(key string, value interface{}) *Status {
 func statusStorage(events events.EventEmmiter) *Status {
 	return &Status{
 		events: events,
-		data:   make(map[string]interface{}, 0),
+		m:      make(map[string]interface{}, 0),
 	}
 }

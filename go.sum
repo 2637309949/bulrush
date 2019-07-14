@@ -10,6 +10,8 @@ github.com/2637309949/bulrush-addition v0.0.0-20190624144340-c79aa78dc842 h1:Fz0
 github.com/2637309949/bulrush-addition v0.0.0-20190624144340-c79aa78dc842/go.mod h1:FKpBSmY4obIdrCggAGYMaD47iTD5Cgk5cnyyBEW+Etg=
 github.com/2637309949/bulrush-addition v0.0.0-20190627072903-fc73b3176242 h1:fi+aZEUqopUkfU9gJ3cehlWRtWeTY7niFPC2xIPruXM=
 github.com/2637309949/bulrush-addition v0.0.0-20190627072903-fc73b3176242/go.mod h1:FKpBSmY4obIdrCggAGYMaD47iTD5Cgk5cnyyBEW+Etg=
+github.com/2637309949/bulrush-utils v0.0.0-20190713031957-0a43e2c4a4e6 h1:lz85+sX7qxXU3EHaIuuTLrsj3IoV7uig1deMjsDXMGE=
+github.com/2637309949/bulrush-utils v0.0.0-20190713031957-0a43e2c4a4e6/go.mod h1:vPokdMdNi8X8e59c24pngRNoMR3eiYpCd/3V/Rqj/E0=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWXgklEdEo=
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=

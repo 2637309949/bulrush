@@ -40,8 +40,8 @@ func (s *Status) Set(key string, value interface{}) *Status {
 	return s
 }
 
-// new statusStorage
-func statusStorage(events events.EventEmmiter) *Status {
+// newStatus defined return new status
+func newStatus(events events.EventEmmiter) *Status {
 	return &Status{
 		events: events,
 		m:      make(map[string]interface{}, 0),

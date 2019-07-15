@@ -23,6 +23,7 @@ func isFunc(target interface{}) bool {
 	return retType.Kind() == reflect.Func
 }
 
+// typeExists defined type is exists or not
 func typeExists(items interface{}, target interface{}) bool {
 	if !isIteratee(items) {
 		panic("items must be an iteratee")

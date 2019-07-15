@@ -28,7 +28,7 @@ func (src *Injects) Has(item interface{}) bool {
 
 func preInjects(bul *rush) Injects {
 	emmiter := events.New()
-	status := statusStorage(emmiter)
+	status := newStatus(emmiter)
 	validate := validator.New()
 	schedule := cron.New()
 	reverseInject := &ReverseInject{

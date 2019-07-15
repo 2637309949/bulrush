@@ -15,17 +15,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const (
-	// DefaultConfigVersion defined default version
-	DefaultConfigVersion = 1.0
-	// DefaultConfigName defined default name
-	DefaultConfigName = "bulrush"
-	// DefaultConfigPrefix defined default prefix
-	DefaultConfigPrefix = "/api/v1"
-	// DefaultConfigMode defined default mode
-	DefaultConfigMode = "debug"
-)
-
 type log struct {
 	Path string `json:"path" yaml:"path"`
 }
@@ -43,7 +32,7 @@ type Config struct {
 	data        []byte
 }
 
-// LoadConfig loads the bulrush tool configuration.
+// LoadConfig loads the bulrush tool configuration
 func LoadConfig(path string) *Config {
 	var data []byte
 	var err error
@@ -61,28 +50,28 @@ func LoadConfig(path string) *Config {
 
 func (c *Config) version() float64 {
 	if c.Version == 0 {
-		return DefaultConfigVersion
+		return 1.0
 	}
 	return c.Version
 }
 
 func (c *Config) name() string {
 	if c.Name == "" {
-		return DefaultConfigName
+		return "bulrush"
 	}
 	return c.Name
 }
 
 func (c *Config) prefix() string {
 	if c.Prefix == "" {
-		return DefaultConfigPrefix
+		return "/api/v1"
 	}
 	return c.Prefix
 }
 
 func (c *Config) mode() string {
 	if c.Mode == "" {
-		return DefaultConfigMode
+		return "debug"
 	}
 	return c.Mode
 }

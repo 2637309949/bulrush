@@ -15,10 +15,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type log struct {
-	Path string `json:"path" yaml:"path"`
-}
-
 // Config bulrush config struct
 type Config struct {
 	Version     float64 `json:"version" yaml:"version"`
@@ -27,9 +23,12 @@ type Config struct {
 	Port        string  `json:"port" yaml:"port"`
 	Mode        string  `json:"mode" yaml:"mode"`
 	DuckReflect bool    `json:"duckReflect" yaml:"duckReflect"`
-	Log         log
-	dataType    string
-	data        []byte
+	Log         struct {
+		Level string `json:"level" yaml:"level"`
+		Path  string `json:"path" yaml:"path"`
+	}
+	dataType string
+	data     []byte
 }
 
 // LoadConfig loads the bulrush tool configuration

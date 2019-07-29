@@ -11,7 +11,6 @@ import (
 
 // ReverseInject Inject
 type ReverseInject struct {
-	config  *Config
 	injects *Injects
 	inspect func(items ...interface{})
 }

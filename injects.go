@@ -34,7 +34,6 @@ func preInjects(bul *rush) Injects {
 	schedule := cron.New()
 	reverseInject := &ReverseInject{
 		injects: bul.injects,
-		config:  bul.config,
 		inspect: func(ret ...interface{}) {
 			bul.Inject(ret...)
 		},

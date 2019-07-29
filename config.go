@@ -31,22 +31,6 @@ type Config struct {
 	data     []byte
 }
 
-// LoadConfig loads the bulrush tool configuration
-func LoadConfig(path string) *Config {
-	var data []byte
-	var err error
-	if data, err = ioutil.ReadFile(path); err != nil {
-		panic(fmt.Errorf("failed to load file %s", err))
-	}
-	conf := &Config{data: data}
-	conf.dataType = conf.dataTypeByPath(path)
-
-	if err := unmarshalByFileType(conf.data, conf, conf.dataType); err != nil {
-		panic(fmt.Errorf("failed to parse yaml file type: %v", err))
-	}
-	return conf
-}
-
 func (c *Config) version() float64 {
 	if c.Version == 0 {
 		return 1.0
@@ -110,6 +94,22 @@ func (c *Config) Unmarshal(fieldName string, v interface{}) error {
 		}
 	}
 	return errors.New("can not unmarshal this type")
+}
+
+// LoadConfig loads the bulrush tool configuration
+func LoadConfig(path string) *Config {
+	var data []byte
+	var err error
+	if data, err = ioutil.ReadFile(path); err != nil {
+		panic(fmt.Errorf("failed to load file %s", err))
+	}
+	conf := &Config{data: data}
+	conf.dataType = conf.dataTypeByPath(path)
+
+	if err := unmarshalByFileType(conf.data, conf, conf.dataType); err != nil {
+		panic(fmt.Errorf("failed to parse yaml file type: %v", err))
+	}
+	return conf
 }
 
 // unmarshalByFileType defined unmarshal by diff file type

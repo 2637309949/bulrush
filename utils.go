@@ -25,9 +25,7 @@ func isFunc(target interface{}) bool {
 
 // typeExists defined type is exists or not
 func typeExists(items interface{}, target interface{}) bool {
-	if !isIteratee(items) {
-		panic("items must be an iteratee")
-	}
+	assert1(isIteratee(items), "items must be an iteratee")
 	ptype := reflect.ValueOf(target).Type()
 	arrValue := reflect.ValueOf(items)
 	for i := 0; i < arrValue.Len(); i++ {
@@ -100,9 +98,7 @@ func indirectFunc(item interface{}, funcName string) (interface{}, bool) {
 
 func indirectPlugin(item interface{}) interface{} {
 	value, _ := indirectFunc(item, pluginHookName)
-	if value == nil {
-		panic(fmt.Errorf("%v can not be used as plugin", item))
-	}
+	assert1(value != nil, fmt.Sprintf("%v can not be used as plugin", item))
 	return value
 }
 
@@ -162,4 +158,10 @@ func retrieveInterface(ptype reflect.Type, types []interface{}) interface{} {
 		return false
 	})
 	return target
+}
+
+func assert1(guard bool, text string) {
+	if !guard {
+		panic(text)
+	}
 }

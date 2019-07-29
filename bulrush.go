@@ -75,9 +75,7 @@ func Default() Bulrush {
 // bulrush range these middles in order
 func (bul *rush) PreUse(items ...interface{}) Bulrush {
 	funk.ForEach(items, func(item interface{}) {
-		if !isPlugin(item) {
-			panic(fmt.Errorf("%v can not be used as plugin", item))
-		}
+		assert1(isPlugin(item), fmt.Sprintf("%v can not be used as plugin", item))
 		*bul.prePlugins = append(*bul.prePlugins, item)
 	})
 	return bul
@@ -88,9 +86,7 @@ func (bul *rush) PreUse(items ...interface{}) Bulrush {
 // bulrush range these middles in order
 func (bul *rush) Use(items ...interface{}) Bulrush {
 	funk.ForEach(items, func(item interface{}) {
-		if !isPlugin(item) {
-			panic(fmt.Errorf("%v can not be used as plugin", item))
-		}
+		assert1(isPlugin(item), fmt.Sprintf("%v can not be used as plugin", item))
 		*bul.plugins = append(*bul.plugins, item)
 	})
 	return bul
@@ -101,9 +97,7 @@ func (bul *rush) Use(items ...interface{}) Bulrush {
 // bulrush range these middles in order
 func (bul *rush) PostUse(items ...interface{}) Bulrush {
 	funk.ForEach(items, func(item interface{}) {
-		if !isPlugin(item) {
-			panic(fmt.Errorf("%v can not be used as plugin", item))
-		}
+		assert1(isPlugin(item), fmt.Sprintf("%v can not be used as plugin", item))
 		*bul.postPlugins = append(*bul.postPlugins, item)
 	})
 	return bul
@@ -127,10 +121,7 @@ func (bul *rush) Config(path string) Bulrush {
 // - inject should be someone that never be pushed in before.
 func (bul *rush) Inject(items ...interface{}) Bulrush {
 	funk.ForEach(items, func(inject interface{}) {
-		if bul.injects.Has(inject) {
-			rushLogger.Error("inject %v has existed", inject)
-			panic(fmt.Errorf("inject %v has existed", inject))
-		}
+		assert1(!bul.injects.Has(inject), fmt.Sprintf("inject %v has existed", inject))
 	})
 	*bul.injects = append(*bul.injects, items...)
 	return bul

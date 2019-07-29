@@ -65,7 +65,8 @@ func New() Bulrush {
 // --Override middles has been register in router for override req
 func Default() Bulrush {
 	bul := New()
-	bul.Use(Plugins{Recovery, Override}...)
+	bul.Use(Recovery)
+	bul.Use(Override)
 	return bul
 }
 
@@ -116,9 +117,7 @@ func (bul *rush) Config(path string) Bulrush {
 	conf.Name = conf.name()
 	conf.Prefix = conf.prefix()
 	conf.Mode = conf.mode()
-	if conf.Version != Version {
-		rushLogger.Warn("Please check the latest version of bulrush's configuration file")
-	}
+	conf.verifyVersion(Version)
 	*bul.config = *conf
 	bul.Inject(bul.config)
 	return bul
@@ -147,8 +146,8 @@ func (bul *rush) RunImmediately() {
 // Note: this method will block the calling goroutine indefinitely unless an error happens.
 func (bul *rush) Run(cb interface{}) {
 	bul.PostUse(cb)
-	middles := bul.prePlugins.Append(bul.plugins).Append(bul.postPlugins)
-	pv := middles.toPluginValues()
+	plugin := bul.prePlugins.Append(bul.plugins).Append(bul.postPlugins)
+	pv := plugin.toPluginValues()
 	executor := &executor{
 		pluginValues: pv,
 		injects:      bul.injects,

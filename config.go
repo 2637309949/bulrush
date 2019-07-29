@@ -12,51 +12,50 @@ import (
 	"reflect"
 	"strings"
 
+	utils "github.com/2637309949/bulrush-utils"
 	"gopkg.in/yaml.v2"
 )
 
-// Config bulrush config struct
-type Config struct {
-	Version     float64 `json:"version" yaml:"version"`
-	Name        string  `json:"name" yaml:"name"`
-	Prefix      string  `json:"prefix" yaml:"prefix"`
-	Port        string  `json:"port" yaml:"port"`
-	Mode        string  `json:"mode" yaml:"mode"`
-	DuckReflect bool    `json:"duckReflect" yaml:"duckReflect"`
-	Log         struct {
+type (
+	// Config bulrush config struct
+	Config struct {
+		Version     float64 `json:"version" yaml:"version"`
+		Name        string  `json:"name" yaml:"name"`
+		Prefix      string  `json:"prefix" yaml:"prefix"`
+		Port        string  `json:"port" yaml:"port"`
+		Mode        string  `json:"mode" yaml:"mode"`
+		DuckReflect bool    `json:"duckReflect" yaml:"duckReflect"`
+		Log         Log
+		dataType    string
+		data        []byte
+	}
+	// Log defined Log cfg
+	Log struct {
 		Level string `json:"level" yaml:"level"`
 		Path  string `json:"path" yaml:"path"`
 	}
-	dataType string
-	data     []byte
+)
+
+func (c *Config) verifyVersion(version float64) {
+	if c.Version != version {
+		rushLogger.Warn("Please check the latest version of bulrush's configuration file")
+	}
 }
 
 func (c *Config) version() float64 {
-	if c.Version == 0 {
-		return 1.0
-	}
-	return c.Version
+	return utils.Some(c.Version, 1.0).(float64)
 }
 
 func (c *Config) name() string {
-	if c.Name == "" {
-		return "bulrush"
-	}
-	return c.Name
+	return utils.Some(c.Name, "bulrush").(string)
 }
 
 func (c *Config) prefix() string {
-	if c.Prefix == "" {
-		return "/api/v1"
-	}
-	return c.Prefix
+	return utils.Some(c.Prefix, "/api").(string)
 }
 
 func (c *Config) mode() string {
-	if c.Mode == "" {
-		return "debug"
-	}
-	return c.Mode
+	return utils.Some(c.Mode, "debug").(string)
 }
 
 func (c *Config) dataTypeByPath(path string) string {
@@ -70,22 +69,22 @@ func (c *Config) dataTypeByPath(path string) string {
 }
 
 // Unmarshal defined Unmarshal type
-func (c *Config) Unmarshal(fieldName string, v interface{}) error {
+func (c *Config) Unmarshal(field string, v interface{}) error {
 	vType := reflect.TypeOf(v)
 	if vType.Kind() == reflect.Ptr || vType.Kind() == reflect.Slice {
 		vType = vType.Elem()
 	}
 	sv := createStruct([]reflect.StructField{
 		reflect.StructField{
-			Name: strings.Title(fieldName),
+			Name: strings.Title(field),
 			Type: vType,
-			Tag:  reflect.StructTag(fmt.Sprintf(`json:"%s" yaml:"%s"`, fieldName, fieldName)),
+			Tag:  reflect.StructTag(fmt.Sprintf(`json:"%s" yaml:"%s"`, field, field)),
 		},
 	})
 	if err := unmarshalByFileType(c.data, sv, c.dataType); err != nil {
 		return err
 	}
-	conf := stealFieldInStruct(strings.Title(fieldName), sv)
+	conf := stealFieldInStruct(strings.Title(field), sv)
 	if reflect.TypeOf(v).Kind() == reflect.Ptr || reflect.TypeOf(v).Kind() == reflect.Slice {
 		elem := reflect.ValueOf(v).Elem()
 		if elem.CanSet() {

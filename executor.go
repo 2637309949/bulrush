@@ -10,13 +10,13 @@ import (
 
 type (
 	executor struct {
-		pluginValues *[]*PluginValue
+		pluginValues *[]PluginValue
 		injects      *Injects
 	}
 )
 
 func (exec *executor) execute(inspect func(...interface{})) {
-	funk.ForEach(*exec.pluginValues, func(pv *PluginValue) {
+	funk.ForEach(*exec.pluginValues, func(pv PluginValue) {
 		pv.inputsFrom(*exec.injects)
 		pv.runPre()
 		inspect(pv.runPlugin()...)

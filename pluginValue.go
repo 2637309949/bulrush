@@ -37,15 +37,15 @@ func (p *Plugins) Append(target *Plugins) *Plugins {
 }
 
 // toCallables defined to get `ret` that plugin func return
-func (p *Plugins) toPluginValues() *[]*PluginValue {
-	pluginValus := funk.Map(*p, func(plugin interface{}) *PluginValue {
-		return NewPluginValue(plugin)
-	}).([]*PluginValue)
+func (p *Plugins) toPluginValues() *[]PluginValue {
+	pluginValus := funk.Map(*p, func(plugin interface{}) PluginValue {
+		return *parsePlugin(plugin)
+	}).([]PluginValue)
 	return &pluginValus
 }
 
-// NewPluginValue defined pluginValue
-func NewPluginValue(src interface{}) *PluginValue {
+// parsePlugin defined parsePlugin
+func parsePlugin(src interface{}) *PluginValue {
 	pv := PluginValue{}
 	// Pre hook
 	if pre, fromStruct := indirectFunc(src, preHookName); pre != nil && fromStruct {
@@ -110,10 +110,9 @@ func (pv *PluginValue) inputsFrom(inputs []interface{}) {
 		ptype := funcType.In(index)
 		eleValue := typeMatcher(ptype, inputs)
 		if eleValue == nil {
-			eleValue = duckMatcher(ptype, inputs)
-		}
-		if eleValue == nil {
-			panic(fmt.Errorf("inputsFrom %v call with %v error", ptype, reflect.TypeOf(inputs[7])))
+			if eleValue = duckMatcher(ptype, inputs); eleValue == nil {
+				panic(fmt.Errorf("inputsFrom %v call with %v error", ptype, reflect.TypeOf(inputs[7])))
+			}
 		}
 		pv.Inputs = append(pv.Inputs, eleValue.(reflect.Value))
 	}

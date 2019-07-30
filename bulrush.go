@@ -6,6 +6,7 @@ package bulrush
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/kataras/go-events"
 	"github.com/thoas/go-funk"
@@ -121,7 +122,7 @@ func (bul *rush) Config(path string) Bulrush {
 // - inject should be someone that never be pushed in before.
 func (bul *rush) Inject(items ...interface{}) Bulrush {
 	funk.ForEach(items, func(inject interface{}) {
-		assert1(isPlugin(item), errorMsgs{&Error{Type: ErrorTypeInject, Err: fmt.Errorf("inject %v has existed", inject)}})
+		assert1(!bul.injects.Has(inject), errorMsgs{&Error{Type: ErrorTypeInject, Err: fmt.Errorf("inject %v has existed", reflect.TypeOf(inject))}})
 	})
 	*bul.injects = append(*bul.injects, items...)
 	return bul

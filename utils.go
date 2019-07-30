@@ -160,8 +160,8 @@ func retrieveInterface(ptype reflect.Type, types []interface{}) interface{} {
 	return target
 }
 
-func assert1(guard bool, text string) {
+func assert1(guard bool, err interface{}) {
 	if !guard {
-		panic(text)
+		panic(err)
 	}
 }

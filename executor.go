@@ -17,6 +17,9 @@ type (
 	}
 )
 
+// execute defined run app plugin in order
+//, if Pre or Post Hook defined in struct, then
+//, Pre > Plugin > Post
 func (exec *executor) execute(inspect func(...interface{})) {
 	funk.ForEach(*exec.pluginValues, func(pv PluginValue) {
 		debugPrint("Exec plugin:%v", reflect.TypeOf(pv.Plugin.Interface()))

@@ -55,7 +55,7 @@ func New() Bulrush {
 		postPlugins:  new(Plugins),
 	})
 	bul.
-		Inject(preInjects(bul)...).
+		Inject(builtInInjects(bul)...).
 		PreUse(Plugins{HTTPProxy, HTTPRouter}...).
 		Use(Plugins{}...).
 		PostUse(Plugins{}...)
@@ -77,7 +77,8 @@ func Default() Bulrush {
 // bulrush range these middles in order
 func (bul *rush) PreUse(items ...interface{}) Bulrush {
 	funk.ForEach(items, func(item interface{}) {
-		assert1(isPlugin(item), errorMsgs{&Error{Type: ErrorTypePlugin, Err: fmt.Errorf("%v can not be used as plugin", item)}})
+		assert1(isPlugin(item), errorMsgs{&Error{Type: ErrorTypePlugin,
+			Err: fmt.Errorf("%v can not be used as plugin", item)}})
 		*bul.prePlugins = append(*bul.prePlugins, item)
 	})
 	return bul
@@ -88,7 +89,8 @@ func (bul *rush) PreUse(items ...interface{}) Bulrush {
 // bulrush range these middles in order
 func (bul *rush) Use(items ...interface{}) Bulrush {
 	funk.ForEach(items, func(item interface{}) {
-		assert1(isPlugin(item), errorMsgs{&Error{Type: ErrorTypePlugin, Err: fmt.Errorf("%v can not be used as plugin", item)}})
+		assert1(isPlugin(item), errorMsgs{&Error{Type: ErrorTypePlugin,
+			Err: fmt.Errorf("%v can not be used as plugin", item)}})
 		*bul.plugins = append(*bul.plugins, item)
 	})
 	return bul
@@ -99,7 +101,8 @@ func (bul *rush) Use(items ...interface{}) Bulrush {
 // bulrush range these middles in order
 func (bul *rush) PostUse(items ...interface{}) Bulrush {
 	funk.ForEach(items, func(item interface{}) {
-		assert1(isPlugin(item), errorMsgs{&Error{Type: ErrorTypePlugin, Err: fmt.Errorf("%v can not be used as plugin", item)}})
+		assert1(isPlugin(item), errorMsgs{&Error{Type: ErrorTypePlugin,
+			Err: fmt.Errorf("%v can not be used as plugin", item)}})
 		*bul.postPlugins = append(*bul.postPlugins, item)
 	})
 	return bul
@@ -124,7 +127,8 @@ func (bul *rush) Config(path string) Bulrush {
 // - inject should be someone that never be pushed in before.
 func (bul *rush) Inject(items ...interface{}) Bulrush {
 	funk.ForEach(items, func(inject interface{}) {
-		assert1(!bul.injects.Has(inject), errorMsgs{&Error{Type: ErrorTypeInject, Err: fmt.Errorf("inject %v has existed", reflect.TypeOf(inject))}})
+		assert1(!bul.injects.Has(inject), errorMsgs{&Error{Type: ErrorTypeInject,
+			Err: fmt.Errorf("inject %v has existed", reflect.TypeOf(inject))}})
 	})
 	*bul.injects = append(*bul.injects, items...)
 	return bul
@@ -139,14 +143,16 @@ func (bul *rush) RunImmediately() {
 // Run application with callback, excute plugin in orderly
 // Note: this method will block the calling goroutine indefinitely unless an error happens.
 func (bul *rush) Run(cb interface{}) {
-	// catch error which one from outside of recovery pluigns, this rec just for bulrush
+	// Catch error which one from outside of recovery pluigns, this rec just for bulrush
 	defer func() {
 		if err := recover(); err != nil {
 			if rushLogger != nil {
-				rushLogger.Error("%s panic recovered:\n%s\n%s%s", timeFormat(time.Now()), err, stack(3), reset)
+				rushLogger.Error("%s panic recovered:\n%s\n%s%s",
+					timeFormat(time.Now()), err, stack(3), reset)
 			}
 		}
 	}()
+
 	bul.PostUse(cb)
 	plugin := bul.prePlugins.Append(bul.plugins).Append(bul.postPlugins)
 	pv := plugin.toPluginValues()

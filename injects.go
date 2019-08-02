@@ -27,7 +27,7 @@ func (src *Injects) Has(item interface{}) bool {
 	return typeExists(*src, item)
 }
 
-func preInjects(bul *rush) Injects {
+func builtInInjects(bul *rush) Injects {
 	emmiter := events.New()
 	status := utils.NewSafeMap()
 	validate := validator.New()

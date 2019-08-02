@@ -7,6 +7,7 @@ package bulrush
 import (
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/kataras/go-events"
 	"github.com/thoas/go-funk"
@@ -112,6 +113,7 @@ func (bul *rush) Config(path string) Bulrush {
 	conf.Name = conf.name()
 	conf.Prefix = conf.prefix()
 	conf.Mode = conf.mode()
+	SetMode(conf.Mode)
 	conf.verifyVersion(Version)
 	*bul.config = *conf
 	bul.Inject(bul.config)
@@ -137,6 +139,14 @@ func (bul *rush) RunImmediately() {
 // Run application with callback, excute plugin in orderly
 // Note: this method will block the calling goroutine indefinitely unless an error happens.
 func (bul *rush) Run(cb interface{}) {
+	// catch error which one from outside of recovery pluigns, this rec just for bulrush
+	defer func() {
+		if err := recover(); err != nil {
+			if rushLogger != nil {
+				rushLogger.Error("%s panic recovered:\n%s\n%s%s", timeFormat(time.Now()), err, stack(3), reset)
+			}
+		}
+	}()
 	bul.PostUse(cb)
 	plugin := bul.prePlugins.Append(bul.plugins).Append(bul.postPlugins)
 	pv := plugin.toPluginValues()

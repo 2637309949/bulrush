@@ -5,6 +5,8 @@
 package bulrush
 
 import (
+	"reflect"
+
 	"github.com/thoas/go-funk"
 )
 
@@ -17,6 +19,7 @@ type (
 
 func (exec *executor) execute(inspect func(...interface{})) {
 	funk.ForEach(*exec.pluginValues, func(pv PluginValue) {
+		debugPrint("Exec plugin:%v", reflect.TypeOf(pv.Plugin.Interface()))
 		pv.inputsFrom(*exec.injects)
 		pv.runPre()
 		inspect(pv.runPlugin()...)

@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kataras/go-events"
+	"github.com/thoas/go-funk"
 )
 
 //	 Recovery         plugin   defined sys recovery
@@ -32,22 +33,24 @@ var (
 	}
 	// Override http methods
 	Override = func(router *gin.RouterGroup, httpProxy *gin.Engine) {
-		router.Use(func(c *gin.Context) {
-			if c.Request.Method != "POST" {
-				c.Next()
-			} else {
-				method := c.PostForm("_method")
-				methods := [3]string{"DELETE", "PUT", "PATCH"}
-				if method != "" {
-					for _, target := range methods {
-						if target == strings.ToUpper(method) {
-							c.Request.Method = target
-							httpProxy.HandleContext(c)
-							break
+		funk.ForEach([]func(...gin.HandlerFunc) gin.IRoutes{router.Use, httpProxy.Use}, func(Use func(...gin.HandlerFunc) gin.IRoutes) {
+			Use(func(c *gin.Context) {
+				if c.Request.Method != "POST" {
+					c.Next()
+				} else {
+					method := c.PostForm("_method")
+					methods := [3]string{"DELETE", "PUT", "PATCH"}
+					if method != "" {
+						for _, target := range methods {
+							if target == strings.ToUpper(method) {
+								c.Request.Method = target
+								httpProxy.HandleContext(c)
+								break
+							}
 						}
 					}
 				}
-			}
+			})
 		})
 	}
 	// RunImmediately run app

@@ -72,7 +72,6 @@ func recoveryWithWriter(out io.Writer) gin.HandlerFunc {
 							timeFormat(time.Now()), err, stack, reset)
 					}
 				}
-
 				// If the connection is dead, we can't write a status to it.
 				if brokenPipe {
 					c.Error(err.(error)) // nolint: errcheck

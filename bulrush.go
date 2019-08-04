@@ -27,7 +27,7 @@ type (
 		Config(string) Bulrush
 		Inject(...interface{}) Bulrush
 		RunImmediately()
-		Run(interface{})
+		Run(interface{}) error
 	}
 	// rush implement Bulrush std
 	rush struct {
@@ -142,17 +142,20 @@ func (bul *rush) RunImmediately() {
 
 // Run application with callback, excute plugin in orderly
 // Note: this method will block the calling goroutine indefinitely unless an error happens.
-func (bul *rush) Run(cb interface{}) {
+func (bul *rush) Run(cb interface{}) (err error) {
 	// Catch error which one from outside of recovery pluigns, this rec just for bulrush
 	defer func() {
-		if err := recover(); err != nil {
+		if ret := recover(); ret != nil {
+			err, ok := ret.(error)
+			if !ok {
+				err = fmt.Errorf("%v", ret)
+			}
 			if rushLogger != nil {
 				rushLogger.Error("%s panic recovered:\n%s\n%s%s",
 					timeFormat(time.Now()), err, stack(3), reset)
 			}
 		}
 	}()
-
 	bul.PostUse(cb)
 	plugin := bul.prePlugins.Append(bul.plugins).Append(bul.postPlugins)
 	pv := plugin.toPluginValues()
@@ -163,4 +166,5 @@ func (bul *rush) Run(cb interface{}) {
 	executor.execute(func(ret ...interface{}) {
 		bul.Inject(ret...)
 	})
+	return
 }

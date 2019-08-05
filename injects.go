@@ -5,7 +5,7 @@
 package bulrush
 
 import (
-	utils "github.com/2637309949/bulrush-utils"
+	"github.com/2637309949/bulrush-utils/maps"
 	"github.com/kataras/go-events"
 	"gopkg.in/go-playground/validator.v9"
 	"gopkg.in/robfig/cron.v2"
@@ -29,7 +29,7 @@ func (src *Injects) Has(item interface{}) bool {
 
 func builtInInjects(bul *rush) Injects {
 	emmiter := events.New()
-	status := utils.NewSafeMap()
+	status := maps.NewSafeMap()
 	validate := validator.New()
 	schedule := cron.New()
 	reverseInject := &ReverseInject{

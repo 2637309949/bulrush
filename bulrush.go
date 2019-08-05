@@ -158,7 +158,7 @@ func (bul *rush) Run(cb interface{}) (err error) {
 	}()
 	bul.PostUse(cb)
 	plugin := bul.prePlugins.Append(bul.plugins).Append(bul.postPlugins)
-	pv := plugin.toPluginValues()
+	pv := plugin.toPluginContexts()
 	executor := &executor{
 		pluginValues: pv,
 		injects:      bul.injects,

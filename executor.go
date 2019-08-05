@@ -6,26 +6,33 @@ package bulrush
 
 import (
 	"reflect"
-
-	"github.com/thoas/go-funk"
 )
 
 type (
 	executor struct {
-		pluginValues *[]PluginValue
+		pluginValues *[]PluginContext
 		injects      *Injects
+		inspect      func(...interface{})
+		index        int
 	}
 )
 
 // execute defined run app plugin in order
 //, if Pre or Post Hook defined in struct, then
 //, Pre > Plugin > Post
-func (exec *executor) execute(inspect func(...interface{})) {
-	funk.ForEach(*exec.pluginValues, func(pv PluginValue) {
-		debugPrint("Exec plugin:%v", reflect.TypeOf(pv.Plugin.Interface()))
+func (exec *executor) next() {
+	for exec.index < len(*exec.pluginValues) {
+		pv := (*exec.pluginValues)[exec.index]
+		debugPrint("exec plugin:%v", reflect.TypeOf(pv.Plugin.Interface()))
 		pv.inputsFrom(*exec.injects)
 		pv.runPre()
-		inspect(pv.runPlugin()...)
+		exec.inspect(pv.runPlugin()...)
 		pv.runPost()
-	})
+		exec.index++
+	}
+}
+
+func (exec *executor) execute(inspect func(...interface{})) {
+	exec.inspect = inspect
+	exec.next()
 }

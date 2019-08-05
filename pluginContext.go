@@ -21,8 +21,8 @@ type (
 	// Plugins defined those that can be call by reflect
 	// , Plugins passby func or a struct that has `Plugin` func
 	Plugins []interface{}
-	// PluginValue defined plugin value with pre an post
-	PluginValue struct {
+	// PluginContext defined plugin value with pre an post
+	PluginContext struct {
 		Pre    reflect.Value
 		Post   reflect.Value
 		Plugin reflect.Value
@@ -37,16 +37,16 @@ func (p *Plugins) Append(target *Plugins) *Plugins {
 }
 
 // toCallables defined to get `ret` that plugin func return
-func (p *Plugins) toPluginValues() *[]PluginValue {
-	pluginValus := funk.Map(*p, func(plugin interface{}) PluginValue {
+func (p *Plugins) toPluginContexts() *[]PluginContext {
+	pluginValus := funk.Map(*p, func(plugin interface{}) PluginContext {
 		return *parsePlugin(plugin)
-	}).([]PluginValue)
+	}).([]PluginContext)
 	return &pluginValus
 }
 
 // parsePlugin defined parsePlugin
-func parsePlugin(src interface{}) *PluginValue {
-	pv := PluginValue{}
+func parsePlugin(src interface{}) *PluginContext {
+	pv := PluginContext{}
 	// Pre hook
 	if pre, fromStruct := indirectFunc(src, preHookName); pre != nil && fromStruct {
 		value := reflect.ValueOf(pre)
@@ -73,7 +73,7 @@ func parsePlugin(src interface{}) *PluginValue {
 
 // runPost defined run post hook in plugin
 // , remind that paramters of hook func should be zero
-func (pv *PluginValue) runPost() {
+func (pv *PluginContext) runPost() {
 	if pv.Post.IsValid() {
 		pv.Post.Call([]reflect.Value{})
 	}
@@ -81,7 +81,7 @@ func (pv *PluginValue) runPost() {
 
 // runPre defined run pre hook in plugin
 // , remind that paramters of hook func should be zero
-func (pv *PluginValue) runPre() {
+func (pv *PluginContext) runPre() {
 	if pv.Pre.IsValid() {
 		pv.Pre.Call([]reflect.Value{})
 	}
@@ -89,7 +89,7 @@ func (pv *PluginValue) runPre() {
 
 // runPlugin defined run plugin hook in plugin
 // , and return injects
-func (pv *PluginValue) runPlugin() []interface{} {
+func (pv *PluginContext) runPlugin() []interface{} {
 	ret := pv.Plugin.Call(pv.Inputs)
 	return funk.Map(ret, func(v reflect.Value) interface{} {
 		return v.Interface()
@@ -98,7 +98,7 @@ func (pv *PluginValue) runPlugin() []interface{} {
 
 // inputsFrom defined plugins paramters by type
 // , or by interface{} implement
-func (pv *PluginValue) inputsFrom(inputs []interface{}) {
+func (pv *PluginContext) inputsFrom(inputs []interface{}) {
 	funcItem := indirectPlugin(pv.Plugin.Interface())
 	funcValue := reflect.ValueOf(funcItem)
 	if funcValue.Type().Kind() != reflect.Func {

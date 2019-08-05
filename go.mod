@@ -4,7 +4,7 @@ go 1.12
 
 require (
 	github.com/2637309949/bulrush-addition v0.0.0-20190729105901-74c392aece2f
-	github.com/2637309949/bulrush-utils v0.0.0-20190729102946-723b60645959
+	github.com/2637309949/bulrush-utils v0.0.0-20190805080455-d246d445deb8
 	github.com/gin-gonic/gin v1.4.0
 	github.com/kataras/go-events v0.0.2
 	github.com/stretchr/objx v0.1.1 // indirect

@@ -26,7 +26,7 @@ type (
 		PostUse(...interface{}) Bulrush
 		Config(string) Bulrush
 		Inject(...interface{}) Bulrush
-		RunImmediately()
+		RunImmediately() error
 		Run(interface{}) error
 	}
 	// rush implement Bulrush std
@@ -136,8 +136,8 @@ func (bul *rush) Inject(items ...interface{}) Bulrush {
 
 // RunImmediately, excute plugin in orderly
 // Quick start application
-func (bul *rush) RunImmediately() {
-	bul.Run(RunImmediately)
+func (bul *rush) RunImmediately() error {
+	return bul.Run(RunImmediately)
 }
 
 // Run application with callback, excute plugin in orderly

@@ -79,7 +79,6 @@ func Default() Bulrush {
 // would return a empty bulrush
 // should be careful
 func (bul *rush) Clear() Bulrush {
-	bul.config = new(Config)
 	bul.injects = new(Injects)
 	bul.prePlugins = new(Plugins)
 	bul.plugins = new(Plugins)

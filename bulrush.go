@@ -9,12 +9,12 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/2637309949/bulrush-utils/sync"
 	"github.com/kataras/go-events"
 	"github.com/thoas/go-funk"
 )
 
 type (
-
 	// Bulrush interface{} defined all framework should be
 	// , also sys provide a default Bulrush - `rush`
 	Bulrush interface {
@@ -37,6 +37,7 @@ type (
 		prePlugins  *Plugins
 		plugins     *Plugins
 		postPlugins *Plugins
+		lock        *sync.Lock
 	}
 )
 
@@ -53,8 +54,10 @@ func New() Bulrush {
 		prePlugins:   new(Plugins),
 		plugins:      new(Plugins),
 		postPlugins:  new(Plugins),
+		lock:         sync.NewLock(),
 	})
 	bul.
+		Clear().
 		Inject(builtInInjects(bul)...).
 		PreUse(Plugins{HTTPProxy, HTTPRouter}...).
 		Use(Plugins{}...).
@@ -72,14 +75,31 @@ func Default() Bulrush {
 	return bul
 }
 
+// Clear defined empty all exists plugin and inject
+// would return a empty bulrush
+// should be careful
+func (bul *rush) Clear() Bulrush {
+	bul.config = new(Config)
+	bul.injects = new(Injects)
+	bul.prePlugins = new(Plugins)
+	bul.plugins = new(Plugins)
+	bul.postPlugins = new(Plugins)
+	return bul
+}
+
 // PreUse attachs a global middleware to the router
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
 func (bul *rush) PreUse(items ...interface{}) Bulrush {
-	funk.ForEach(items, func(item interface{}) {
-		assert1(isPlugin(item), errorMsgs{&Error{Type: ErrorTypePlugin,
-			Err: fmt.Errorf("%v can not be used as plugin", item)}})
-		*bul.prePlugins = append(*bul.prePlugins, item)
+	if len(items) == 0 {
+		return bul
+	}
+	bul.lock.AcquireForSync("prePlugins", func() {
+		funk.ForEach(items, func(item interface{}) {
+			assert1(isPlugin(item), errorMsgs{&Error{Type: ErrorTypePlugin,
+				Err: fmt.Errorf("%v can not be used as plugin", item)}})
+			*bul.prePlugins = append(*bul.prePlugins, item)
+		})
 	})
 	return bul
 }
@@ -88,10 +108,15 @@ func (bul *rush) PreUse(items ...interface{}) Bulrush {
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
 func (bul *rush) Use(items ...interface{}) Bulrush {
-	funk.ForEach(items, func(item interface{}) {
-		assert1(isPlugin(item), errorMsgs{&Error{Type: ErrorTypePlugin,
-			Err: fmt.Errorf("%v can not be used as plugin", item)}})
-		*bul.plugins = append(*bul.plugins, item)
+	if len(items) == 0 {
+		return bul
+	}
+	bul.lock.AcquireForSync("plugins", func() {
+		funk.ForEach(items, func(item interface{}) {
+			assert1(isPlugin(item), errorMsgs{&Error{Type: ErrorTypePlugin,
+				Err: fmt.Errorf("%v can not be used as plugin", item)}})
+			*bul.plugins = append(*bul.plugins, item)
+		})
 	})
 	return bul
 }
@@ -100,10 +125,15 @@ func (bul *rush) Use(items ...interface{}) Bulrush {
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
 func (bul *rush) PostUse(items ...interface{}) Bulrush {
-	funk.ForEach(items, func(item interface{}) {
-		assert1(isPlugin(item), errorMsgs{&Error{Type: ErrorTypePlugin,
-			Err: fmt.Errorf("%v can not be used as plugin", item)}})
-		*bul.postPlugins = append(*bul.postPlugins, item)
+	if len(items) == 0 {
+		return bul
+	}
+	bul.lock.AcquireForSync("postPlugins", func() {
+		funk.ForEach(items, func(item interface{}) {
+			assert1(isPlugin(item), errorMsgs{&Error{Type: ErrorTypePlugin,
+				Err: fmt.Errorf("%v can not be used as plugin", item)}})
+			*bul.postPlugins = append(*bul.postPlugins, item)
+		})
 	})
 	return bul
 }
@@ -111,42 +141,47 @@ func (bul *rush) PostUse(items ...interface{}) Bulrush {
 // Config load config from string path
 // currently, it support loading file that end with .json or .yarm
 func (bul *rush) Config(path string) Bulrush {
-	conf := LoadConfig(path)
-	conf.Version = conf.version()
-	conf.Name = conf.name()
-	conf.Prefix = conf.prefix()
-	conf.Mode = conf.mode()
-	SetMode(conf.Mode)
-	conf.verifyVersion(Version)
-	*bul.config = *conf
-	bul.Inject(bul.config)
+	if len(path) == 0 {
+		return bul
+	}
+	bul.lock.AcquireForSync("config", func() {
+		conf := LoadConfig(path)
+		conf.Version = conf.version()
+		conf.Name = conf.name()
+		conf.Prefix = conf.prefix()
+		conf.Mode = conf.mode()
+		SetMode(conf.Mode)
+		conf.verifyVersion(Version)
+		*bul.config = *conf
+		bul.Inject(bul.config)
+	})
 	return bul
 }
 
 // Inject `inject` to bulrush
 // - inject should be someone that never be pushed in before.
 func (bul *rush) Inject(items ...interface{}) Bulrush {
-	funk.ForEach(items, func(inject interface{}) {
-		assert1(!bul.injects.Has(inject), errorMsgs{&Error{Type: ErrorTypeInject,
-			Err: fmt.Errorf("inject %v has existed", reflect.TypeOf(inject))}})
+	if len(items) == 0 {
+		return bul
+	}
+	bul.lock.AcquireForSync("injects", func() {
+		funk.ForEach(items, func(inject interface{}) {
+			assert1(!bul.injects.Has(inject), errorMsgs{&Error{Type: ErrorTypeInject,
+				Err: fmt.Errorf("inject %v has existed", reflect.TypeOf(inject))}})
+		})
+		*bul.injects = append(*bul.injects, items...)
 	})
-	*bul.injects = append(*bul.injects, items...)
 	return bul
 }
 
-// RunImmediately, excute plugin in orderly
-// Quick start application
-func (bul *rush) RunImmediately() error {
-	return bul.Run(RunImmediately)
-}
-
-// Run application with callback, excute plugin in orderly
-// Note: this method will block the calling goroutine indefinitely unless an error happens.
-func (bul *rush) Run(cb interface{}) (err error) {
-	// Catch error which one from outside of recovery pluigns, this rec just for bulrush
+// CatchError error which one from outside of recovery pluigns, this rec just for bulrush
+// you can CatchError if your error code does not affect the next plug-in
+// sometime you should handler all error in plugin
+func CatchError(funk interface{}) (err error) {
 	defer func() {
+		var ok bool
 		if ret := recover(); ret != nil {
-			err, ok := ret.(error)
+			err, ok = ret.(error)
 			if !ok {
 				err = fmt.Errorf("%v", ret)
 			}
@@ -156,15 +191,37 @@ func (bul *rush) Run(cb interface{}) (err error) {
 			}
 		}
 	}()
-	bul.PostUse(cb)
-	plugin := bul.prePlugins.Append(bul.plugins).Append(bul.postPlugins)
-	pv := plugin.toPluginContexts()
-	executor := &executor{
-		pluginValues: pv,
-		injects:      bul.injects,
-	}
-	executor.execute(func(ret ...interface{}) {
-		bul.Inject(ret...)
-	})
+	assert1(isFunc(funk), fmt.Errorf("funk %v should be func type", reflect.TypeOf(funk)))
+	reflect.ValueOf(funk).Call([]reflect.Value{})
 	return
+}
+
+// CatchError error which one from outside of recovery pluigns, this rec just for bulrush
+// you can CatchError if your error code does not affect the next plug-in
+// sometime you should handler all error in plugin
+func (bul *rush) CatchError(funk interface{}) error {
+	return CatchError(funk)
+}
+
+// RunImmediately, excute plugin in orderly
+// Quick start application
+func (bul *rush) RunImmediately() error {
+	return bul.Run(RunImmediately)
+}
+
+// Run application with callback, excute plugin in orderly
+// Note: this method will block the calling goroutine indefinitely unless an error happens
+func (bul *rush) Run(cb interface{}) error {
+	return bul.CatchError(func() {
+		bul.PostUse(cb)
+		plugin := bul.prePlugins.Append(bul.plugins).Append(bul.postPlugins)
+		pv := plugin.toPluginContexts()
+		executor := &executor{
+			pluginValues: pv,
+			injects:      bul.injects,
+		}
+		executor.execute(func(ret ...interface{}) {
+			bul.Inject(ret...)
+		})
+	})
 }

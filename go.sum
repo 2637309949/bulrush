@@ -7,8 +7,8 @@ github.com/2637309949/bulrush-addition v0.0.0-20190729105901-74c392aece2f h1:Gi/
 github.com/2637309949/bulrush-addition v0.0.0-20190729105901-74c392aece2f/go.mod h1:avto4cBiPrhhnnO6BhypEECsCoRxSuqqdtwJ5jlE7JY=
 github.com/2637309949/bulrush-utils v0.0.0-20190729102946-723b60645959 h1:aGbRvwYuZCXRE+p5rd3Ega+zYSbOcQfMV2nBXFsSlWw=
 github.com/2637309949/bulrush-utils v0.0.0-20190729102946-723b60645959/go.mod h1:Zg/lUboPlqDomzMxIp8PgId7YTGAs+QH/F21vCh9OkU=
-github.com/2637309949/bulrush-utils v0.0.0-20190805080455-d246d445deb8 h1:xfMcrTwCGqDYPW7w9//yGc1CmssJvmkF2v5A/uUSkOs=
-github.com/2637309949/bulrush-utils v0.0.0-20190805080455-d246d445deb8/go.mod h1:Zg/lUboPlqDomzMxIp8PgId7YTGAs+QH/F21vCh9OkU=
+github.com/2637309949/bulrush-utils v0.0.0-20190806081411-8cfbb6d460f9 h1:I0LVTkIVMU2st6xJ7PpUmLHV0+Y0H2VhTZfewmbrFAI=
+github.com/2637309949/bulrush-utils v0.0.0-20190806081411-8cfbb6d460f9/go.mod h1:Zg/lUboPlqDomzMxIp8PgId7YTGAs+QH/F21vCh9OkU=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWXgklEdEo=

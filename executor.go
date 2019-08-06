@@ -4,10 +4,6 @@
 
 package bulrush
 
-import (
-	"reflect"
-)
-
 type (
 	executor struct {
 		pluginValues *[]PluginContext
@@ -22,16 +18,24 @@ type (
 //, Pre > Plugin > Post
 func (exec *executor) next() {
 	for exec.index < len(*exec.pluginValues) {
-		pv := (*exec.pluginValues)[exec.index]
-		debugPrint("exec plugin:%v", reflect.TypeOf(pv.Plugin.Interface()))
-		pv.inputsFrom(*exec.injects)
-		pv.runPre()
-		exec.inspect(pv.runPlugin()...)
-		pv.runPost()
-		exec.index++
+		// roback if error panic in plugin
+		if err := CatchError(func() {
+			pv := (*exec.pluginValues)[exec.index]
+			debugPrint("next plugin:%v", pv.Plugin.Type())
+			pv.inputsFrom(*exec.injects)
+			pv.runPre()
+			exec.inspect(pv.runPlugin()...)
+			pv.runPost()
+			exec.index++
+		}); err != nil {
+			// next plugin
+			exec.index++
+		}
 	}
 }
 
+// execute defined all plugin execute in orderly
+// ,inspect defined cb for runPlugin
 func (exec *executor) execute(inspect func(...interface{})) {
 	exec.inspect = inspect
 	exec.next()

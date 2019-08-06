@@ -6,6 +6,7 @@ package bulrush
 
 import (
 	addition "github.com/2637309949/bulrush-addition"
+	"github.com/2637309949/bulrush-addition/logger"
 )
 
 var (
@@ -21,3 +22,19 @@ var (
 
 // rushLogger just for console log
 var rushLogger = addition.RushLogger
+
+// SetLogger defined set logger for bulrush
+// you can append transport to addition.RushLogger
+// It is not recommended to create new one Journal
+// I recommendation to customize different output from addition.RushLogger, but not SetLogger
+func SetLogger(logger *logger.Journal) {
+	rushLogger = logger
+}
+
+// GetLogger defined get logger for bulrush
+// you can append transport to addition.RushLogger
+// It is not recommended to create new one Journal
+// I recommendation to customize different output from addition.RushLogger, but not SetLogger
+func GetLogger() *logger.Journal {
+	return rushLogger
+}

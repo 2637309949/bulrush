@@ -93,7 +93,7 @@ func (bul *rush) PreUse(items ...interface{}) Bulrush {
 	if len(items) == 0 {
 		return bul
 	}
-	bul.lock.AcquireForSync("prePlugins", func() {
+	bul.lock.Acquire("prePlugins", func(async sync.Async) {
 		funk.ForEach(items, func(item interface{}) {
 			assert1(isPlugin(item), errorMsgs{&Error{Type: ErrorTypePlugin,
 				Err: fmt.Errorf("%v can not be used as plugin", item)}})
@@ -110,7 +110,7 @@ func (bul *rush) Use(items ...interface{}) Bulrush {
 	if len(items) == 0 {
 		return bul
 	}
-	bul.lock.AcquireForSync("plugins", func() {
+	bul.lock.Acquire("plugins", func(async sync.Async) {
 		funk.ForEach(items, func(item interface{}) {
 			assert1(isPlugin(item), errorMsgs{&Error{Type: ErrorTypePlugin,
 				Err: fmt.Errorf("%v can not be used as plugin", item)}})
@@ -127,7 +127,7 @@ func (bul *rush) PostUse(items ...interface{}) Bulrush {
 	if len(items) == 0 {
 		return bul
 	}
-	bul.lock.AcquireForSync("postPlugins", func() {
+	bul.lock.Acquire("postPlugins", func(async sync.Async) {
 		funk.ForEach(items, func(item interface{}) {
 			assert1(isPlugin(item), errorMsgs{&Error{Type: ErrorTypePlugin,
 				Err: fmt.Errorf("%v can not be used as plugin", item)}})
@@ -143,7 +143,7 @@ func (bul *rush) Config(path string) Bulrush {
 	if len(path) == 0 {
 		return bul
 	}
-	bul.lock.AcquireForSync("config", func() {
+	bul.lock.Acquire("config", func(async sync.Async) {
 		conf := LoadConfig(path)
 		conf.Version = conf.version()
 		conf.Name = conf.name()
@@ -163,7 +163,7 @@ func (bul *rush) Inject(items ...interface{}) Bulrush {
 	if len(items) == 0 {
 		return bul
 	}
-	bul.lock.AcquireForSync("injects", func() {
+	bul.lock.Acquire("injects", func(async sync.Async) {
 		funk.ForEach(items, func(inject interface{}) {
 			assert1(!bul.injects.Has(inject), errorMsgs{&Error{Type: ErrorTypeInject,
 				Err: fmt.Errorf("inject %v has existed", reflect.TypeOf(inject))}})

@@ -26,6 +26,7 @@ type (
 		PostUse(...interface{}) Bulrush
 		Config(string) Bulrush
 		Inject(...interface{}) Bulrush
+		Acquire(reflect.Type) interface{}
 		RunImmediately() error
 		Run(interface{}) error
 	}
@@ -171,6 +172,17 @@ func (bul *rush) Inject(items ...interface{}) Bulrush {
 		*bul.injects = append(*bul.injects, items...)
 	})
 	return bul
+}
+
+// Acquire defined acquire inject ele from type
+// - match type or match interface{}
+// - return nil if no ele match
+func (bul *rush) Acquire(ty reflect.Type) interface{} {
+	ele := typeMatcher(ty, *bul.injects)
+	if ele == nil {
+		ele = duckMatcher(ty, *bul.injects)
+	}
+	return ele
 }
 
 // CatchError error which one from outside of recovery pluigns, this rec just for bulrush

@@ -49,7 +49,7 @@ func (src *Injects) Swap(i, j int) {
 }
 
 func builtInInjects(bul *rush) Injects {
-	emmiter := events.New()
+	var emmiter events.EventEmmiter = bul
 	status := maps.NewSafeMap()
 	validate := validator.New()
 	schedule := cron.New()

@@ -40,7 +40,6 @@ type (
 		plugins     *Plugins
 		postPlugins *Plugins
 		lock        *sync.Lock
-		httpContext *HTTPContext
 		exit        chan struct{}
 	}
 )
@@ -59,12 +58,10 @@ func New() Bulrush {
 		plugins:      new(Plugins),
 		postPlugins:  new(Plugins),
 		lock:         sync.NewLock(),
-		httpContext:  NewHTTPContext(3 * time.Second),
 		exit:         make(chan struct{}, 1),
 	})
-	bul.
-		Clear().
-		Inject(builtInInjects(bul)...).
+	bul.Clear()
+	bul.Inject(builtInInjects(bul)...).
 		PreUse(Plugins{HTTPProxy, HTTPRouter}...).
 		Use(Plugins{}...).
 		PostUse(Plugins{}...)
@@ -84,12 +81,11 @@ func Default() Bulrush {
 // Clear defined empty all exists plugin and inject
 // would return a empty bulrush
 // should be careful
-func (bul *rush) Clear() Bulrush {
+func (bul *rush) Clear() {
 	bul.injects = new(Injects)
 	bul.prePlugins = new(Plugins)
 	bul.plugins = new(Plugins)
 	bul.postPlugins = new(Plugins)
-	return bul
 }
 
 // PreUse attachs a global middleware to the router
@@ -219,34 +215,29 @@ func (bul *rush) CatchError(funk interface{}) error {
 	return CatchError(funk)
 }
 
-// RunImmediately, excute plugin in orderly
-// Quick start application
-func (bul *rush) RunImmediately() error {
-	return bul.Run(RunImmediately(bul.NewHTTPContext(3 * time.Second)))
-}
-
-// NewHTTPContext defined obtain a httpContext for httpProxy
-// if you implement run logic, you should obtain a ctx for HttpProxy
-// reference RunImmediately plugin
-func (bul *rush) NewHTTPContext(duration time.Duration) *HTTPContext {
-	bul.httpContext.DeadLineTime = time.Now().Add(duration)
-	return bul.httpContext
-}
-
 // Shutdown defined bul gracefulExit
 // ,, close http or other resources
+// should call Shutdown after bulrush has running success
 func (bul *rush) Shutdown() error {
-	<-func() chan struct{} {
-		bul.httpContext.Exit <- struct{}{}
-		return bul.httpContext.Exit
+	defer func() {
+		close(bul.exit)
 	}()
-	rushLogger.Warn("Shutdown: httpProxy Closed")
+	// emit shutdown event
+	bul.Emit("shutdown")
+	// shutdown bulrush
+	time.Sleep(time.Second * 5)
 	<-func() chan struct{} {
 		bul.exit <- struct{}{}
 		return bul.exit
 	}()
 	rushLogger.Warn("Shutdown: bulrush Closed")
 	return nil
+}
+
+// RunImmediately, excute plugin in orderly
+// Quick start application
+func (bul *rush) RunImmediately() error {
+	return bul.Run(RunImmediately)
 }
 
 // Run application with callback, excute plugin in orderly

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kataras/go-events"
@@ -56,32 +57,24 @@ var (
 		})
 	}
 	// RunImmediately run app
-	RunImmediately = func(ctx *HTTPContext) func(httpProxy *gin.Engine, event events.EventEmmiter, config *Config) {
-		return func(httpProxy *gin.Engine, event events.EventEmmiter, config *Config) {
-			var err error
-			defer func() {
-				if err != nil {
-					rushLogger.Error(fmt.Sprintf("%v", err))
-				}
-			}()
-			addr := fixedPortPrefix(strings.TrimSpace(config.Port))
-			name := config.Name
-			rushLogger.Debug("================================")
-			rushLogger.Debug("App: %s", name)
-			rushLogger.Debug("Listen on %s", addr)
-			rushLogger.Debug("================================")
-			event.Emit(EventSysBulrushPluginRunImmediately, EventSysBulrushPluginRunImmediately)
-			server := &http.Server{Addr: addr, Handler: httpProxy}
-			go func() {
-				err = server.ListenAndServe()
-			}()
-			// block and await Shutdown
-			<-ctx.Exit
-			err = server.Shutdown(ctx)
-			// send close sig2bul
-			if err == nil {
-				ctx.Exit <- struct{}{}
+	RunImmediately = func(httpProxy *gin.Engine, event events.EventEmmiter, config *Config) {
+		var err error
+		defer func() {
+			if err != nil {
+				rushLogger.Error(fmt.Sprintf("%v", err))
 			}
-		}
+		}()
+		addr := fixedPortPrefix(strings.TrimSpace(config.Port))
+		name := config.Name
+		rushLogger.Debug("================================")
+		rushLogger.Debug("App: %s", name)
+		rushLogger.Debug("Listen on %s", addr)
+		rushLogger.Debug("================================")
+		event.Emit(EventSysBulrushPluginRunImmediately, EventSysBulrushPluginRunImmediately)
+		server := &http.Server{Addr: addr, Handler: httpProxy}
+		event.On("shutdown", func(payload ...interface{}) {
+			server.Shutdown(NewHTTPContext(3 * time.Second))
+		})
+		err = server.ListenAndServe()
 	}
 )

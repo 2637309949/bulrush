@@ -222,7 +222,7 @@ func (bul *rush) CatchError(funk interface{}) error {
 // RunImmediately, excute plugin in orderly
 // Quick start application
 func (bul *rush) RunImmediately() error {
-	return bul.Run(RunImmediately(bul.NewHTTPContext(1 * time.Second)))
+	return bul.Run(RunImmediately(bul.NewHTTPContext(3 * time.Second)))
 }
 
 // NewHTTPContext defined obtain a httpContext for httpProxy

@@ -22,9 +22,30 @@ func (src *Injects) Append(target *Injects) *Injects {
 	return &injects
 }
 
+// Put defined array Put
+func (src *Injects) Put(target interface{}) *Injects {
+	*src = append(*src, target)
+	return src
+}
+
 // Has defined inject type is existed or not
 func (src *Injects) Has(item interface{}) bool {
 	return typeExists(*src, item)
+}
+
+// Size defined inject Size
+func (src *Injects) Size() int {
+	return len(*src)
+}
+
+// Get defined index of inject
+func (src *Injects) Get(pos int) interface{} {
+	return (*src)[pos]
+}
+
+// Swap swaps the two values at the specified positions.
+func (src *Injects) Swap(i, j int) {
+	(*src)[i], (*src)[j] = (*src)[j], (*src)[i]
 }
 
 func builtInInjects(bul *rush) Injects {

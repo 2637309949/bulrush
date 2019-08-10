@@ -6,10 +6,10 @@ package bulrush
 
 type (
 	executor struct {
-		pluginValues *[]PluginContext
-		injects      *Injects
-		inspect      func(...interface{})
-		index        int
+		pluginContexts *[]PluginContext
+		injects        *Injects
+		inspect        func(...interface{})
+		index          int
 	}
 )
 
@@ -17,10 +17,10 @@ type (
 //, if Pre or Post Hook defined in struct, then
 //, Pre > Plugin > Post
 func (exec *executor) next() {
-	for exec.index < len(*exec.pluginValues) {
+	for exec.index < len(*exec.pluginContexts) {
 		// roback if error panic in plugin
 		if err := CatchError(func() {
-			pv := (*exec.pluginValues)[exec.index]
+			pv := (*exec.pluginContexts)[exec.index]
 			debugPrint("next plugin:%v", pv.Plugin.Type())
 			pv.inputsFrom(*exec.injects)
 			pv.runPre()

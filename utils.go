@@ -6,6 +6,7 @@ package bulrush
 
 import (
 	"fmt"
+	"os"
 	"reflect"
 
 	"github.com/thoas/go-funk"
@@ -163,5 +164,21 @@ func retrieveInterface(ptype reflect.Type, types []interface{}) interface{} {
 func assert1(guard bool, err interface{}) {
 	if !guard {
 		panic(err)
+	}
+}
+
+func resolveAddress(addr []string) string {
+	switch len(addr) {
+	case 0:
+		if port := os.Getenv("PORT"); port != "" {
+			debugPrint("Environment variable PORT=\"%s\"", port)
+			return ":" + port
+		}
+		debugPrint("Environment variable PORT is undefined. Using port :8080 by default")
+		return ":8080"
+	case 1:
+		return addr[0]
+	default:
+		panic("too much parameters")
 	}
 }

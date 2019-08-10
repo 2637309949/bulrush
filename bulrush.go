@@ -29,6 +29,7 @@ type (
 		Acquire(reflect.Type) interface{}
 		RunImmediately() error
 		Run(interface{}) error
+		Shutdown() error
 	}
 	// rush implement Bulrush std
 	rush struct {
@@ -39,6 +40,8 @@ type (
 		plugins     *Plugins
 		postPlugins *Plugins
 		lock        *sync.Lock
+		httpContext *HTTPContext
+		exit        chan struct{}
 	}
 )
 
@@ -56,6 +59,8 @@ func New() Bulrush {
 		plugins:      new(Plugins),
 		postPlugins:  new(Plugins),
 		lock:         sync.NewLock(),
+		httpContext:  NewHTTPContext(3 * time.Second),
+		exit:         make(chan struct{}, 1),
 	})
 	bul.
 		Clear().
@@ -98,7 +103,7 @@ func (bul *rush) PreUse(items ...interface{}) Bulrush {
 		funk.ForEach(items, func(item interface{}) {
 			assert1(isPlugin(item), errorMsgs{&Error{Type: ErrorTypePlugin,
 				Err: fmt.Errorf("%v can not be used as plugin", item)}})
-			*bul.prePlugins = append(*bul.prePlugins, item)
+			bul.prePlugins.Put(item)
 		})
 	})
 	return bul
@@ -115,7 +120,7 @@ func (bul *rush) Use(items ...interface{}) Bulrush {
 		funk.ForEach(items, func(item interface{}) {
 			assert1(isPlugin(item), errorMsgs{&Error{Type: ErrorTypePlugin,
 				Err: fmt.Errorf("%v can not be used as plugin", item)}})
-			*bul.plugins = append(*bul.plugins, item)
+			bul.plugins.Put(item)
 		})
 	})
 	return bul
@@ -132,7 +137,7 @@ func (bul *rush) PostUse(items ...interface{}) Bulrush {
 		funk.ForEach(items, func(item interface{}) {
 			assert1(isPlugin(item), errorMsgs{&Error{Type: ErrorTypePlugin,
 				Err: fmt.Errorf("%v can not be used as plugin", item)}})
-			*bul.postPlugins = append(*bul.postPlugins, item)
+			bul.postPlugins.Put(item)
 		})
 	})
 	return bul
@@ -165,11 +170,11 @@ func (bul *rush) Inject(items ...interface{}) Bulrush {
 		return bul
 	}
 	bul.lock.Acquire("injects", func(async sync.Async) {
-		funk.ForEach(items, func(inject interface{}) {
-			assert1(!bul.injects.Has(inject), errorMsgs{&Error{Type: ErrorTypeInject,
-				Err: fmt.Errorf("inject %v has existed", reflect.TypeOf(inject))}})
+		funk.ForEach(items, func(item interface{}) {
+			assert1(!bul.injects.Has(item), errorMsgs{&Error{Type: ErrorTypeInject,
+				Err: fmt.Errorf("inject %v has existed", reflect.TypeOf(item))}})
+			bul.injects.Put(item)
 		})
-		*bul.injects = append(*bul.injects, items...)
 	})
 	return bul
 }
@@ -217,22 +222,53 @@ func (bul *rush) CatchError(funk interface{}) error {
 // RunImmediately, excute plugin in orderly
 // Quick start application
 func (bul *rush) RunImmediately() error {
-	return bul.Run(RunImmediately)
+	return bul.Run(RunImmediately(bul.NewHTTPContext(1 * time.Second)))
+}
+
+// NewHTTPContext defined obtain a httpContext for httpProxy
+// if you implement run logic, you should obtain a ctx for HttpProxy
+// reference RunImmediately plugin
+func (bul *rush) NewHTTPContext(duration time.Duration) *HTTPContext {
+	bul.httpContext.DeadLineTime = time.Now().Add(duration)
+	return bul.httpContext
+}
+
+// Shutdown defined bul gracefulExit
+// ,, close http or other resources
+func (bul *rush) Shutdown() error {
+	<-func() chan struct{} {
+		bul.httpContext.Exit <- struct{}{}
+		return bul.httpContext.Exit
+	}()
+	rushLogger.Warn("Shutdown: httpProxy Closed")
+	<-func() chan struct{} {
+		bul.exit <- struct{}{}
+		return bul.exit
+	}()
+	rushLogger.Warn("Shutdown: bulrush Closed")
+	return nil
 }
 
 // Run application with callback, excute plugin in orderly
 // Note: this method will block the calling goroutine indefinitely unless an error happens
-func (bul *rush) Run(cb interface{}) error {
-	return bul.CatchError(func() {
-		bul.PostUse(cb)
-		plugin := bul.prePlugins.Append(bul.plugins).Append(bul.postPlugins)
-		pv := plugin.toPluginContexts()
-		executor := &executor{
-			pluginValues: pv,
-			injects:      bul.injects,
-		}
-		executor.execute(func(ret ...interface{}) {
-			bul.Inject(ret...)
+func (bul *rush) Run(p interface{}) (err error) {
+	go func() {
+		err = bul.CatchError(func() {
+			bul.PostUse(p)
+			pcts := bul.
+				prePlugins.
+				Append(bul.plugins).
+				Append(bul.postPlugins).
+				toPluginContexts()
+			executor := &executor{
+				pluginContexts: pcts,
+				injects:        bul.injects,
+			}
+			executor.execute(func(ret ...interface{}) {
+				bul.Inject(ret...)
+			})
 		})
-	})
+	}()
+	bul.exit <- <-bul.exit
+	return
 }

@@ -4,7 +4,7 @@ go 1.12
 
 require (
 	github.com/2637309949/bulrush-addition v0.0.0-20190729105901-74c392aece2f
-	github.com/2637309949/bulrush-utils v0.0.0-20190807022855-59ec0dc985a7
+	github.com/2637309949/bulrush-utils v0.0.0-20190810110643-60e955e3927a
 	github.com/gin-gonic/gin v1.4.0
 	github.com/kataras/go-events v0.0.2
 	github.com/smartystreets/goconvey v0.0.0-20190731233626-505e41936337 // indirect

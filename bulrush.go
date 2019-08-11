@@ -62,9 +62,9 @@ func New() Bulrush {
 	})
 	bul.Clear()
 	bul.Inject(builtInInjects(bul)...).
-		PreUse(Plugins{HTTPProxy, HTTPRouter}...).
+		PreUse(Plugins{Starting, HTTPProxy, HTTPRouter}...).
 		Use(Plugins{}...).
-		PostUse(Plugins{}...)
+		PostUse(Plugins{Running}...)
 	return bul
 }
 
@@ -133,7 +133,7 @@ func (bul *rush) PostUse(items ...interface{}) Bulrush {
 		funk.ForEach(items, func(item interface{}) {
 			assert1(isPlugin(item), errorMsgs{&Error{Type: ErrorTypePlugin,
 				Err: fmt.Errorf("%v can not be used as plugin", item)}})
-			bul.postPlugins.Put(item)
+			bul.postPlugins.PutHead(item)
 		})
 	})
 	return bul
@@ -223,7 +223,7 @@ func (bul *rush) Shutdown() error {
 		close(bul.exit)
 	}()
 	// emit shutdown event
-	bul.Emit("shutdown")
+	bul.Emit(EventsShutdown)
 	// shutdown bulrush
 	time.Sleep(time.Second * 5)
 	<-func() chan struct{} {
@@ -237,7 +237,7 @@ func (bul *rush) Shutdown() error {
 // RunImmediately, excute plugin in orderly
 // Quick start application
 func (bul *rush) RunImmediately() error {
-	return bul.Run(RunImmediately)
+	return bul.Run(HTTPBooting)
 }
 
 // Run application with callback, excute plugin in orderly

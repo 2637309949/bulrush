@@ -20,9 +20,6 @@ const (
 )
 
 type (
-	// Plugins defined those that can be call by reflect
-	// , Plugins passby func or a struct that has `Plugin` func
-	Plugins []interface{}
 	// PluginContext defined plugin value with pre an post
 	PluginContext struct {
 		Pre    reflect.Value
@@ -32,49 +29,13 @@ type (
 	}
 	// HTTPContext defined httpContxt
 	HTTPContext struct {
-		Exit         chan struct{}
 		Chan         chan struct{}
 		DeadLineTime time.Time
 	}
 )
 
-// Append defined array concat
-func (p *Plugins) Append(target *Plugins) *Plugins {
-	middles := append(*p, *target...)
-	return &middles
-}
-
-// Put defined array Put
-func (p *Plugins) Put(target interface{}) *Plugins {
-	*p = append(*p, target)
-	return p
-}
-
-// Size defined Plugins Size
-func (p *Plugins) Size() int {
-	return len(*p)
-}
-
-// Get defined index of Plugins
-func (p *Plugins) Get(pos int) interface{} {
-	return (*p)[pos]
-}
-
-// Swap swaps the two values at the specified positions.
-func (p *Plugins) Swap(i, j int) {
-	(*p)[i], (*p)[j] = (*p)[j], (*p)[i]
-}
-
-// toCallables defined to get `ret` that plugin func return
-func (p *Plugins) toPluginContexts() *[]PluginContext {
-	pluginValus := funk.Map(*p, func(plugin interface{}) PluginContext {
-		return *parsePlugin(plugin)
-	}).([]PluginContext)
-	return &pluginValus
-}
-
-// parsePlugin defined parsePlugin
-func parsePlugin(src interface{}) *PluginContext {
+// newPluginContext defined newPluginContext
+func newPluginContext(src interface{}) *PluginContext {
 	pv := PluginContext{}
 	// Pre hook
 	if pre, fromStruct := indirectFunc(src, preHookName); pre != nil && fromStruct {
@@ -145,15 +106,6 @@ func (pv *PluginContext) inputsFrom(inputs []interface{}) {
 		}
 		pv.Inputs = append(pv.Inputs, eleValue.(reflect.Value))
 	}
-}
-
-// NewHTTPContext defined httpContext
-func NewHTTPContext(duration time.Duration) *HTTPContext {
-	cxt := &HTTPContext{}
-	cxt.DeadLineTime = time.Now().Add(duration)
-	cxt.Chan = make(chan struct{}, 1)
-	cxt.Exit = make(chan struct{}, 1)
-	return cxt
 }
 
 // Done defined http done action

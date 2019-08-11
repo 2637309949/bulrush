@@ -15,12 +15,63 @@ import (
 	"github.com/thoas/go-funk"
 )
 
+type (
+	// Plugins defined those that can be call by reflect
+	// , Plugins passby func or a struct that has `Plugin` func
+	Plugins []interface{}
+)
+
+// Append defined array concat
+func (p *Plugins) Append(target *Plugins) *Plugins {
+	middles := append(*p, *target...)
+	return &middles
+}
+
+// Put defined array Put
+func (p *Plugins) Put(target interface{}) *Plugins {
+	*p = append(*p, target)
+	return p
+}
+
+// PutHead defined put ele to head
+func (p *Plugins) PutHead(target interface{}) *Plugins {
+	*p = append([]interface{}{target}, *p...)
+	return p
+}
+
+// Size defined Plugins Size
+func (p *Plugins) Size() int {
+	return len(*p)
+}
+
+// Get defined index of Plugins
+func (p *Plugins) Get(pos int) interface{} {
+	return (*p)[pos]
+}
+
+// Swap swaps the two values at the specified positions.
+func (p *Plugins) Swap(i, j int) {
+	(*p)[i], (*p)[j] = (*p)[j], (*p)[i]
+}
+
+// toCallables defined to get `ret` that plugin func return
+func (p *Plugins) toPluginContexts() *[]PluginContext {
+	pluginValus := funk.Map(*p, func(plugin interface{}) PluginContext {
+		return *newPluginContext(plugin)
+	}).([]PluginContext)
+	return &pluginValus
+}
+
 //	 Recovery         plugin   defined sys recovery
 //   HTTPProxy        plugin   defined http proxy
 //   HTTPRouter       plugin   defined http router
 //   Override         plugin   defined method override
 //   RunImmediately   plugin   defined httpproxy run
 var (
+	// Starting defined before all plugin
+	Starting = func(event events.EventEmmiter) {
+		event.Emit(EventsStarting, EventsStarting)
+	}
 	// Recovery system rec from panic
 	Recovery = func(httpProxy *gin.Engine, router *gin.RouterGroup) {
 		httpProxy.Use(recovery())
@@ -56,8 +107,8 @@ var (
 			})
 		})
 	}
-	// RunImmediately run app
-	RunImmediately = func(httpProxy *gin.Engine, event events.EventEmmiter, config *Config) {
+	// HTTPBooting run http proxy
+	HTTPBooting = func(httpProxy *gin.Engine, event events.EventEmmiter, config *Config) {
 		var err error
 		defer func() {
 			if err != nil {
@@ -70,11 +121,19 @@ var (
 		rushLogger.Debug("App: %s", name)
 		rushLogger.Debug("Listen on %s", addr)
 		rushLogger.Debug("================================")
-		event.Emit(EventSysBulrushPluginRunImmediately, EventSysBulrushPluginRunImmediately)
 		server := &http.Server{Addr: addr, Handler: httpProxy}
-		event.On("shutdown", func(payload ...interface{}) {
-			server.Shutdown(NewHTTPContext(3 * time.Second))
+		event.On(EventsShutdown, func(payload ...interface{}) {
+			server.Shutdown(&HTTPContext{
+				DeadLineTime: time.Now().Add(3 * time.Second),
+				Chan:         make(chan struct{}, 1),
+			})
 		})
-		err = server.ListenAndServe()
+		go func() {
+			err = server.ListenAndServe()
+		}()
+	}
+	// Running defined after all plugin
+	Running = func(event events.EventEmmiter) {
+		event.Emit(EventsRunning, EventsRunning)
 	}
 )

@@ -24,7 +24,7 @@ func (r *ReverseInject) Register(rFunc interface{}) {
 	if kind != reflect.Func {
 		panic(fmt.Errorf("rFunc should to be func type"))
 	}
-	pv := parsePlugin(rFunc)
+	pv := newPluginContext(rFunc)
 	pv.inputsFrom(*r.injects)
 	pv.runPre()
 	r.inspect(pv.runPlugin()...)

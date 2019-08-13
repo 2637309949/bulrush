@@ -25,7 +25,7 @@ func (r *ReverseInject) Register(rFunc interface{}) {
 		panic(fmt.Errorf("rFunc should to be func type"))
 	}
 	pv := newPluginContext(rFunc)
-	pv.inputsFrom(*r.injects)
+	pv.insFrom(*r.injects)
 	pv.runPre()
 	r.inspect(pv.runPlugin()...)
 	pv.runPost()

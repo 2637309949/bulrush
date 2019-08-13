@@ -22,7 +22,7 @@ func (exec *executor) next() {
 		if err := CatchError(func() {
 			pv := (*exec.pluginContexts)[exec.index]
 			debugPrint("next plugin:%v", pv.Plugin.Type())
-			pv.inputsFrom(*exec.injects)
+			pv.insFrom(*exec.injects)
 			pv.runPre()
 			exec.inspect(pv.runPlugin()...)
 			pv.runPost()

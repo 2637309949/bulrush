@@ -24,12 +24,25 @@ type (
 		Prefix  string  `json:"prefix" yaml:"prefix"`
 		Port    string  `json:"port" yaml:"port"`
 		Mode    string  `json:"mode" yaml:"mode"`
-		suffix  string
 		data    []byte
+		cfgType cfgType
 		Log     struct {
 			Level string `json:"level" yaml:"level"`
 			Path  string `json:"path" yaml:"path"`
 		}
+	}
+	// cfgType enum type
+	cfgType uint
+)
+
+// defined cfgType types
+var (
+	cfgTypeEnums = struct {
+		JSON cfgType
+		YAML cfgType
+	}{
+		JSON: 1 << 7,
+		YAML: 1<<7 + 1,
 	}
 )
 
@@ -55,12 +68,12 @@ func (c *Config) mode() string {
 	return utils.Some(c.Mode, "debug").(string)
 }
 
-func (c *Config) typeBySuffix(path string) string {
-	var dataType string
+func (c *Config) typeBySuffix(path string) cfgType {
+	var dataType cfgType
 	if strings.HasSuffix(path, ".json") {
-		dataType = "json"
+		dataType = cfgTypeEnums.JSON
 	} else if strings.HasSuffix(path, ".yaml") {
-		dataType = "yaml"
+		dataType = cfgTypeEnums.YAML
 	}
 	return dataType
 }
@@ -78,7 +91,7 @@ func (c *Config) Unmarshal(field string, v interface{}) (err error) {
 			Tag:  reflect.StructTag(fmt.Sprintf(`json:"%s" yaml:"%s"`, field, field)),
 		},
 	})
-	if err = c.UnmarshalByType(c.data, sv, c.suffix); err != nil {
+	if err = c.UnmarshalByType(c.data, sv, c.cfgType); err != nil {
 		return
 	}
 	conf := stealFieldInStruct(strings.Title(field), sv)
@@ -101,8 +114,8 @@ func LoadConfig(path string) *Config {
 	)
 	if data, err = ioutil.ReadFile(path); err == nil {
 		c := &Config{data: data}
-		c.suffix = c.typeBySuffix(path)
-		err = c.UnmarshalByType(c.data, c, c.suffix)
+		c.cfgType = c.typeBySuffix(path)
+		err = c.UnmarshalByType(c.data, c, c.cfgType)
 		return c
 	}
 	panic(fmt.Errorf("failed to load file %s", err))
@@ -112,14 +125,14 @@ func LoadConfig(path string) *Config {
 // suport
 // , : json
 // , : yaml
-func (c *Config) UnmarshalByType(data []byte, v interface{}, dataType string) (err error) {
+func (c *Config) UnmarshalByType(data []byte, v interface{}, dataType cfgType) (err error) {
 	switch true {
-	case dataType == "json":
+	case dataType == cfgTypeEnums.JSON:
 		err = json.Unmarshal(data, v)
 		if err != nil {
 			return err
 		}
-	case dataType == "yaml":
+	case dataType == cfgTypeEnums.YAML:
 		err = yaml.Unmarshal(data, v)
 		if err != nil {
 			return err

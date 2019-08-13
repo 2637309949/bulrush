@@ -8,6 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type modelType uint
+
 const (
 	// DebugMode indicates bul mode is debug.
 	DebugMode = "debug"

@@ -18,7 +18,7 @@ func EventName(name string) events.EventName {
 
 // Events defined built-in events
 var (
-	EventsStarting = EventName(utils.ToString(1 << 49))
-	EventsRunning  = EventName(utils.ToString(1 << 50))
-	EventsShutdown = EventName(utils.ToString(1 << 51))
+	EventsStarting = EventName(utils.ToString(1<<49 + 0))
+	EventsRunning  = EventName(utils.ToString(1<<49 + 1))
+	EventsShutdown = EventName(utils.ToString(1<<49 + 2))
 )

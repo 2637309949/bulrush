@@ -86,9 +86,9 @@ func (pv *PluginContext) runPlugin() []interface{} {
 	}).([]interface{})
 }
 
-// inputsFrom defined plugins paramters by type
+// insFrom defined plugins paramters by type
 // , or by interface{} implement
-func (pv *PluginContext) inputsFrom(inputs []interface{}) {
+func (pv *PluginContext) insFrom(inputs []interface{}) {
 	funcItem := indirectPlugin(pv.Plugin.Interface())
 	funcValue := reflect.ValueOf(funcItem)
 	if funcValue.Type().Kind() != reflect.Func {

@@ -24,9 +24,10 @@ func (r *ReverseInject) Register(rFunc interface{}) {
 	if kind != reflect.Func {
 		panic(fmt.Errorf("rFunc should to be func type"))
 	}
-	pv := newPluginContext(rFunc)
-	pv.insFrom(*r.injects)
-	pv.runPre()
-	r.inspect(pv.runPlugin()...)
-	pv.runPost()
+	scopes := (&Plugins{rFunc}).toScopes()
+	exec := &executor{
+		scopes:  scopes,
+		injects: r.injects,
+	}
+	exec.execute(r.inspect)
 }

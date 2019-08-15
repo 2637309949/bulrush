@@ -5,6 +5,7 @@
 package bulrush
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -19,6 +20,11 @@ type (
 	// Plugins defined those that can be call by reflect
 	// , Plugins passby func or a struct that has `Plugin` func
 	Plugins []interface{}
+	// HTTPContext defined httpContxt
+	HTTPContext struct {
+		Chan         chan struct{}
+		DeadLineTime time.Time
+	}
 )
 
 // Append defined array concat
@@ -54,12 +60,35 @@ func (p *Plugins) Swap(i, j int) {
 	(*p)[i], (*p)[j] = (*p)[j], (*p)[i]
 }
 
-// toCallables defined to get `ret` that plugin func return
-func (p *Plugins) toPluginContexts() *[]PluginContext {
-	pluginValus := funk.Map(*p, func(plugin interface{}) PluginContext {
-		return *newPluginContext(plugin)
-	}).([]PluginContext)
-	return &pluginValus
+// toScopes defined to get `ret` that plugin func return
+func (p *Plugins) toScopes() *[]Scope {
+	scopes := funk.Map(*p, func(v interface{}) Scope {
+		return *newScope(v)
+	}).([]Scope)
+	return &scopes
+}
+
+// Done defined http done action
+func (ctx *HTTPContext) Done() <-chan struct{} {
+	if time.Now().After(ctx.DeadLineTime) {
+		ctx.Chan <- struct{}{}
+	}
+	return ctx.Chan
+}
+
+// Err defined http action error
+func (ctx *HTTPContext) Err() error {
+	return errors.New("can't exit before Specified time")
+}
+
+// Value nothing
+func (ctx *HTTPContext) Value(key interface{}) interface{} {
+	return nil
+}
+
+// Deadline defined Deadline time
+func (ctx *HTTPContext) Deadline() (time.Time, bool) {
+	return ctx.DeadLineTime, true
 }
 
 //	 Recovery         plugin   defined sys recovery

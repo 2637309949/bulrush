@@ -19,14 +19,16 @@ const (
 	ErrorTypePlugin ErrorType = 1 << 63
 	// ErrorTypeInject is used when bul.Inject() fails.
 	ErrorTypeInject ErrorType = 1 << 62
+	// ErrorUnaddressable unaddressable value
+	ErrorUnaddressable = 1 << 61
 	// ErrorTypePrivate indicates a private error.
-	ErrorTypePrivate ErrorType = 1 << 0
+	ErrorTypePrivate ErrorType = 1 << 60
 	// ErrorTypePublic indicates a public error.
-	ErrorTypePublic ErrorType = 1 << 1
+	ErrorTypePublic ErrorType = 1 << 59
 	// ErrorTypeAny indicates any other error.
-	ErrorTypeAny ErrorType = 1<<64 - 1
+	ErrorTypeAny ErrorType = 1 << 58
 	// ErrorTypeNu indicates any other error.
-	ErrorTypeNu = 2
+	ErrorTypeNu = 1 << 57
 )
 
 // Error represents a error's specification.

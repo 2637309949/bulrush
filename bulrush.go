@@ -183,6 +183,9 @@ func (bul *rush) Acquire(ty reflect.Type) interface{} {
 	if ele == nil {
 		ele = duckMatcher(ty, *bul.injects)
 	}
+	if ele != nil {
+		ele = ele.(reflect.Value).Interface()
+	}
 	return ele
 }
 
@@ -246,16 +249,16 @@ func (bul *rush) Run(p interface{}) (err error) {
 	go func() {
 		err = bul.CatchError(func() {
 			bul.PostUse(p)
-			pcts := bul.
+			scopes := bul.
 				prePlugins.
 				Append(bul.plugins).
 				Append(bul.postPlugins).
-				toPluginContexts()
-			executor := &executor{
-				pluginContexts: pcts,
-				injects:        bul.injects,
+				toScopes()
+			exec := &executor{
+				scopes:  scopes,
+				injects: bul.injects,
 			}
-			executor.execute(func(ret ...interface{}) {
+			exec.execute(func(ret ...interface{}) {
 				bul.Inject(ret...)
 			})
 		})

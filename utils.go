@@ -97,26 +97,10 @@ func indirectFunc(item interface{}, funcName string) (interface{}, bool) {
 	return nil, fromStruct
 }
 
-func indirectPlugin(item interface{}) interface{} {
-	value, _ := indirectFunc(item, pluginHookName)
+func indirectPlugin(item interface{}, funk string) interface{} {
+	value, _ := indirectFunc(item, funk)
 	assert1(value != nil, fmt.Sprintf("%v can not be used as plugin", item))
 	return value
-}
-
-func indirectPre(item interface{}) interface{} {
-	value, fromStruct := indirectFunc(item, preHookName)
-	if !fromStruct {
-		return value
-	}
-	return nil
-}
-
-func indirectPost(item interface{}) interface{} {
-	value, fromStruct := indirectFunc(item, postHookName)
-	if !fromStruct {
-		return value
-	}
-	return nil
 }
 
 func isPlugin(item interface{}) bool {

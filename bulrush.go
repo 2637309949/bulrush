@@ -176,7 +176,6 @@ func (bul *rush) Inject(items ...interface{}) Bulrush {
 // - match type or match interface{}
 // - return nil if no ele match
 func (bul *rush) Acquire(ty reflect.Type) interface{} {
-	fmt.Println("ty ", ty)
 	ele := typeMatcher(ty, *bul.injects)
 	if ele == nil {
 		ele = duckMatcher(ty, *bul.injects)

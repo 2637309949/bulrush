@@ -203,10 +203,10 @@ func (bul *rush) Wire(target interface{}) (err error) {
 		tv = tv.Elem()
 		if tv.Type() == reflect.TypeOf(v) && tv.CanSet() {
 			tv.Set(reflect.ValueOf(v))
-		} else {
-			err = ErrWith(ErrUnaddressable, fmt.Sprintf("type %v should be pointer", reflect.TypeOf(target)))
+			return
 		}
 	}
+	err = ErrWith(ErrUnaddressable, fmt.Sprintf("type %v not found in ct", reflect.TypeOf(target)))
 	return
 }
 

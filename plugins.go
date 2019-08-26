@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/2637309949/bulrush-utils/sync"
 	"github.com/gin-gonic/gin"
 	"github.com/kataras/go-events"
 	"github.com/thoas/go-funk"
@@ -20,12 +21,53 @@ type (
 	// Plugins defined those that can be call by reflect
 	// , Plugins passby func or a struct that has `Plugin` func
 	Plugins []interface{}
+	// PluginsOption defined option of Plugin
+	PluginsOption interface{ apply(*rush) *rush }
 	// HTTPContext defined httpContxt
 	HTTPContext struct {
 		Chan         chan struct{}
 		DeadLineTime time.Time
 	}
 )
+
+// PrePlugins defined Option of PrePlugin
+func PrePlugins(plugins ...interface{}) PluginsOption {
+	return option(func(r *rush) *rush {
+		r.lock.Acquire("prePlugins", func(async sync.Async) {
+			funk.ForEach(plugins, func(item interface{}) {
+				assert1(isPlugin(item), ErrWith(ErrPlugin, fmt.Sprintf("%v can not be used as plugin", item)))
+				r.prePlugins.Put(item)
+			})
+		})
+		return r
+	})
+}
+
+// PostPlugins defined Option of PostPlugin
+func PostPlugins(plugins ...interface{}) PluginsOption {
+	return option(func(r *rush) *rush {
+		r.lock.Acquire("postPlugins", func(async sync.Async) {
+			funk.ForEach(plugins, func(item interface{}) {
+				assert1(isPlugin(item), ErrWith(ErrPlugin, fmt.Sprintf("%v can not be used as plugin", item)))
+				r.postPlugins.Put(item)
+			})
+		})
+		return r
+	})
+}
+
+// MiddlePlugins defined Option of MiddlePlugin
+func MiddlePlugins(plugins ...interface{}) PluginsOption {
+	return option(func(r *rush) *rush {
+		r.lock.Acquire("plugins", func(async sync.Async) {
+			funk.ForEach(plugins, func(item interface{}) {
+				assert1(isPlugin(item), ErrWith(ErrPlugin, fmt.Sprintf("%v can not be used as plugin", item)))
+				r.plugins.Put(item)
+			})
+		})
+		return r
+	})
+}
 
 // Append defined array concat
 func (p *Plugins) Append(target *Plugins) *Plugins {

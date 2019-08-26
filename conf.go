@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	utils "github.com/2637309949/bulrush-utils"
+	"github.com/2637309949/bulrush-utils/sync"
 	"gopkg.in/yaml.v2"
 )
 
@@ -31,6 +32,8 @@ type (
 			Path  string `json:"path" yaml:"path"`
 		}
 	}
+	// ConfigOption defined config for rush
+	ConfigOption interface{ apply(*rush) *rush }
 	// cfgType enum type
 	cfgType uint
 )
@@ -45,6 +48,27 @@ var (
 		YAML: 1<<7 + 1,
 	}
 )
+
+// ParseConfig defined Option of PrePlugin
+func ParseConfig(path string) ConfigOption {
+	return option(func(r *rush) *rush {
+		if len(path) == 0 {
+			return r
+		}
+		r.lock.Acquire("config", func(async sync.Async) {
+			conf := LoadConfig(path)
+			conf.Version = conf.version()
+			conf.Name = conf.name()
+			conf.Prefix = conf.prefix()
+			conf.Mode = conf.mode()
+			SetMode(conf.Mode)
+			conf.verifyVersion(Version)
+			*r.config = *conf
+			r.Inject(r.config)
+		})
+		return r
+	})
+}
 
 func (c *Config) verifyVersion(version float64) {
 	if c.Version != version {

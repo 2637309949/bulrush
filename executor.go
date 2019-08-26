@@ -24,7 +24,7 @@ func (exec *executor) traverse() {
 		if err := CatchError(func() {
 			pv := (*exec.scopes)[exec.index]
 			debugPrint("next plugin:%v", reflect.TypeOf(pv.Value))
-			pv.inFrom(*exec.injects)
+			pv.inFrom(exec.injects)
 			pv.methodCall(pv.indirectFunc(preHookName), *exec.injects)
 			exec.inspect(pv.reflectCall(pv.indirectPlugin(), pv.Inputs)...)
 			pv.methodCall(pv.indirectFunc(postHookName), *exec.injects)

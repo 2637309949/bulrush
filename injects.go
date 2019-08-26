@@ -5,8 +5,13 @@
 package bulrush
 
 import (
+	"fmt"
+	"reflect"
+
 	"github.com/2637309949/bulrush-utils/maps"
+	"github.com/2637309949/bulrush-utils/sync"
 	"github.com/kataras/go-events"
+	"github.com/thoas/go-funk"
 	"gopkg.in/go-playground/validator.v9"
 	"gopkg.in/robfig/cron.v2"
 )
@@ -14,7 +19,57 @@ import (
 // Injects defined some entitys that can be inject to middle
 // , Injects would panic if repetition
 // , Injects can be go base tyle or struct or ptr or interface{}
-type Injects []interface{}
+type (
+	Injects []interface{}
+	// InjectsOption defined option of Injects
+	InjectsOption interface{ apply(*rush) *rush }
+)
+
+// MiddleInjects defined Option of Injects
+func MiddleInjects(injects ...interface{}) PluginsOption {
+	return option(func(r *rush) *rush {
+		r.lock.Acquire("injects", func(async sync.Async) {
+			funk.ForEach(injects, func(item interface{}) {
+				assert1(!r.injects.Has(item), ErrWith(ErrInject, fmt.Sprintf("inject %v has existed", reflect.TypeOf(item))))
+				r.injects.Put(item)
+			})
+		})
+		return r
+	})
+}
+
+// Wire defined wire ele from type
+func (src *Injects) Wire(target interface{}) (err error) {
+	// tv := (*interface{})(unsafe.Pointer(targetValue.Pointer()))
+	// va := reflect.ValueOf(&a).Elem()
+	// va.Set(reflect.New(va.Type().Elem()))
+	tv := reflect.ValueOf(target)
+	if tv.Kind() != reflect.Ptr && !tv.IsNil() {
+		err = ErrWith(ErrUnaddressable, fmt.Sprintf("type %v should be pointer", reflect.TypeOf(target)))
+		return
+	}
+	if v := src.Acquire(tv.Elem().Type()); v != nil {
+		tv = tv.Elem()
+		if tv.Type() == reflect.TypeOf(v) && tv.CanSet() {
+			tv.Set(reflect.ValueOf(v))
+			return
+		}
+	}
+	err = ErrWith(ErrUnaddressable, fmt.Sprintf("type %v not found in ct", reflect.TypeOf(target)))
+	return
+}
+
+// Acquire defined acquire inject ele from type
+func (src *Injects) Acquire(ty reflect.Type) interface{} {
+	ele := typeMatcher(ty, *src)
+	if ele == nil {
+		ele = duckMatcher(ty, *src)
+	}
+	if ele != nil {
+		ele = ele.(reflect.Value).Interface()
+	}
+	return ele
+}
 
 // Append defined array concat
 func (src *Injects) Append(target *Injects) *Injects {

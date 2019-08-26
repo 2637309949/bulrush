@@ -11,7 +11,6 @@ import (
 
 	"github.com/2637309949/bulrush-utils/sync"
 	"github.com/kataras/go-events"
-	"github.com/thoas/go-funk"
 )
 
 type (
@@ -61,7 +60,7 @@ func New() Bulrush {
 		lock:         sync.NewLock(),
 		exit:         make(chan struct{}, 1),
 	})
-	bul.Clear()
+	bul.Empty()
 	bul.Inject(builtInInjects(bul)...).
 		PreUse(Plugins{Starting, HTTPProxy, HTTPRouter}...).
 		Use(Plugins{}...).
@@ -79,111 +78,51 @@ func Default() Bulrush {
 	return bul
 }
 
-// Clear defined empty all exists plugin and inject
+// Empty defined empty all exists plugin and inject
 // would return a empty bulrush
 // should be careful
-func (bul *rush) Clear() {
-	bul.injects = new(Injects)
-	bul.prePlugins = new(Plugins)
-	bul.plugins = new(Plugins)
-	bul.postPlugins = new(Plugins)
+func (bul *rush) Empty() *rush {
+	return Empty().apply(bul)
 }
 
 // PreUse attachs a global middleware to the router
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
 func (bul *rush) PreUse(items ...interface{}) Bulrush {
-	if len(items) == 0 {
-		return bul
-	}
-	bul.lock.Acquire("prePlugins", func(async sync.Async) {
-		funk.ForEach(items, func(item interface{}) {
-			assert1(isPlugin(item), ErrWith(ErrPlugin, fmt.Sprintf("%v can not be used as plugin", item)))
-			bul.prePlugins.Put(item)
-		})
-	})
-	return bul
+	return PrePlugins(items...).apply(bul)
 }
 
 // Use attachs a global middleware to the router
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
 func (bul *rush) Use(items ...interface{}) Bulrush {
-	if len(items) == 0 {
-		return bul
-	}
-	bul.lock.Acquire("plugins", func(async sync.Async) {
-		funk.ForEach(items, func(item interface{}) {
-			assert1(isPlugin(item), ErrWith(ErrPlugin, fmt.Sprintf("%v can not be used as plugin", item)))
-			bul.plugins.Put(item)
-		})
-	})
-	return bul
+	return MiddlePlugins(items...).apply(bul)
 }
 
 // PostUse attachs a global middleware to the router
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
 func (bul *rush) PostUse(items ...interface{}) Bulrush {
-	if len(items) == 0 {
-		return bul
-	}
-	bul.lock.Acquire("postPlugins", func(async sync.Async) {
-		funk.ForEach(items, func(item interface{}) {
-			assert1(isPlugin(item), ErrWith(ErrPlugin, fmt.Sprintf("%v can not be used as plugin", item)))
-			bul.postPlugins.PutHead(item)
-		})
-	})
-	return bul
+	return PostPlugins(items...).apply(bul)
 }
 
 // Config load config from string path
 // currently, it support loading file that end with .json or .yarm
 func (bul *rush) Config(path string) Bulrush {
-	if len(path) == 0 {
-		return bul
-	}
-	bul.lock.Acquire("config", func(async sync.Async) {
-		conf := LoadConfig(path)
-		conf.Version = conf.version()
-		conf.Name = conf.name()
-		conf.Prefix = conf.prefix()
-		conf.Mode = conf.mode()
-		SetMode(conf.Mode)
-		conf.verifyVersion(Version)
-		*bul.config = *conf
-		bul.Inject(bul.config)
-	})
-	return bul
+	return ParseConfig(path).apply(bul)
 }
 
 // Inject `inject` to bulrush
 // - inject should be someone that never be pushed in before.
 func (bul *rush) Inject(items ...interface{}) Bulrush {
-	if len(items) == 0 {
-		return bul
-	}
-	bul.lock.Acquire("injects", func(async sync.Async) {
-		funk.ForEach(items, func(item interface{}) {
-			assert1(!bul.injects.Has(item), ErrWith(ErrInject, fmt.Sprintf("inject %v has existed", reflect.TypeOf(item))))
-			bul.injects.Put(item)
-		})
-	})
-	return bul
+	return MiddleInjects(items...).apply(bul)
 }
 
 // Acquire defined acquire inject ele from type
 // - match type or match interface{}
 // - return nil if no ele match
 func (bul *rush) Acquire(ty reflect.Type) interface{} {
-	ele := typeMatcher(ty, *bul.injects)
-	if ele == nil {
-		ele = duckMatcher(ty, *bul.injects)
-	}
-	if ele != nil {
-		ele = ele.(reflect.Value).Interface()
-	}
-	return ele
+	return bul.injects.Acquire(ty)
 }
 
 // Wire defined wire ele from type
@@ -193,20 +132,7 @@ func (bul *rush) Wire(target interface{}) (err error) {
 	// tv := (*interface{})(unsafe.Pointer(targetValue.Pointer()))
 	// va := reflect.ValueOf(&a).Elem()
 	// va.Set(reflect.New(va.Type().Elem()))
-	tv := reflect.ValueOf(target)
-	if tv.Kind() != reflect.Ptr && !tv.IsNil() {
-		err = ErrWith(ErrUnaddressable, fmt.Sprintf("type %v should be pointer", reflect.TypeOf(target)))
-		return
-	}
-	if v := bul.Acquire(tv.Elem().Type()); v != nil {
-		tv = tv.Elem()
-		if tv.Type() == reflect.TypeOf(v) && tv.CanSet() {
-			tv.Set(reflect.ValueOf(v))
-			return
-		}
-	}
-	err = ErrWith(ErrUnaddressable, fmt.Sprintf("type %v not found in ct", reflect.TypeOf(target)))
-	return
+	return bul.injects.Wire(target)
 }
 
 // CatchError error which one from outside of recovery pluigns, this rec just for bulrush

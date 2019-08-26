@@ -67,7 +67,7 @@ func (scope *Scope) indirectPlugin() reflect.Value {
 	return reflect.Value{}
 }
 
-func (scope *Scope) inFrom(inputs []interface{}) {
+func (scope *Scope) inFrom(inputs *Injects) {
 	funk := scope.indirectPlugin()
 	if funk.Type().Kind() != reflect.Func {
 		panic(fmt.Errorf(" %v inputsFrom call with %v error", funk, inputs))
@@ -76,13 +76,11 @@ func (scope *Scope) inFrom(inputs []interface{}) {
 	numIn := funcType.NumIn()
 	for index := 0; index < numIn; index++ {
 		ptype := funcType.In(index)
-		eleValue := typeMatcher(ptype, inputs)
-		if eleValue == nil {
-			if eleValue = duckMatcher(ptype, inputs); eleValue == nil {
-				panic(fmt.Errorf("inputsFrom %v call with %v error", ptype, reflect.TypeOf(inputs)))
-			}
+		v := inputs.Acquire(ptype)
+		if v == nil {
+			panic(fmt.Errorf("inputsFrom %v call with %v error", ptype, reflect.TypeOf(inputs)))
 		}
-		scope.Inputs = append(scope.Inputs, eleValue.(reflect.Value))
+		scope.Inputs = append(scope.Inputs, reflect.ValueOf(v))
 	}
 }
 

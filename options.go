@@ -4,19 +4,17 @@
 
 package bulrush
 
-// option defined implement of option
+// Option defined implement of option
 type (
-	option func(*rush) *rush
-	// EmptyOption defined option of rush
-	EmptyOption interface{ apply(*rush) *rush }
+	Option func(*rush) *rush
 )
 
 // option defined implement of option
-func (o option) apply(r *rush) *rush { return o(r) }
+func (o Option) apply(r *rush) *rush { return o(r) }
 
 // Empty defined Option of rush
-func Empty() EmptyOption {
-	return option(func(r *rush) *rush {
+func Empty() Option {
+	return Option(func(r *rush) *rush {
 		r.injects = new(Injects)
 		r.prePlugins = new(Plugins)
 		r.plugins = new(Plugins)

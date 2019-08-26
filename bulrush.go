@@ -89,33 +89,33 @@ func (bul *rush) Empty() *rush {
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
 func (bul *rush) PreUse(items ...interface{}) Bulrush {
-	return PrePlugins(items...).apply(bul)
+	return PrePluginsOption(items...).apply(bul)
 }
 
 // Use attachs a global middleware to the router
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
 func (bul *rush) Use(items ...interface{}) Bulrush {
-	return MiddlePlugins(items...).apply(bul)
+	return MiddlePluginsOption(items...).apply(bul)
 }
 
 // PostUse attachs a global middleware to the router
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
 func (bul *rush) PostUse(items ...interface{}) Bulrush {
-	return PostPlugins(items...).apply(bul)
+	return PostPluginsOption(items...).apply(bul)
 }
 
 // Config load config from string path
 // currently, it support loading file that end with .json or .yarm
 func (bul *rush) Config(path string) Bulrush {
-	return ParseConfig(path).apply(bul)
+	return ParseConfigOption(path).apply(bul)
 }
 
 // Inject `inject` to bulrush
 // - inject should be someone that never be pushed in before.
 func (bul *rush) Inject(items ...interface{}) Bulrush {
-	return MiddleInjects(items...).apply(bul)
+	return InjectsOption(items...).apply(bul)
 }
 
 // Acquire defined acquire inject ele from type

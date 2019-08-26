@@ -32,8 +32,6 @@ type (
 			Path  string `json:"path" yaml:"path"`
 		}
 	}
-	// ConfigOption defined config for rush
-	ConfigOption interface{ apply(*rush) *rush }
 	// cfgType enum type
 	cfgType uint
 )
@@ -49,9 +47,9 @@ var (
 	}
 )
 
-// ParseConfig defined Option of PrePlugin
-func ParseConfig(path string) ConfigOption {
-	return option(func(r *rush) *rush {
+// ParseConfigOption defined Option of PrePlugin
+func ParseConfigOption(path string) Option {
+	return Option(func(r *rush) *rush {
 		if len(path) == 0 {
 			return r
 		}

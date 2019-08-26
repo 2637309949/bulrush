@@ -21,13 +21,11 @@ import (
 // , Injects can be go base tyle or struct or ptr or interface{}
 type (
 	Injects []interface{}
-	// InjectsOption defined option of Injects
-	InjectsOption interface{ apply(*rush) *rush }
 )
 
-// MiddleInjects defined Option of Injects
-func MiddleInjects(injects ...interface{}) PluginsOption {
-	return option(func(r *rush) *rush {
+// InjectsOption defined Option of Injects
+func InjectsOption(injects ...interface{}) Option {
+	return Option(func(r *rush) *rush {
 		r.lock.Acquire("injects", func(async sync.Async) {
 			funk.ForEach(injects, func(item interface{}) {
 				assert1(!r.injects.Has(item), ErrWith(ErrInject, fmt.Sprintf("inject %v has existed", reflect.TypeOf(item))))

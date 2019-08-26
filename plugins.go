@@ -21,8 +21,6 @@ type (
 	// Plugins defined those that can be call by reflect
 	// , Plugins passby func or a struct that has `Plugin` func
 	Plugins []interface{}
-	// PluginsOption defined option of Plugin
-	PluginsOption interface{ apply(*rush) *rush }
 	// HTTPContext defined httpContxt
 	HTTPContext struct {
 		Chan         chan struct{}
@@ -30,9 +28,9 @@ type (
 	}
 )
 
-// PrePlugins defined Option of PrePlugin
-func PrePlugins(plugins ...interface{}) PluginsOption {
-	return option(func(r *rush) *rush {
+// PrePluginsOption defined Option of PrePlugin
+func PrePluginsOption(plugins ...interface{}) Option {
+	return Option(func(r *rush) *rush {
 		r.lock.Acquire("prePlugins", func(async sync.Async) {
 			funk.ForEach(plugins, func(item interface{}) {
 				assert1(isPlugin(item), ErrWith(ErrPlugin, fmt.Sprintf("%v can not be used as plugin", item)))
@@ -43,9 +41,9 @@ func PrePlugins(plugins ...interface{}) PluginsOption {
 	})
 }
 
-// PostPlugins defined Option of PostPlugin
-func PostPlugins(plugins ...interface{}) PluginsOption {
-	return option(func(r *rush) *rush {
+// PostPluginsOption defined Option of PostPlugin
+func PostPluginsOption(plugins ...interface{}) Option {
+	return Option(func(r *rush) *rush {
 		r.lock.Acquire("postPlugins", func(async sync.Async) {
 			funk.ForEach(plugins, func(item interface{}) {
 				assert1(isPlugin(item), ErrWith(ErrPlugin, fmt.Sprintf("%v can not be used as plugin", item)))
@@ -56,9 +54,9 @@ func PostPlugins(plugins ...interface{}) PluginsOption {
 	})
 }
 
-// MiddlePlugins defined Option of MiddlePlugin
-func MiddlePlugins(plugins ...interface{}) PluginsOption {
-	return option(func(r *rush) *rush {
+// MiddlePluginsOption defined Option of MiddlePlugin
+func MiddlePluginsOption(plugins ...interface{}) Option {
+	return Option(func(r *rush) *rush {
 		r.lock.Acquire("plugins", func(async sync.Async) {
 			funk.ForEach(plugins, func(item interface{}) {
 				assert1(isPlugin(item), ErrWith(ErrPlugin, fmt.Sprintf("%v can not be used as plugin", item)))

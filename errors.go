@@ -6,45 +6,40 @@ package bulrush
 
 import (
 	"encoding/json"
-	"fmt"
 	"reflect"
 	"strings"
+
+	"github.com/pkg/errors"
+	"github.com/thoas/go-funk"
 )
 
-// ErrorType is an unsigned 64-bit error code as defined in the gin spec.
-type ErrorType uint64
-
-const (
-	// ErrorTypePlugin is used when bul.PreUse(), bul.Use(), bul.PostUse() fails.
-	ErrorTypePlugin ErrorType = 1 << 63
-	// ErrorTypeInject is used when bul.Inject() fails.
-	ErrorTypeInject ErrorType = 1 << 62
-	// ErrorUnaddressable unaddressable value
-	ErrorUnaddressable = 1 << 61
-	// ErrorTypePrivate indicates a private error.
-	ErrorTypePrivate ErrorType = 1 << 60
-	// ErrorTypePublic indicates a public error.
-	ErrorTypePublic ErrorType = 1 << 59
-	// ErrorTypeAny indicates any other error.
-	ErrorTypeAny ErrorType = 1 << 58
-	// ErrorTypeNu indicates any other error.
-	ErrorTypeNu = 1 << 57
+var (
+	// ErrPlugin is used when bul.Use().
+	ErrPlugin = &Error{Code: uint64(1 << 20)}
+	// ErrInject is used when bul.Inject() fails.
+	ErrInject = &Error{Code: uint64(1 << 21)}
+	// ErrUnaddressable unaddressable value
+	ErrUnaddressable = &Error{Code: uint64(1 << 22)}
+	// ErrPrivate indicates a private error.
+	ErrPrivate = &Error{Code: uint64(1 << 23)}
+	// ErrPublic indicates a public error.
+	ErrPublic = &Error{Code: uint64(1 << 24)}
+	// ErrAny indicates any other error.
+	ErrAny = &Error{Code: uint64(1 << 25)}
+	// ErrNu indicates any other error.
+	ErrNu = &Error{Code: uint64(1 << 55)}
 )
 
 // Error represents a error's specification.
 type Error struct {
 	Err  error
-	Type ErrorType
+	Code uint64
 	Meta interface{}
 }
 
-type errorMsgs []*Error
-
-var _ error = &Error{}
-
-// SetType sets the error's type.
-func (msg *Error) SetType(flags ErrorType) *Error {
-	msg.Type = flags
+// SetCode sets the error's code
+func (msg *Error) SetCode(code uint64) *Error {
+	msg.Code = code
 	return msg
 }
 
@@ -63,9 +58,9 @@ func (msg *Error) JSON() interface{} {
 		case reflect.Struct:
 			return msg.Meta
 		case reflect.Map:
-			for _, key := range value.MapKeys() {
-				json[key.String()] = value.MapIndex(key).Interface()
-			}
+			funk.ForEach(value.MapKeys(), func(kv reflect.Value) {
+				json[kv.String()] = value.MapIndex(kv).Interface()
+			})
 		default:
 			json["meta"] = msg.Meta
 		}
@@ -82,89 +77,39 @@ func (msg *Error) MarshalJSON() ([]byte, error) {
 }
 
 // Error implements the error interface.
-func (msg Error) Error() string {
-	return msg.Err.Error()
+func (msg *Error) Error() (message string) {
+	if msg.Err != nil {
+		message = msg.Err.Error()
+	}
+	return
 }
 
-// IsType judges one error.
-func (msg *Error) IsType(flags ErrorType) bool {
-	return (msg.Type & flags) > 0
+// IsCode judges one error.
+func (msg *Error) IsCode(code uint64) bool {
+	return (msg.Code & code) > 0
 }
 
-// ByType returns a readonly copy filtered the byte.
-// ie ByType(gin.ErrorTypePublic) returns a slice of errors with type=ErrorTypePublic.
-func (a errorMsgs) ByType(typ ErrorType) errorMsgs {
-	if len(a) == 0 {
-		return nil
-	}
-	if typ == ErrorTypeAny {
-		return a
-	}
-	var result errorMsgs
-	for _, msg := range a {
-		if msg.IsType(typ) {
-			result = append(result, msg)
-		}
-	}
-	return result
+// ErrWith defined wrap error
+func ErrWith(err *Error, msg string) error {
+	return errors.Wrap(err, msg)
 }
 
-// Last returns the last error in the slice. It returns nil if the array is empty.
-// Shortcut for errors[len(errors)-1].
-func (a errorMsgs) Last() *Error {
-	if length := len(a); length > 0 {
-		return a[length-1]
-	}
-	return nil
+// ErrOut defined unwrap error
+func ErrOut(err error) (bulError *Error, ok bool) {
+	bulError, ok = errors.Cause(err).(*Error)
+	return
 }
 
-// Errors returns an array will all the error messages.
-// Example:
-// 		c.Error(errors.New("first"))
-// 		c.Error(errors.New("second"))
-// 		c.Error(errors.New("third"))
-// 		c.Errors.Errors() // == []string{"first", "second", "third"}
-func (a errorMsgs) Errors() []string {
-	if len(a) == 0 {
-		return nil
-	}
-	errorStrings := make([]string, len(a))
-	for i, err := range a {
-		errorStrings[i] = err.Error()
-	}
-	return errorStrings
+// ErrMsgs defined split wrap msg
+func ErrMsgs(err error) []string {
+	return strings.Split(err.Error(), ":")
 }
 
-func (a errorMsgs) JSON() interface{} {
-	switch len(a) {
-	case 0:
-		return nil
-	case 1:
-		return a.Last().JSON()
-	default:
-		json := make([]interface{}, len(a))
-		for i, err := range a {
-			json[i] = err.JSON()
-		}
-		return json
+// ErrCode defined return error code
+func ErrCode(err error) (code uint64) {
+	if bulErr, ok := ErrOut(err); ok {
+		code = bulErr.Code
 	}
-}
-
-// MarshalJSON implements the json.Marshaller interface.
-func (a errorMsgs) MarshalJSON() ([]byte, error) {
-	return json.Marshal(a.JSON())
-}
-
-func (a errorMsgs) String() string {
-	if len(a) == 0 {
-		return ""
-	}
-	var buffer strings.Builder
-	for i, msg := range a {
-		fmt.Fprintf(&buffer, "Error #%02d: %s\n", i+1, msg.Err)
-		if msg.Meta != nil {
-			fmt.Fprintf(&buffer, "     Meta: %v\n", msg.Meta)
-		}
-	}
-	return buffer.String()
+	code = ErrNu.Code
+	return
 }

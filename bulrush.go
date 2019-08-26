@@ -27,6 +27,7 @@ type (
 		Config(string) Bulrush
 		Inject(...interface{}) Bulrush
 		Acquire(reflect.Type) interface{}
+		Wire(interface{}) error
 		RunImmediately() error
 		Run(interface{}) error
 		Shutdown() error
@@ -97,8 +98,7 @@ func (bul *rush) PreUse(items ...interface{}) Bulrush {
 	}
 	bul.lock.Acquire("prePlugins", func(async sync.Async) {
 		funk.ForEach(items, func(item interface{}) {
-			assert1(isPlugin(item), errorMsgs{&Error{Type: ErrorTypePlugin,
-				Err: fmt.Errorf("%v can not be used as plugin", item)}})
+			assert1(isPlugin(item), ErrWith(ErrPlugin, fmt.Sprintf("%v can not be used as plugin", item)))
 			bul.prePlugins.Put(item)
 		})
 	})
@@ -114,8 +114,7 @@ func (bul *rush) Use(items ...interface{}) Bulrush {
 	}
 	bul.lock.Acquire("plugins", func(async sync.Async) {
 		funk.ForEach(items, func(item interface{}) {
-			assert1(isPlugin(item), errorMsgs{&Error{Type: ErrorTypePlugin,
-				Err: fmt.Errorf("%v can not be used as plugin", item)}})
+			assert1(isPlugin(item), ErrWith(ErrPlugin, fmt.Sprintf("%v can not be used as plugin", item)))
 			bul.plugins.Put(item)
 		})
 	})
@@ -131,8 +130,7 @@ func (bul *rush) PostUse(items ...interface{}) Bulrush {
 	}
 	bul.lock.Acquire("postPlugins", func(async sync.Async) {
 		funk.ForEach(items, func(item interface{}) {
-			assert1(isPlugin(item), errorMsgs{&Error{Type: ErrorTypePlugin,
-				Err: fmt.Errorf("%v can not be used as plugin", item)}})
+			assert1(isPlugin(item), ErrWith(ErrPlugin, fmt.Sprintf("%v can not be used as plugin", item)))
 			bul.postPlugins.PutHead(item)
 		})
 	})
@@ -167,8 +165,7 @@ func (bul *rush) Inject(items ...interface{}) Bulrush {
 	}
 	bul.lock.Acquire("injects", func(async sync.Async) {
 		funk.ForEach(items, func(item interface{}) {
-			assert1(!bul.injects.Has(item), errorMsgs{&Error{Type: ErrorTypeInject,
-				Err: fmt.Errorf("inject %v has existed", reflect.TypeOf(item))}})
+			assert1(!bul.injects.Has(item), ErrWith(ErrInject, fmt.Sprintf("inject %v has existed", reflect.TypeOf(item))))
 			bul.injects.Put(item)
 		})
 	})
@@ -179,6 +176,7 @@ func (bul *rush) Inject(items ...interface{}) Bulrush {
 // - match type or match interface{}
 // - return nil if no ele match
 func (bul *rush) Acquire(ty reflect.Type) interface{} {
+	fmt.Println("ty ", ty)
 	ele := typeMatcher(ty, *bul.injects)
 	if ele == nil {
 		ele = duckMatcher(ty, *bul.injects)
@@ -189,20 +187,44 @@ func (bul *rush) Acquire(ty reflect.Type) interface{} {
 	return ele
 }
 
+// Wire defined wire ele from type
+// - match type or match interface{}
+// - return err if wire error
+func (bul *rush) Wire(target interface{}) (err error) {
+	// tv := (*interface{})(unsafe.Pointer(targetValue.Pointer()))
+	// va := reflect.ValueOf(&a).Elem()
+	// va.Set(reflect.New(va.Type().Elem()))
+	tv := reflect.ValueOf(target)
+	if tv.Kind() != reflect.Ptr && !tv.IsNil() {
+		err = ErrWith(ErrUnaddressable, fmt.Sprintf("type %v should be pointer", reflect.TypeOf(target)))
+		return
+	}
+	if v := bul.Acquire(tv.Elem().Type()); v != nil {
+		tv = tv.Elem()
+		if tv.Type() == reflect.TypeOf(v) && tv.CanSet() {
+			tv.Set(reflect.ValueOf(v))
+		} else {
+			err = ErrWith(ErrUnaddressable, fmt.Sprintf("type %v should be pointer", reflect.TypeOf(target)))
+		}
+	}
+	return
+}
+
 // CatchError error which one from outside of recovery pluigns, this rec just for bulrush
 // you can CatchError if your error code does not affect the next plug-in
 // sometime you should handler all error in plugin
 func CatchError(funk interface{}) (err error) {
 	defer func() {
-		var ok bool
 		if ret := recover(); ret != nil {
-			err, ok = ret.(error)
-			if !ok {
+			ok, bulError := false, &Error{Code: ErrNu.Code, Err: err}
+			if err, ok = ret.(error); !ok {
 				err = fmt.Errorf("%v", ret)
 			}
+			if bulError, ok = ErrOut(err); !ok {
+				bulError.Err = err
+			}
 			if rushLogger != nil {
-				rushLogger.Error("%s panic recovered:\n%s\n%s%s",
-					timeFormat(time.Now()), err, stack(3), reset)
+				rushLogger.Error("%s panic recovered:\n%s\n%s%s", timeFormat(time.Now()), bulError.Err, stack(3), reset)
 			}
 		}
 	}()

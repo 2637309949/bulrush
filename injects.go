@@ -23,12 +23,21 @@ type (
 	Injects []interface{}
 )
 
+// InjectsValidOption defined Option of valid
+func InjectsValidOption(injects ...interface{}) Option {
+	return Option(func(r *rush) interface{} {
+		funk.ForEach(injects, func(item interface{}) {
+			assert1(!r.injects.Has(item), ErrWith(ErrInject, fmt.Sprintf("inject %v has existed", reflect.TypeOf(item))))
+		})
+		return injects
+	})
+}
+
 // InjectsOption defined Option of Injects
 func InjectsOption(injects ...interface{}) Option {
-	return Option(func(r *rush) *rush {
+	return Option(func(r *rush) interface{} {
 		r.lock.Acquire("injects", func(async sync.Async) {
 			funk.ForEach(injects, func(item interface{}) {
-				assert1(!r.injects.Has(item), ErrWith(ErrInject, fmt.Sprintf("inject %v has existed", reflect.TypeOf(item))))
 				r.injects.Put(item)
 			})
 		})

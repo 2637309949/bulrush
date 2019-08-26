@@ -47,20 +47,27 @@ var (
 	}
 )
 
-// ParseConfigOption defined Option of PrePlugin
-func ParseConfigOption(path string) Option {
-	return Option(func(r *rush) *rush {
+// ConfigValidOption defined Option of valid
+func ConfigValidOption(path string) Option {
+	return Option(func(r *rush) interface{} {
 		if len(path) == 0 {
 			return r
 		}
+		conf := LoadConfig(path)
+		conf.Version = conf.version()
+		conf.Name = conf.name()
+		conf.Prefix = conf.prefix()
+		conf.Mode = conf.mode()
+		conf.verifyVersion(Version)
+		return conf
+	})
+}
+
+// ParseConfigOption defined Option of PrePlugin
+func ParseConfigOption(conf *Config) Option {
+	return Option(func(r *rush) interface{} {
 		r.lock.Acquire("config", func(async sync.Async) {
-			conf := LoadConfig(path)
-			conf.Version = conf.version()
-			conf.Name = conf.name()
-			conf.Prefix = conf.prefix()
-			conf.Mode = conf.mode()
 			SetMode(conf.Mode)
-			conf.verifyVersion(Version)
 			*r.config = *conf
 			r.Inject(r.config)
 		})

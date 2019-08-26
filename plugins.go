@@ -28,12 +28,21 @@ type (
 	}
 )
 
+// PluginsValidOption defined Option of valid
+func PluginsValidOption(plugins ...interface{}) Option {
+	return Option(func(r *rush) interface{} {
+		funk.ForEach(plugins, func(item interface{}) {
+			assert1(isPlugin(item), ErrWith(ErrPlugin, fmt.Sprintf("%v can not be used as plugin", item)))
+		})
+		return plugins
+	})
+}
+
 // PrePluginsOption defined Option of PrePlugin
 func PrePluginsOption(plugins ...interface{}) Option {
-	return Option(func(r *rush) *rush {
+	return Option(func(r *rush) interface{} {
 		r.lock.Acquire("prePlugins", func(async sync.Async) {
 			funk.ForEach(plugins, func(item interface{}) {
-				assert1(isPlugin(item), ErrWith(ErrPlugin, fmt.Sprintf("%v can not be used as plugin", item)))
 				r.prePlugins.Put(item)
 			})
 		})
@@ -43,10 +52,9 @@ func PrePluginsOption(plugins ...interface{}) Option {
 
 // PostPluginsOption defined Option of PostPlugin
 func PostPluginsOption(plugins ...interface{}) Option {
-	return Option(func(r *rush) *rush {
+	return Option(func(r *rush) interface{} {
 		r.lock.Acquire("postPlugins", func(async sync.Async) {
 			funk.ForEach(plugins, func(item interface{}) {
-				assert1(isPlugin(item), ErrWith(ErrPlugin, fmt.Sprintf("%v can not be used as plugin", item)))
 				r.postPlugins.Put(item)
 			})
 		})
@@ -56,10 +64,9 @@ func PostPluginsOption(plugins ...interface{}) Option {
 
 // MiddlePluginsOption defined Option of MiddlePlugin
 func MiddlePluginsOption(plugins ...interface{}) Option {
-	return Option(func(r *rush) *rush {
+	return Option(func(r *rush) interface{} {
 		r.lock.Acquire("plugins", func(async sync.Async) {
 			funk.ForEach(plugins, func(item interface{}) {
-				assert1(isPlugin(item), ErrWith(ErrPlugin, fmt.Sprintf("%v can not be used as plugin", item)))
 				r.plugins.Put(item)
 			})
 		})

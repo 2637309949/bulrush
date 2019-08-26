@@ -88,34 +88,44 @@ func (bul *rush) Empty() *rush {
 // PreUse attachs a global middleware to the router
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
-func (bul *rush) PreUse(items ...interface{}) Bulrush {
-	return PrePluginsOption(items...).apply(bul)
+func (bul *rush) PreUse(params ...interface{}) Bulrush {
+	cParams := PluginsValidOption(params...).
+		check(bul).([]interface{})
+	return PrePluginsOption(cParams...).apply(bul)
 }
 
 // Use attachs a global middleware to the router
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
-func (bul *rush) Use(items ...interface{}) Bulrush {
-	return MiddlePluginsOption(items...).apply(bul)
+func (bul *rush) Use(params ...interface{}) Bulrush {
+	cParams := PluginsValidOption(params...).
+		check(bul).([]interface{})
+	return MiddlePluginsOption(cParams...).apply(bul)
 }
 
 // PostUse attachs a global middleware to the router
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
-func (bul *rush) PostUse(items ...interface{}) Bulrush {
-	return PostPluginsOption(items...).apply(bul)
+func (bul *rush) PostUse(params ...interface{}) Bulrush {
+	cParams := PluginsValidOption(params...).
+		check(bul).([]interface{})
+	return PostPluginsOption(cParams...).apply(bul)
 }
 
 // Config load config from string path
 // currently, it support loading file that end with .json or .yarm
 func (bul *rush) Config(path string) Bulrush {
-	return ParseConfigOption(path).apply(bul)
+	conf := ConfigValidOption(path).
+		check(bul).(*Config)
+	return ParseConfigOption(conf).apply(bul)
 }
 
 // Inject `inject` to bulrush
 // - inject should be someone that never be pushed in before.
-func (bul *rush) Inject(items ...interface{}) Bulrush {
-	return InjectsOption(items...).apply(bul)
+func (bul *rush) Inject(params ...interface{}) Bulrush {
+	cParams := InjectsValidOption(params...).
+		check(bul).([]interface{})
+	return InjectsOption(cParams...).apply(bul)
 }
 
 // Acquire defined acquire inject ele from type

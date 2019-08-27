@@ -26,10 +26,15 @@ type (
 		Chan         chan struct{}
 		DeadLineTime time.Time
 	}
+	// PluginsOption defined plugin option
+	PluginsOption interface {
+		apply(r *rush) *rush
+		check(r *rush) interface{}
+	}
 )
 
 // PluginsValidOption defined Option of valid
-func PluginsValidOption(plugins ...interface{}) Option {
+func PluginsValidOption(plugins ...interface{}) PluginsOption {
 	return Option(func(r *rush) interface{} {
 		funk.ForEach(plugins, func(item interface{}) {
 			assert1(isPlugin(item), ErrWith(ErrPlugin, fmt.Sprintf("%v can not be used as plugin", item)))
@@ -39,7 +44,7 @@ func PluginsValidOption(plugins ...interface{}) Option {
 }
 
 // PrePluginsOption defined Option of PrePlugin
-func PrePluginsOption(plugins ...interface{}) Option {
+func PrePluginsOption(plugins ...interface{}) PluginsOption {
 	return Option(func(r *rush) interface{} {
 		r.lock.Acquire("prePlugins", func(async sync.Async) {
 			funk.ForEach(plugins, func(item interface{}) {
@@ -51,7 +56,7 @@ func PrePluginsOption(plugins ...interface{}) Option {
 }
 
 // PostPluginsOption defined Option of PostPlugin
-func PostPluginsOption(plugins ...interface{}) Option {
+func PostPluginsOption(plugins ...interface{}) PluginsOption {
 	return Option(func(r *rush) interface{} {
 		r.lock.Acquire("postPlugins", func(async sync.Async) {
 			funk.ForEach(plugins, func(item interface{}) {
@@ -63,7 +68,7 @@ func PostPluginsOption(plugins ...interface{}) Option {
 }
 
 // MiddlePluginsOption defined Option of MiddlePlugin
-func MiddlePluginsOption(plugins ...interface{}) Option {
+func MiddlePluginsOption(plugins ...interface{}) PluginsOption {
 	return Option(func(r *rush) interface{} {
 		r.lock.Acquire("plugins", func(async sync.Async) {
 			funk.ForEach(plugins, func(item interface{}) {

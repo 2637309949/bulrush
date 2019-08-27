@@ -32,6 +32,11 @@ type (
 			Path  string `json:"path" yaml:"path"`
 		}
 	}
+	// ConfigOption defined cfg option
+	ConfigOption interface {
+		apply(r *rush) *rush
+		check(r *rush) interface{}
+	}
 	// cfgType enum type
 	cfgType uint
 )
@@ -48,7 +53,7 @@ var (
 )
 
 // ConfigValidOption defined Option of valid
-func ConfigValidOption(path string) Option {
+func ConfigValidOption(path string) ConfigOption {
 	return Option(func(r *rush) interface{} {
 		if len(path) == 0 {
 			return r
@@ -64,7 +69,7 @@ func ConfigValidOption(path string) Option {
 }
 
 // ParseConfigOption defined Option of PrePlugin
-func ParseConfigOption(conf *Config) Option {
+func ParseConfigOption(conf *Config) ConfigOption {
 	return Option(func(r *rush) interface{} {
 		r.lock.Acquire("config", func(async sync.Async) {
 			SetMode(conf.Mode)

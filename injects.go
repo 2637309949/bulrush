@@ -10,7 +10,6 @@ import (
 
 	"github.com/2637309949/bulrush-utils/maps"
 	"github.com/2637309949/bulrush-utils/sync"
-	"github.com/kataras/go-events"
 	"github.com/thoas/go-funk"
 	"gopkg.in/go-playground/validator.v9"
 	"gopkg.in/robfig/cron.v2"
@@ -111,7 +110,7 @@ func (src *Injects) Swap(i, j int) {
 }
 
 func builtInInjects(bul *rush) Injects {
-	var emmiter events.EventEmmiter = bul
+	var emmiter = bul.EventEmmiter
 	status := maps.NewSafeMap()
 	validate := validator.New()
 	schedule := cron.New()

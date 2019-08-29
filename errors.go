@@ -6,6 +6,7 @@ package bulrush
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -112,4 +113,9 @@ func ErrCode(err error) (code uint64) {
 	}
 	code = ErrNu.Code
 	return
+}
+
+// WithStack error stack
+func WithStack(err error) string {
+	return fmt.Sprintf("%+v", errors.WithStack(err))
 }

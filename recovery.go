@@ -44,7 +44,8 @@ func recoveryWithWriter(out io.Writer) gin.HandlerFunc {
 			if err := recover(); err != nil {
 				// Check for a broken connection, as it is not really a
 				// condition that warrants a panic stack trace.
-				var brokenPipe bool
+				brokenPipe := false
+				stack := stack(3)
 				if ne, ok := err.(*net.OpError); ok {
 					if se, ok := ne.Err.(*os.SyscallError); ok {
 						if strings.Contains(strings.ToLower(se.Error()), "broken pipe") || strings.Contains(strings.ToLower(se.Error()), "connection reset by peer") {
@@ -53,7 +54,6 @@ func recoveryWithWriter(out io.Writer) gin.HandlerFunc {
 					}
 				}
 				if logger != nil {
-					stack := stack(3)
 					httpRequest, _ := httputil.DumpRequest(c.Request, false)
 					headers := strings.Split(string(httpRequest), "\r\n")
 					for idx, header := range headers {
@@ -74,12 +74,12 @@ func recoveryWithWriter(out io.Writer) gin.HandlerFunc {
 				}
 				// If the connection is dead, we can't write a status to it.
 				if brokenPipe {
-					c.Error(err.(error)) // nolint: errcheck
+					c.Error(err.(error))
 					c.Abort()
 				} else {
 					c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 						"message": "Internal Server Error",
-						"stack":   err.(error).Error(),
+						"stack":   stack,
 					})
 				}
 			}

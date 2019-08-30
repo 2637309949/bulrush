@@ -156,7 +156,7 @@ func CatchError(funk interface{}) (err error) {
 				err = fmt.Errorf("%v", ret)
 			}
 			if bulError, ok = ErrOut(err); !ok {
-				bulError.Err = err
+				bulError = &Error{Code: ErrNu.Code, Err: err}
 			}
 			if rushLogger != nil {
 				rushLogger.Error("%s panic recovered:\n%s\n%s%s", timeFormat(time.Now()), bulError.Err, stack(3), reset)

@@ -11,29 +11,36 @@ type (
 		scopes  *[]Scope
 		injects *Injects
 		inspect func(...interface{})
-		index   int
 	}
 )
+
+// next defined foreach
+func (exec *executor) next(in func(s Scope) error, index ...int) (errs []error) {
+	var i int
+	if len(index) > 0 {
+		i = index[0]
+	}
+	if len(*exec.scopes) >= (i + 1) {
+		errs = append(errs, in((*exec.scopes)[i]))
+		i++
+		exec.next(in, i)
+	}
+	return
+}
 
 // execute defined run app plugin in order
 //, if Pre or Post Hook defined in struct, then
 //, Pre > Plugin > Post
-func (exec *executor) traverse() {
-	for exec.index < len(*exec.scopes) {
-		// roback if error panic in plugin
-		if err := CatchError(func() {
-			pv := (*exec.scopes)[exec.index]
+func (exec *executor) traverse() []error {
+	return exec.next(func(pv Scope) error {
+		return CatchError(func() {
 			debugPrint("next plugin:%v", reflect.TypeOf(pv.Value))
 			pv.inFrom(exec.injects)
 			pv.methodCall(pv.indirectFunc(preHookName), *exec.injects)
 			exec.inspect(pv.reflectCall(pv.indirectPlugin(), pv.Inputs)...)
 			pv.methodCall(pv.indirectFunc(postHookName), *exec.injects)
-			exec.index++
-		}); err != nil {
-			// next plugin
-			exec.index++
-		}
-	}
+		})
+	})
 }
 
 // execute defined all plugin execute in orderly

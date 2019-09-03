@@ -31,5 +31,5 @@ func main() {
 			})
 		})
 	})
-	app.RunImmediately()
+	app.Run()
 }

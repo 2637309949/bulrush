@@ -71,7 +71,7 @@ app.Use(func(testInject string, router *gin.RouterGroup) {
         })
     })
 })
-app.RunImmediately()
+app.Run()
 ```
 OR
 ```go

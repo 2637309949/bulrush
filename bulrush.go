@@ -9,6 +9,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/2637309949/bulrush-utils/sync"
 	"github.com/kataras/go-events"
 )
@@ -27,8 +29,13 @@ type (
 		Inject(...interface{}) Bulrush
 		Acquire(reflect.Type) interface{}
 		Wire(interface{}) error
-		RunImmediately() error
-		Run(interface{}) error
+		GET(string, ...gin.HandlerFunc) Bulrush
+		POST(string, ...gin.HandlerFunc) Bulrush
+		DELETE(string, ...gin.HandlerFunc) Bulrush
+		PUT(string, ...gin.HandlerFunc) Bulrush
+		Run(...interface{}) error
+		RunTLS(...interface{}) error
+		ExecWithBooting(interface{}) error
 		Shutdown() error
 	}
 	// rush implement Bulrush std
@@ -145,6 +152,42 @@ func (bul *rush) Wire(target interface{}) (err error) {
 	return bul.injects.Wire(target)
 }
 
+// GET defined HttpProxy handles
+// shortcut method
+func (bul *rush) GET(relativePath string, handlers ...gin.HandlerFunc) Bulrush {
+	bul.Use(func(router *gin.RouterGroup) {
+		router.GET(relativePath, handlers...)
+	})
+	return bul
+}
+
+// POST defined HttpProxy handles
+// shortcut method
+func (bul *rush) POST(relativePath string, handlers ...gin.HandlerFunc) Bulrush {
+	bul.Use(func(router *gin.RouterGroup) {
+		router.POST(relativePath, handlers...)
+	})
+	return bul
+}
+
+// PUT defined HttpProxy handles
+// shortcut method
+func (bul *rush) PUT(relativePath string, handlers ...gin.HandlerFunc) Bulrush {
+	bul.Use(func(router *gin.RouterGroup) {
+		router.PUT(relativePath, handlers...)
+	})
+	return bul
+}
+
+// DELETE defined HttpProxy handles
+// shortcut method
+func (bul *rush) DELETE(relativePath string, handlers ...gin.HandlerFunc) Bulrush {
+	bul.Use(func(router *gin.RouterGroup) {
+		router.DELETE(relativePath, handlers...)
+	})
+	return bul
+}
+
 // CatchError error which one from outside of recovery pluigns, this rec just for bulrush
 // you can CatchError if your error code does not affect the next plug-in
 // sometime you should handler all error in plugin
@@ -194,18 +237,34 @@ func (bul *rush) Shutdown() error {
 	return nil
 }
 
-// RunImmediately, excute plugin in orderly
-// Quick start application
-func (bul *rush) RunImmediately() error {
-	return bul.Run(HTTPBooting)
+// Run application with a booting`plugin, excute plugin in orderly
+// Just for HTTPProxy booting
+// Note: this method will block the calling goroutine indefinitely unless an error happens
+func (bul *rush) Run(b ...interface{}) (err error) {
+	var booting interface{} = HTTPBooting
+	if len(b) > 0 {
+		booting = b[0]
+	}
+	return bul.ExecWithBooting(booting)
 }
 
-// Run application with callback, excute plugin in orderly
+// Run application with a booting`plugin, excute plugin in orderly
+// Just for HTTPProxy booting
 // Note: this method will block the calling goroutine indefinitely unless an error happens
-func (bul *rush) Run(p interface{}) (err error) {
+func (bul *rush) RunTLS(b ...interface{}) (err error) {
+	var booting interface{} = HTTPTLSBooting
+	if len(b) > 0 {
+		booting = b[0]
+	}
+	return bul.ExecWithBooting(booting)
+}
+
+// execWithBooting defined exeute plugins with a booting plugins
+// Note: this method will block the calling goroutine indefinitely unless an error happens
+func (bul *rush) ExecWithBooting(b interface{}) (err error) {
 	go func() {
 		err = bul.CatchError(func() {
-			bul.PostUse(p)
+			bul.PostUse(b)
 			scopes := bul.
 				prePlugins.
 				Append(bul.plugins).

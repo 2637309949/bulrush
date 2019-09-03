@@ -24,7 +24,11 @@ type (
 		Name    string  `json:"name" yaml:"name"`
 		Prefix  string  `json:"prefix" yaml:"prefix"`
 		Port    string  `json:"port" yaml:"port"`
-		Mode    string  `json:"mode" yaml:"mode"`
+		TLS     struct {
+			CRT string `json:"crt" yaml:"crt"`
+			Key string `json:"key" yaml:"key"`
+		} `json:"tls" yaml:"tls"`
+		Mode    string `json:"mode" yaml:"mode"`
 		data    []byte
 		cfgType cfgType
 		Log     struct {

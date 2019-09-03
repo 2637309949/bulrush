@@ -147,7 +147,7 @@ func (ctx *HTTPContext) Deadline() (time.Time, bool) {
 //   HTTPProxy        plugin   defined http proxy
 //   HTTPRouter       plugin   defined http router
 //   Override         plugin   defined method override
-//   RunImmediately   plugin   defined httpproxy run
+//   Run   plugin   defined httpproxy run
 var (
 	// Starting defined before all plugin
 	Starting = func(event events.EventEmmiter) {
@@ -211,6 +211,31 @@ var (
 		})
 		go func() {
 			err = server.ListenAndServe()
+		}()
+	}
+	// HTTPTLSBooting run http proxy
+	HTTPTLSBooting = func(httpProxy *gin.Engine, event events.EventEmmiter, config *Config) {
+		var err error
+		defer func() {
+			if err != nil {
+				rushLogger.Error(fmt.Sprintf("%v", err))
+			}
+		}()
+		addr := fixedPortPrefix(strings.TrimSpace(config.Port))
+		name := config.Name
+		rushLogger.Debug("================================")
+		rushLogger.Debug("App: %s", name)
+		rushLogger.Debug("Listen on %s", addr)
+		rushLogger.Debug("================================")
+		server := &http.Server{Addr: addr, Handler: httpProxy}
+		event.On(EventsShutdown, func(payload ...interface{}) {
+			server.Shutdown(&HTTPContext{
+				DeadLineTime: time.Now().Add(3 * time.Second),
+				Chan:         make(chan struct{}, 1),
+			})
+		})
+		go func() {
+			err = server.ListenAndServeTLS(config.TLS.CRT, config.TLS.Key)
 		}()
 	}
 	// Running defined after all plugin

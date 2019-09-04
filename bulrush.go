@@ -6,6 +6,7 @@ package bulrush
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"time"
 
@@ -29,8 +30,8 @@ type (
 		Inject(...interface{}) Bulrush
 		Acquire(reflect.Type) interface{}
 		Wire(interface{}) error
-		Inspect() (string, error)
-		ToJSON() (string, error)
+		Inspect()
+		ToJSON() interface{}
 		GET(string, ...gin.HandlerFunc) Bulrush
 		POST(string, ...gin.HandlerFunc) Bulrush
 		DELETE(string, ...gin.HandlerFunc) Bulrush
@@ -156,19 +157,22 @@ func (bul *rush) Wire(target interface{}) (err error) {
 
 // Return JSON representation.
 // We only bother showing settings
-func (bul *rush) ToJSON() (string, error) {
-	jsIndent, err := json.MarshalIndent(&struct {
+func (bul *rush) ToJSON() interface{} {
+	return struct {
 		Config *Config
+		Env    string
 	}{
 		Config: bul.config,
-	}, "", "\t")
-	return string(jsIndent), err
+		Env:    modeName,
+	}
 }
 
 // Inspect implementation
 // We only bother showing settings
-func (bul *rush) Inspect() (string, error) {
-	return bul.ToJSON()
+func (bul *rush) Inspect() {
+	profile := bul.ToJSON()
+	jsIndent, _ := json.MarshalIndent(&profile, "", "\t")
+	fmt.Println(string(jsIndent))
 }
 
 // GET defined HttpProxy handles

@@ -5,7 +5,7 @@
 package bulrush
 
 import (
-	"fmt"
+	"encoding/json"
 	"reflect"
 	"time"
 
@@ -29,6 +29,8 @@ type (
 		Inject(...interface{}) Bulrush
 		Acquire(reflect.Type) interface{}
 		Wire(interface{}) error
+		Inspect() (string, error)
+		ToJSON() (string, error)
 		GET(string, ...gin.HandlerFunc) Bulrush
 		POST(string, ...gin.HandlerFunc) Bulrush
 		DELETE(string, ...gin.HandlerFunc) Bulrush
@@ -152,6 +154,23 @@ func (bul *rush) Wire(target interface{}) (err error) {
 	return bul.injects.Wire(target)
 }
 
+// Return JSON representation.
+// We only bother showing settings
+func (bul *rush) ToJSON() (string, error) {
+	jsIndent, err := json.MarshalIndent(&struct {
+		Config *Config
+	}{
+		Config: bul.config,
+	}, "", "\t")
+	return string(jsIndent), err
+}
+
+// Inspect implementation
+// We only bother showing settings
+func (bul *rush) Inspect() (string, error) {
+	return bul.ToJSON()
+}
+
 // GET defined HttpProxy handles
 // shortcut method
 func (bul *rush) GET(relativePath string, handlers ...gin.HandlerFunc) Bulrush {
@@ -186,29 +205,6 @@ func (bul *rush) DELETE(relativePath string, handlers ...gin.HandlerFunc) Bulrus
 		router.DELETE(relativePath, handlers...)
 	})
 	return bul
-}
-
-// CatchError error which one from outside of recovery pluigns, this rec just for bulrush
-// you can CatchError if your error code does not affect the next plug-in
-// sometime you should handler all error in plugin
-func CatchError(funk interface{}) (err error) {
-	defer func() {
-		if ret := recover(); ret != nil {
-			ok, bulError := false, &Error{Code: ErrNu.Code, Err: err}
-			if err, ok = ret.(error); !ok {
-				err = fmt.Errorf("%v", ret)
-			}
-			if bulError, ok = ErrOut(err); !ok {
-				bulError = &Error{Code: ErrNu.Code, Err: err}
-			}
-			if rushLogger != nil {
-				rushLogger.Error("%s panic recovered:\n%s\n%s%s", timeFormat(time.Now()), bulError.Err, stack(3), reset)
-			}
-		}
-	}()
-	assert1(isFunc(funk), fmt.Errorf("funk %v should be func type", reflect.TypeOf(funk)))
-	reflect.ValueOf(funk).Call([]reflect.Value{})
-	return
 }
 
 // CatchError error which one from outside of recovery pluigns, this rec just for bulrush

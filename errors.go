@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/thoas/go-funk"
@@ -88,6 +89,27 @@ func (msg *Error) Error() (message string) {
 // IsCode judges one error.
 func (msg *Error) IsCode(code uint64) bool {
 	return (msg.Code & code) > 0
+}
+
+// CatchError defined  catch error from panic
+func CatchError(funk interface{}) (err error) {
+	defer func() {
+		if ret := recover(); ret != nil {
+			ok, bulError := false, &Error{Code: ErrNu.Code, Err: err}
+			if err, ok = ret.(error); !ok {
+				err = fmt.Errorf("%v", ret)
+			}
+			if bulError, ok = ErrOut(err); !ok {
+				bulError = &Error{Code: ErrNu.Code, Err: err}
+			}
+			if rushLogger != nil {
+				rushLogger.Error("%s panic recovered:\n%s\n%s%s", timeFormat(time.Now()), bulError.Err, stack(3), reset)
+			}
+		}
+	}()
+	assert1(isFunc(funk), fmt.Errorf("funk %v should be func type", reflect.TypeOf(funk)))
+	reflect.ValueOf(funk).Call([]reflect.Value{})
+	return
 }
 
 // ErrWith defined wrap error

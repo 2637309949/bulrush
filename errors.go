@@ -26,8 +26,10 @@ var (
 	ErrPrivate = &Error{Code: uint64(1 << 23)}
 	// ErrPublic indicates a public error.
 	ErrPublic = &Error{Code: uint64(1 << 24)}
+	// ErrNotMatch indicates not match error.
+	ErrNotMatch = &Error{Code: uint64(1 << 25)}
 	// ErrAny indicates any other error.
-	ErrAny = &Error{Code: uint64(1 << 25)}
+	ErrAny = &Error{Code: uint64(1 << 26)}
 	// ErrNu indicates any other error.
 	ErrNu = &Error{Code: uint64(1 << 55)}
 )

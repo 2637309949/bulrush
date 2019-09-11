@@ -167,14 +167,10 @@ func (c *Config) UnmarshalByType(data []byte, v interface{}, dataType cfgType) (
 	switch true {
 	case dataType == cfgTypeEnums.JSON:
 		err = json.Unmarshal(data, v)
-		if err != nil {
-			return err
-		}
 	case dataType == cfgTypeEnums.YAML:
 		err = yaml.Unmarshal(data, v)
-		if err != nil {
-			return err
-		}
+	default:
+		err = ErrNotMatch
 	}
 	return
 }

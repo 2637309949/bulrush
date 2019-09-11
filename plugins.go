@@ -211,6 +211,7 @@ var (
 		})
 		go func() {
 			err = server.ListenAndServe()
+			rushLogger.Error(fmt.Sprintf("%v", err))
 		}()
 	}
 	// HTTPTLSBooting run http proxy
@@ -236,6 +237,7 @@ var (
 		})
 		go func() {
 			err = server.ListenAndServeTLS(config.TLS.CRT, config.TLS.Key)
+			rushLogger.Error(fmt.Sprintf("%v", err))
 		}()
 	}
 	// Running defined after all plugin

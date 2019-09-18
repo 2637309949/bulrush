@@ -79,6 +79,12 @@ func MiddlePluginsOption(plugins ...interface{}) PluginsOption {
 	})
 }
 
+func newPlugins(items ...interface{}) *Plugins {
+	plugins := make(Plugins, 1)
+	plugins = append(plugins, items...)
+	return &plugins
+}
+
 // Append defined array concat
 func (p *Plugins) Append(target *Plugins) *Plugins {
 	middles := append(*p, *target...)

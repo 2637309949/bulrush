@@ -49,6 +49,12 @@ func InjectsOption(injects ...interface{}) InjectOption {
 	})
 }
 
+func newInjects(items ...interface{}) *Injects {
+	inject := make(Injects, 1)
+	inject = append(inject, items...)
+	return &inject
+}
+
 // Wire defined wire ele from type
 func (src *Injects) Wire(target interface{}) (err error) {
 	// tv := (*interface{})(unsafe.Pointer(targetValue.Pointer()))

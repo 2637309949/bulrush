@@ -63,10 +63,10 @@ func New() Bulrush {
 	bul := (&rush{
 		EventEmmiter: events.New(),
 		config:       new(Config),
-		injects:      new(Injects),
-		prePlugins:   new(Plugins),
-		plugins:      new(Plugins),
-		postPlugins:  new(Plugins),
+		injects:      newInjects(),
+		prePlugins:   newPlugins(),
+		plugins:      newPlugins(),
+		postPlugins:  newPlugins(),
 		lock:         sync.NewLock(),
 		exit:         make(chan struct{}, 1),
 	})

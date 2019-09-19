@@ -29,6 +29,7 @@ type (
 			Key string `json:"key" yaml:"key"`
 		} `json:"tls" yaml:"tls"`
 		Mode    string `json:"mode" yaml:"mode"`
+		Env     string `json:"env" yaml:"env"`
 		data    []byte
 		cfgType cfgType
 		Log     struct {

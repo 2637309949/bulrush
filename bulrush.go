@@ -72,7 +72,7 @@ func New() Bulrush {
 	})
 	bul.Empty()
 	bul.Inject(builtInInjects(bul)...).
-		PreUse(Plugins{Starting, HTTPProxy, HTTPRouter}...).
+		PreUse(Plugins{Starting, HTTPProxy, GRPCProxy, HTTPRouter}...).
 		Use(Plugins{}...).
 		PostUse(Plugins{Running}...)
 	return bul

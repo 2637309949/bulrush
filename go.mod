@@ -11,6 +11,7 @@ require (
 	github.com/kataras/go-events v0.0.2
 	github.com/pkg/errors v0.8.1
 	github.com/thoas/go-funk v0.4.0
+	google.golang.org/grpc v1.23.0
 	gopkg.in/go-playground/validator.v9 v9.29.1
 	gopkg.in/robfig/cron.v2 v2.0.0-20150107220207-be2e0b0deed5
 	gopkg.in/yaml.v2 v2.2.2

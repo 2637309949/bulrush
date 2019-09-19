@@ -8,15 +8,22 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strconv"
+	"strings"
 
 	"github.com/thoas/go-funk"
 )
 
-func fixedPortPrefix(port string) string {
-	if prefix := port[:1]; prefix != ":" {
-		port = fmt.Sprintf(":%s", port)
+func fixedPortPrefix(port string, plus ...int) string {
+	port = strings.ReplaceAll(port, ":", "")
+	number, err := strconv.Atoi(port)
+	if err != nil {
+		panic(err)
 	}
-	return port
+	if len(plus) > 0 {
+		number = plus[0] + number
+	}
+	return fmt.Sprintf(":%v", number)
 }
 
 func isFunc(target interface{}) bool {

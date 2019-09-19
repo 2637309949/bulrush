@@ -7,6 +7,7 @@ package bulrush
 import (
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -15,6 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kataras/go-events"
 	"github.com/thoas/go-funk"
+	"google.golang.org/grpc"
 )
 
 type (
@@ -168,6 +170,10 @@ var (
 	HTTPProxy = func() *gin.Engine {
 		return gin.New()
 	}
+	// GRPCProxy create grpc proxy
+	GRPCProxy = func() *grpc.Server {
+		return grpc.NewServer()
+	}
 	// HTTPRouter create http router
 	HTTPRouter = func(httpProxy *gin.Engine, config *Config) *gin.RouterGroup {
 		return httpProxy.Group(config.Prefix)
@@ -194,57 +200,83 @@ var (
 			})
 		})
 	}
-	// HTTPBooting run http proxy
-	HTTPBooting = func(httpProxy *gin.Engine, event events.EventEmmiter, config *Config) {
+	// HTTPBooting run http proxy and grpc proxy
+	HTTPBooting = func(httpProxy *gin.Engine, gs *grpc.Server, event events.EventEmmiter, config *Config) {
 		var err error
 		defer func() {
 			if err != nil {
 				rushLogger.Error(fmt.Sprintf("%v", err))
 			}
 		}()
-		addr := fixedPortPrefix(strings.TrimSpace(config.Port))
+		addr1 := fixedPortPrefix(strings.TrimSpace(config.Port))
+		addr2 := fixedPortPrefix(strings.TrimSpace(config.Port), 1)
 		name := config.Name
-		rushLogger.Debug("================================")
-		rushLogger.Debug("App: %s", name)
-		rushLogger.Debug("Listen on %s", addr)
-		rushLogger.Debug("================================")
-		server := &http.Server{Addr: addr, Handler: httpProxy}
+		grpc, err := net.Listen("tcp", addr2)
+		http := &http.Server{Addr: addr1, Handler: httpProxy}
 		event.On(EventsShutdown, func(payload ...interface{}) {
-			server.Shutdown(&HTTPContext{
+			// graceful stop srv
+			gs.GracefulStop()
+			http.Shutdown(&HTTPContext{
 				DeadLineTime: time.Now().Add(3 * time.Second),
 				Chan:         make(chan struct{}, 1),
 			})
 		})
 		go func() {
-			err = server.ListenAndServe()
-			rushLogger.Error(fmt.Sprintf("%v", err))
+			err = http.ListenAndServe()
+			if err != nil {
+				rushLogger.Error(fmt.Sprintf("%v", err))
+			}
 		}()
+		go func() {
+			err = gs.Serve(grpc)
+			if err != nil {
+				rushLogger.Error(fmt.Sprintf("%v", err))
+			}
+		}()
+		rushLogger.Debug("================================")
+		rushLogger.Debug("App: %s", name)
+		rushLogger.Debug("Http Listen on %s", addr1)
+		rushLogger.Debug("Grpc Listen on %s", addr2)
+		rushLogger.Debug("================================")
 	}
-	// HTTPTLSBooting run http proxy
-	HTTPTLSBooting = func(httpProxy *gin.Engine, event events.EventEmmiter, config *Config) {
+	// HTTPTLSBooting run http proxy and grpc proxy
+	HTTPTLSBooting = func(httpProxy *gin.Engine, gs *grpc.Server, event events.EventEmmiter, config *Config) {
 		var err error
 		defer func() {
 			if err != nil {
 				rushLogger.Error(fmt.Sprintf("%v", err))
 			}
 		}()
-		addr := fixedPortPrefix(strings.TrimSpace(config.Port))
+		addr1 := fixedPortPrefix(strings.TrimSpace(config.Port))
+		addr2 := fixedPortPrefix(strings.TrimSpace(config.Port), 1)
 		name := config.Name
-		rushLogger.Debug("================================")
-		rushLogger.Debug("App: %s", name)
-		rushLogger.Debug("Listen on %s", addr)
-		rushLogger.Debug("================================")
-		server := &http.Server{Addr: addr, Handler: httpProxy}
+		grpc, err := net.Listen("tcp", addr2)
+		http := &http.Server{Addr: addr1, Handler: httpProxy}
 		event.On(EventsShutdown, func(payload ...interface{}) {
-			server.Shutdown(&HTTPContext{
+			// graceful stop srv
+			gs.GracefulStop()
+			http.Shutdown(&HTTPContext{
 				DeadLineTime: time.Now().Add(3 * time.Second),
 				Chan:         make(chan struct{}, 1),
 			})
 		})
 		go func() {
-			err = server.ListenAndServeTLS(config.TLS.CRT, config.TLS.Key)
-			rushLogger.Error(fmt.Sprintf("%v", err))
+			err = http.ListenAndServeTLS(config.TLS.CRT, config.TLS.Key)
+			if err != nil {
+				rushLogger.Error(fmt.Sprintf("%v", err))
+			}
 		}()
+		go func() {
+			err = gs.Serve(grpc)
+			if err != nil {
+				rushLogger.Error(fmt.Sprintf("%v", err))
+			}
+		}()
+		rushLogger.Debug("================================")
+		rushLogger.Debug("App: %s", name)
+		rushLogger.Debug("Http Listen on %s", addr1)
+		rushLogger.Debug("Grpc Listen on %s", addr2)
+		rushLogger.Debug("================================")
 	}
 	// Running defined after all plugin
 	Running = func(event events.EventEmmiter) {

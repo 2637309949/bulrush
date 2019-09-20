@@ -158,6 +158,7 @@ func assert1(guard bool, err interface{}) {
 	}
 }
 
+// resolveAddress defined ipaddress
 func resolveAddress(addr []string) string {
 	switch len(addr) {
 	case 0:

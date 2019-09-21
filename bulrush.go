@@ -270,11 +270,11 @@ func (bul *rush) ExecWithBooting(b interface{}) (err error) {
 				Append(bul.plugins).
 				Append(bul.postPlugins).
 				toScopes()
-			exec := &executor{
+			exec := &engine{
 				scopes:  scopes,
 				injects: bul.injects,
 			}
-			exec.execute(func(ret ...interface{}) {
+			exec.exec(func(ret ...interface{}) {
 				bul.Inject(ret...)
 			})
 		})

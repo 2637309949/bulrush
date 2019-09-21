@@ -82,7 +82,7 @@ func MiddlePluginsOption(plugins ...interface{}) PluginsOption {
 }
 
 func newPlugins(items ...interface{}) *Plugins {
-	plugins := make(Plugins, 1)
+	plugins := make(Plugins, 0)
 	plugins = append(plugins, items...)
 	return &plugins
 }

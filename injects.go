@@ -50,7 +50,7 @@ func InjectsOption(injects ...interface{}) InjectOption {
 }
 
 func newInjects(items ...interface{}) *Injects {
-	inject := make(Injects, 1)
+	inject := make(Injects, 0)
 	inject = append(inject, items...)
 	return &inject
 }

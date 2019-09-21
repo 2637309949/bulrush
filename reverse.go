@@ -25,9 +25,9 @@ func (r *ReverseInject) Register(rFunc interface{}) {
 		panic(fmt.Errorf("rFunc should to be func type"))
 	}
 	scopes := (&Plugins{rFunc}).toScopes()
-	exec := &executor{
+	exec := &engine{
 		scopes:  scopes,
 		injects: r.injects,
 	}
-	exec.execute(r.inspect)
+	exec.exec(r.inspect)
 }

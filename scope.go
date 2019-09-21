@@ -7,8 +7,6 @@ package bulrush
 import (
 	"fmt"
 	"reflect"
-
-	"github.com/thoas/go-funk"
 )
 
 type (
@@ -35,16 +33,19 @@ func (scope *Scope) methodCall(m reflect.Value, inputs []interface{}) {
 		case func():
 			method()
 		case func(*Config):
-			method(scope.inValue(reflect.TypeOf(&Config{}), inputs).(*Config))
+			method(scope.inValue(reflect.TypeOf(new(Config)), inputs).(*Config))
 		default:
 		}
 	}
 }
 
-func (scope *Scope) reflectCall(m reflect.Value, ins []reflect.Value) []interface{} {
-	return funk.Map(m.Call(ins), func(v reflect.Value) interface{} {
-		return v.Interface()
-	}).([]interface{})
+func (scope *Scope) reflectCall(m reflect.Value, ins []reflect.Value) (ret []interface{}) {
+	if m.IsValid() {
+		for _, v := range m.Call(ins) {
+			ret = append(ret, v.Interface())
+		}
+	}
+	return
 }
 
 func (scope *Scope) indirectFunc(name string) reflect.Value {
@@ -67,7 +68,7 @@ func (scope *Scope) indirectPlugin() reflect.Value {
 	return reflect.Value{}
 }
 
-func (scope *Scope) inFrom(inputs *Injects) {
+func (scope *Scope) arguments(inputs *Injects) {
 	funk := scope.indirectPlugin()
 	if funk.Type().Kind() != reflect.Func {
 		panic(fmt.Errorf(" %v inputsFrom call with %v error", funk, inputs))

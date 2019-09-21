@@ -18,10 +18,10 @@ func (o Option) check(r *rush) interface{} { return o(r) }
 // Empty defined Option of rush
 func Empty() Option {
 	return Option(func(r *rush) interface{} {
-		r.injects = new(Injects)
-		r.prePlugins = new(Plugins)
-		r.plugins = new(Plugins)
-		r.postPlugins = new(Plugins)
+		r.injects = newInjects()
+		r.prePlugins = newPlugins()
+		r.plugins = newPlugins()
+		r.postPlugins = newPlugins()
 		return r
 	})
 }

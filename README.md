@@ -11,7 +11,7 @@
     - [Inject your custom injects](#inject-your-custom-injects)
     - [Import your plugins](#import-your-plugins)
     - [Run app](#run-app)
-    - [Share state between plug-ins](#share-state-between-plug-ins)
+    - [Share sstate between plug-ins](#share-state-between-plug-ins)
     - [store state](#store-state)
     - [read state](#read-state)
     - [Plug in communication between plug-ins](#plug-in-communication-between-plug-ins)
@@ -30,6 +30,17 @@
 - [MIT License](#mit-license)
 
 <!-- /TOC -->
+
+## Snapshot
+
+```sh
+[BUL-debug] 2019/09/22 20:31:46 /home/double/work/K11/repo/bulrush/bulrush/plugin.go:237: ================================
+[BUL-debug] 2019/09/22 20:31:46 /home/double/work/K11/repo/bulrush/bulrush/plugin.go:238: App: bulrush-template
+[BUL-debug] 2019/09/22 20:31:46 /home/double/work/K11/repo/bulrush/bulrush/plugin.go:239: Env: local
+[BUL-debug] 2019/09/22 20:31:46 /home/double/work/K11/repo/bulrush/bulrush/plugin.go:240: Http Listen on :8080
+[BUL-debug] 2019/09/22 20:31:46 /home/double/work/K11/repo/bulrush/bulrush/plugin.go:241: Grpc Listen on :8081
+[BUL-debug] 2019/09/22 20:31:46 /home/double/work/K11/repo/bulrush/bulrush/plugin.go:242: ================================
+```
 
 ## Benchmarks
 ```cmd

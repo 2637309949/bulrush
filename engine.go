@@ -4,12 +4,9 @@
 
 package bulrush
 
-import "reflect"
-
 type (
 	engine struct {
 		scopes  *[]Scope
-		injects *Injects
 		inspect func(...interface{})
 	}
 )
@@ -34,11 +31,10 @@ func (e *engine) next(cb func(s Scope) error, index ...int) (errs []error) {
 func (e *engine) traverse() (errs []error) {
 	errs = e.next(func(pv Scope) (err error) {
 		err = CatchError(func() {
-			debugPrint("next plugin:%v", reflect.TypeOf(pv.Value))
-			pv.arguments(e.injects)
-			pv.methodCall(pv.indirectFunc(preHookName), *e.injects)
-			e.inspect(pv.reflectCall(pv.indirectPlugin(), pv.Inputs)...)
-			pv.methodCall(pv.indirectFunc(postHookName), *e.injects)
+			debugPrint("next plugin:%v", pv.Type())
+			pv.Pre()
+			e.inspect(pv.Plugin()...)
+			pv.Post()
 		})
 		return
 	})

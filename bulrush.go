@@ -269,10 +269,11 @@ func (bul *rush) ExecWithBooting(b interface{}) (err error) {
 				prePlugins.
 				Append(bul.plugins).
 				Append(bul.postPlugins).
-				toScopes()
+				toScopes(func(t reflect.Type) interface{} {
+					return bul.injects.Acquire(t)
+				})
 			exec := &engine{
-				scopes:  scopes,
-				injects: bul.injects,
+				scopes: scopes,
 			}
 			exec.exec(func(ret ...interface{}) {
 				bul.Inject(ret...)

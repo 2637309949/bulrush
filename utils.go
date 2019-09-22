@@ -72,47 +72,29 @@ func indirectValue(reflectValue reflect.Value) reflect.Value {
 	return reflectValue
 }
 
-// indirect from ptr
-func indirectType(reflectType reflect.Type) reflect.Type {
-	for reflectType.Kind() == reflect.Ptr {
-		reflectType = reflectType.Elem()
-	}
-	return reflectType
-}
-
-func indirectFunc(item interface{}, funcName string) (interface{}, bool) {
-	fromStruct := false
-	value := reflect.ValueOf(item)
-	if value.Kind() == reflect.Interface && value.Elem().Kind() == reflect.Interface {
-		value = value.Elem().Elem()
-	}
-	if value.Kind() == reflect.Ptr && value.Elem().Kind() == reflect.Struct {
-		if value.MethodByName(funcName).IsValid() {
-			value = value.MethodByName(funcName)
-			fromStruct = true
+func isPlugin(src interface{}) (is bool) {
+	vType := reflect.TypeOf(src)
+	if vType.Kind() == reflect.Ptr && vType.Elem().Kind() == reflect.Func {
+		is = true
+	} else if vType.Kind() == reflect.Ptr && vType.Elem().Kind() == reflect.Struct {
+		_, e := vType.MethodByName("Plugin")
+		if e {
+			is = true
 		} else {
-			value = value.Elem()
+			_, e = vType.Elem().MethodByName("Plugin")
+			if e {
+				is = true
+			}
+		}
+	} else if vType.Kind() == reflect.Func {
+		is = true
+	} else if vType.Kind() == reflect.Struct {
+		_, e := vType.MethodByName("Plugin")
+		if e {
+			is = true
 		}
 	}
-	if value.Kind() == reflect.Struct {
-		value = value.MethodByName(funcName)
-		fromStruct = true
-	}
-	if value.Kind() == reflect.Func && value.IsValid() {
-		return value.Interface(), fromStruct
-	}
-	return nil, fromStruct
-}
-
-func indirectPlugin(item interface{}, funk string) interface{} {
-	value, _ := indirectFunc(item, funk)
-	assert1(value != nil, fmt.Sprintf("%v can not be used as plugin", item))
-	return value
-}
-
-func isPlugin(item interface{}) bool {
-	value, _ := indirectFunc(item, pluginHookName)
-	return value != nil
+	return
 }
 
 // duckMatcher match type if from target`type

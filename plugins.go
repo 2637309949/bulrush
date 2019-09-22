@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"reflect"
 	"strings"
 	"time"
 
@@ -121,9 +122,9 @@ func (p *Plugins) Swap(i, j int) {
 }
 
 // toScopes defined to get `ret` that plugin func return
-func (p *Plugins) toScopes() *[]Scope {
+func (p *Plugins) toScopes(acquire func(reflect.Type) interface{}) *[]Scope {
 	scopes := funk.Map(*p, func(v interface{}) Scope {
-		return *newScope(v)
+		return newScope(v, acquire)
 	}).([]Scope)
 	return &scopes
 }

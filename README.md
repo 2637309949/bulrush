@@ -33,13 +33,13 @@
 
 ## Snapshot
 
-```sh
-[BUL-debug] 2019/09/22 20:31:46 /home/double/work/K11/repo/bulrush/bulrush/plugin.go:237: ================================
-[BUL-debug] 2019/09/22 20:31:46 /home/double/work/K11/repo/bulrush/bulrush/plugin.go:238: App: bulrush-template
-[BUL-debug] 2019/09/22 20:31:46 /home/double/work/K11/repo/bulrush/bulrush/plugin.go:239: Env: local
-[BUL-debug] 2019/09/22 20:31:46 /home/double/work/K11/repo/bulrush/bulrush/plugin.go:240: Http Listen on :8080
-[BUL-debug] 2019/09/22 20:31:46 /home/double/work/K11/repo/bulrush/bulrush/plugin.go:241: Grpc Listen on :8081
-[BUL-debug] 2019/09/22 20:31:46 /home/double/work/K11/repo/bulrush/bulrush/plugin.go:242: ================================
+```cmd
+[BUL-debug] 2019/09/22 20:31:46 /bulrush/bulrush/plugin.go:237: ================================
+[BUL-debug] 2019/09/22 20:31:46 /bulrush/bulrush/plugin.go:238: App: bulrush-template
+[BUL-debug] 2019/09/22 20:31:46 /bulrush/bulrush/plugin.go:239: Env: local
+[BUL-debug] 2019/09/22 20:31:46 /bulrush/bulrush/plugin.go:240: Http Listen on :8080
+[BUL-debug] 2019/09/22 20:31:46 /bulrush/bulrush/plugin.go:241: Grpc Listen on :8081
+[BUL-debug] 2019/09/22 20:31:46 /bulrush/bulrush/plugin.go:242: ================================
 ```
 
 ## Benchmarks

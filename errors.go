@@ -17,21 +17,21 @@ import (
 
 var (
 	// ErrPlugin is used when bul.Use().
-	ErrPlugin = &Error{Code: uint64(1 << 20)}
+	ErrPlugin = &Error{Code: uint64(100)}
 	// ErrInject is used when bul.Inject() fails.
-	ErrInject = &Error{Code: uint64(1 << 21)}
+	ErrInject = &Error{Code: uint64(101)}
 	// ErrUnaddressable unaddressable value
-	ErrUnaddressable = &Error{Code: uint64(1 << 22)}
+	ErrUnaddressable = &Error{Code: uint64(102)}
 	// ErrPrivate indicates a private error.
-	ErrPrivate = &Error{Code: uint64(1 << 23)}
+	ErrPrivate = &Error{Code: uint64(103)}
 	// ErrPublic indicates a public error.
-	ErrPublic = &Error{Code: uint64(1 << 24)}
+	ErrPublic = &Error{Code: uint64(104)}
 	// ErrNotMatch indicates not match error.
-	ErrNotMatch = &Error{Code: uint64(1 << 25)}
+	ErrNotMatch = &Error{Code: uint64(105)}
 	// ErrAny indicates any other error.
-	ErrAny = &Error{Code: uint64(1 << 26)}
+	ErrAny = &Error{Code: uint64(106)}
 	// ErrNu indicates any other error.
-	ErrNu = &Error{Code: uint64(1 << 55)}
+	ErrNu = &Error{Code: uint64(107)}
 )
 
 // Error represents a error's specification.
@@ -134,8 +134,9 @@ func ErrMsgs(err error) []string {
 func ErrCode(err error) (code uint64) {
 	if bulErr, ok := ErrOut(err); ok {
 		code = bulErr.Code
+	} else {
+		code = ErrNu.Code
 	}
-	code = ErrNu.Code
 	return
 }
 

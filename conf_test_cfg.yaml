@@ -1,0 +1,5 @@
+name: 'bulrush-test'
+port: ':8080'
+prefix: '/api'
+mode: 'debug'
+env: 'dev'

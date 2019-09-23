@@ -6,13 +6,13 @@ package bulrush
 
 type (
 	engine struct {
-		scopes  *[]Scope
+		scopes  *[]scope
 		inspect func(...interface{})
 	}
 )
 
 // next defined foreach
-func (e *engine) next(cb func(s Scope) error, index ...int) (errs []error) {
+func (e *engine) next(cb func(s scope) error, index ...int) (errs []error) {
 	i := 0
 	if len(index) > 0 {
 		i = index[0]
@@ -31,11 +31,11 @@ func (e *engine) next(cb func(s Scope) error, index ...int) (errs []error) {
 //, if Pre or Post Hook defined in struct, then
 //, Pre > Plugin > Post
 func (e *engine) traverse() (errs []error) {
-	return e.next(func(pv Scope) (err error) {
+	return e.next(func(pv scope) (err error) {
 		return CatchError(func() {
-			pv.Pre()
-			e.inspect(pv.Plugin()...)
-			pv.Post()
+			pv.pre()
+			e.inspect(pv.plugin()...)
+			pv.post()
 		})
 	})
 }

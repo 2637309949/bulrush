@@ -9,16 +9,25 @@ import (
 	"reflect"
 )
 
-// ReverseInject Inject
+// ReverseInject defined a inject
+// , for reverse inject
 type ReverseInject struct {
 	injects *Injects
 	inspect func(items ...interface{})
 }
 
-// Register function for Reverse Injects
-// If the function you're injecting is a black box,
-// then you can try this
-// Example: github.com/2637309949/bulrush-template/models.go
+// Register defiend function for Reverse Injects
+// Example:
+// func Route(router *gin.RouterGroup, event events.EventEmmiter, ri *bulrush.ReverseInject) {
+// 		ri.Register(RegisterMgo)
+// 		ri.Register(RegisterCache)
+// 		ri.Register(RegisterSeq)
+// 		ri.Register(RegisterMq)
+// 		ri.Register(RegisterEvent)
+// 		ri.Register(RegisterMock)
+// 		ri.Register(RegisterGRPC)
+// 		event.Emit("hello", "this is my payload to hello router")
+// }
 func (r *ReverseInject) Register(rFunc interface{}) {
 	kind := reflect.TypeOf(rFunc).Kind()
 	if kind != reflect.Func {

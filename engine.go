@@ -18,7 +18,9 @@ func (e *engine) next(cb func(s Scope) error, index ...int) (errs []error) {
 		i = index[0]
 	}
 	if len(*e.scopes) >= (i + 1) {
-		errs = append(errs, cb((*e.scopes)[i]))
+		pv := (*e.scopes)[i]
+		debugPrint("next plugin:%v", pv.Type())
+		errs = append(errs, cb(pv))
 		i++
 		e.next(cb, i)
 	}
@@ -29,16 +31,13 @@ func (e *engine) next(cb func(s Scope) error, index ...int) (errs []error) {
 //, if Pre or Post Hook defined in struct, then
 //, Pre > Plugin > Post
 func (e *engine) traverse() (errs []error) {
-	errs = e.next(func(pv Scope) (err error) {
-		err = CatchError(func() {
-			debugPrint("next plugin:%v", pv.Type())
+	return e.next(func(pv Scope) (err error) {
+		return CatchError(func() {
 			pv.Pre()
 			e.inspect(pv.Plugin()...)
 			pv.Post()
 		})
-		return
 	})
-	return
 }
 
 // execute defined all plugin execute in orderly

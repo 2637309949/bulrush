@@ -10,50 +10,62 @@ import (
 )
 
 type (
-	baseScope struct {
+	// baseScope defined a struct that constructorScope or objectScope must
+	// be provided
+	bs struct {
 		v       interface{}
 		acquire func(reflect.Type) interface{}
 	}
-	// constructorScope
-	constructorScope struct {
-		baseScope
+	// funcScope defined a construct scope like
+	// func(r *gin.RouterGroup) {
+	// }
+	funcScope struct {
+		bs
 	}
 	// objectScope defined scope plugin from object
 	// must implement plugin function
 	// plugin() []interface{}
 	objectScope struct {
-		baseScope
+		bs
 	}
-	arguments interface {
+	// args interface defined arguments provided
+	args interface {
 		arguments(funk reflect.Type) (args []reflect.Value)
 	}
-	scopeHook interface {
+	// hook defined plugin hook
+	// pre
+	// post
+	// plugin
+	hook interface {
 		pre() error
 		post() error
 		plugin() []interface{}
 	}
 	// scope defined plugin hooks
 	scope interface {
-		arguments
-		scopeHook
+		args
+		hook
 		Type() reflect.Type
 	}
 )
 
 // Type defined type info
-func (s *constructorScope) Type() reflect.Type {
+func (s *funcScope) Type() reflect.Type {
 	return reflect.TypeOf(s.v)
 }
 
-func (s *constructorScope) pre() error {
+// pre defined pre hook
+func (s *funcScope) pre() error {
 	return nil
 }
 
-func (s *constructorScope) post() error {
+// post defined pre hook
+func (s *funcScope) post() error {
 	return nil
 }
 
-func (s *constructorScope) plugin() (rets []interface{}) {
+// plugin defined pre hook
+func (s *funcScope) plugin() (rets []interface{}) {
 	funk := reflect.ValueOf(s.v)
 	if funk.IsValid() {
 		args := s.arguments(funk.Type())
@@ -66,7 +78,7 @@ func (s *constructorScope) plugin() (rets []interface{}) {
 }
 
 // arguments defined obtain arguments before exec plugin
-func (s *constructorScope) arguments(funk reflect.Type) (args []reflect.Value) {
+func (s *funcScope) arguments(funk reflect.Type) (args []reflect.Value) {
 	numIn := funk.NumIn()
 	for index := 0; index < numIn; index++ {
 		ptype := funk.In(index)
@@ -84,6 +96,7 @@ func (s *objectScope) Type() reflect.Type {
 	return reflect.TypeOf(s.v)
 }
 
+// pre defined pre hook
 func (s *objectScope) pre() error {
 	funk := reflect.ValueOf(s.v)
 	v := funk.MethodByName("Pre")
@@ -97,6 +110,7 @@ func (s *objectScope) pre() error {
 	return nil
 }
 
+// post defined post hook
 func (s *objectScope) post() error {
 	funk := reflect.ValueOf(s.v)
 	v := funk.MethodByName("Post")
@@ -110,6 +124,7 @@ func (s *objectScope) post() error {
 	return nil
 }
 
+// plugin defined plugin hook
 func (s *objectScope) plugin() (rets []interface{}) {
 	funk := reflect.ValueOf(s.v)
 	v := funk.MethodByName("Plugin")
@@ -126,6 +141,7 @@ func (s *objectScope) plugin() (rets []interface{}) {
 	return
 }
 
+// arguments defined arguments hook
 func (s *objectScope) arguments(funk reflect.Type) (args []reflect.Value) {
 	numIn := funk.NumIn()
 	for index := 0; index < numIn; index++ {
@@ -139,25 +155,25 @@ func (s *objectScope) arguments(funk reflect.Type) (args []reflect.Value) {
 	return
 }
 
-func newconstructorScope(src interface{}, acquire func(reflect.Type) interface{}) scope {
-	return &constructorScope{
-		baseScope{
+func newFuncScope(src interface{}, acquire func(reflect.Type) interface{}) scope {
+	return &funcScope{
+		bs{
 			v:       src,
 			acquire: acquire,
 		},
 	}
 }
 
-func newobjectScope(src interface{}, acquire func(reflect.Type) interface{}) scope {
+func newObjectScope(src interface{}, acquire func(reflect.Type) interface{}) scope {
 	return &objectScope{
-		baseScope{
+		bs{
 			v:       src,
 			acquire: acquire,
 		},
 	}
 }
 
-func newScope(src interface{}, acquire func(reflect.Type) interface{}) (s scope) {
+func determineScope(src interface{}, acquire func(reflect.Type) interface{}) (s scope) {
 	vType := reflect.TypeOf(src)
 	if vType.Kind() == reflect.Interface {
 		vType = vType.Elem()
@@ -167,9 +183,9 @@ func newScope(src interface{}, acquire func(reflect.Type) interface{}) (s scope)
 	}
 	switch true {
 	case vType.Kind() == reflect.Func:
-		s = newconstructorScope(src, acquire)
+		s = newFuncScope(src, acquire)
 	case vType.Kind() == reflect.Struct:
-		s = newobjectScope(src, acquire)
+		s = newObjectScope(src, acquire)
 	}
 	return
 }

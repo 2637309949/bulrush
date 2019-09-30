@@ -215,7 +215,6 @@ var (
 		grpc, err := net.Listen("tcp", addr2)
 		http := &http.Server{Addr: addr1, Handler: httpProxy}
 		event.On(EventsShutdown, func(payload ...interface{}) {
-			// graceful stop srv
 			gs.GracefulStop()
 			http.Shutdown(&HTTPContext{
 				DeadLineTime: time.Now().Add(3 * time.Second),
@@ -255,7 +254,6 @@ var (
 		grpc, err := net.Listen("tcp", addr2)
 		http := &http.Server{Addr: addr1, Handler: httpProxy}
 		event.On(EventsShutdown, func(payload ...interface{}) {
-			// graceful stop srv
 			gs.GracefulStop()
 			http.Shutdown(&HTTPContext{
 				DeadLineTime: time.Now().Add(3 * time.Second),

@@ -72,9 +72,8 @@ func New() Bulrush {
 	})
 	bul.Empty()
 	bul.Inject(builtInInjects(bul)...).
-		PreUse(Plugins{Starting, HTTPProxy, GRPCProxy, HTTPRouter}...).
-		Use(Plugins{}...).
-		PostUse(Plugins{Running}...)
+		PreUse(Starting).
+		PostUse(Running)
 	return bul
 }
 
@@ -82,9 +81,9 @@ func New() Bulrush {
 // --Recovery middle has been register in httpProxy and user router
 // --Override middles has been register in router for override req
 func Default() Bulrush {
-	bul := New()
-	bul.Use(Recovery)
-	bul.Use(Override)
+	bul := New().
+		PreUse(HTTPProxy, GRPCProxy, HTTPRouter).
+		Use(Recovery, Override)
 	return bul
 }
 

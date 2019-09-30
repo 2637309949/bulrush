@@ -59,7 +59,7 @@ type (
 // --config json or yaml config for bulrush
 // --injects struct instance can be reflect by bulrush
 // --middles some middles for gin self
-func New() Bulrush {
+func New(opt ...Option) Bulrush {
 	bul := (&rush{
 		EventEmmiter: events.New(),
 		config:       new(Config),
@@ -70,6 +70,11 @@ func New() Bulrush {
 		lock:         sync.NewLock(),
 		exit:         make(chan struct{}, 1),
 	})
+
+	for _, o := range opt {
+		o.apply(bul)
+	}
+
 	bul.Empty()
 	bul.Inject(builtInInjects(bul)...).
 		PreUse(Starting).
@@ -80,8 +85,8 @@ func New() Bulrush {
 // Default returns an Bulrush instance with the Override and Recovery middleware already attached.
 // --Recovery middle has been register in httpProxy and user router
 // --Override middles has been register in router for override req
-func Default() Bulrush {
-	bul := New()
+func Default(opt ...Option) Bulrush {
+	bul := New(opt...)
 	bul.PreUse(HTTPProxy, GRPCProxy, HTTPRouter, Recovery, Override)
 	return bul
 }

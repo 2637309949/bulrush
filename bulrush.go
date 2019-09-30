@@ -81,9 +81,8 @@ func New() Bulrush {
 // --Recovery middle has been register in httpProxy and user router
 // --Override middles has been register in router for override req
 func Default() Bulrush {
-	bul := New().
-		PreUse(HTTPProxy, GRPCProxy, HTTPRouter).
-		Use(Recovery, Override)
+	bul := New()
+	bul.PreUse(HTTPProxy, GRPCProxy, HTTPRouter, Recovery, Override)
 	return bul
 }
 

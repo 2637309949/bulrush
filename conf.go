@@ -61,7 +61,7 @@ var (
 func ConfigValidOption(path string) ConfigOption {
 	return Option(func(r *rush) interface{} {
 		if len(path) == 0 {
-			return r
+			return nil
 		}
 		conf := LoadConfig(path)
 		conf.Version = conf.version()

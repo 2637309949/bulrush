@@ -70,11 +70,9 @@ func New(opt ...Option) Bulrush {
 		lock:         sync.NewLock(),
 		exit:         make(chan struct{}, 1),
 	})
-
 	for _, o := range opt {
 		o.apply(bul)
 	}
-
 	bul.Empty()
 	bul.Inject(builtInInjects(bul)...).
 		PreUse(Starting).
@@ -87,7 +85,7 @@ func New(opt ...Option) Bulrush {
 // --Override middles has been register in router for override req
 func Default(opt ...Option) Bulrush {
 	bul := New(opt...)
-	bul.PreUse(HTTPProxy, GRPCProxy, HTTPRouter, Recovery, Override)
+	bul.PreUse(GRPCProxy, HTTPProxy, HTTPRouter, Recovery, Override)
 	return bul
 }
 
@@ -102,27 +100,27 @@ func (bul *rush) Empty() *rush {
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
 func (bul *rush) PreUse(params ...interface{}) Bulrush {
-	cParams := PluginsValidOption(params...).
+	params = PluginsValidOption(params...).
 		check(bul).([]interface{})
-	return PrePluginsOption(cParams...).apply(bul)
+	return PrePluginsOption(params...).apply(bul)
 }
 
 // Use attachs a global middleware to the router
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
 func (bul *rush) Use(params ...interface{}) Bulrush {
-	cParams := PluginsValidOption(params...).
+	params = PluginsValidOption(params...).
 		check(bul).([]interface{})
-	return MiddlePluginsOption(cParams...).apply(bul)
+	return MiddlePluginsOption(params...).apply(bul)
 }
 
 // PostUse attachs a global middleware to the router
 // just like function in gin, but not been inited util bulrush inited.
 // bulrush range these middles in order
 func (bul *rush) PostUse(params ...interface{}) Bulrush {
-	cParams := PluginsValidOption(params...).
+	params = PluginsValidOption(params...).
 		check(bul).([]interface{})
-	return PostPluginsOption(cParams...).apply(bul)
+	return PostPluginsOption(params...).apply(bul)
 }
 
 // Config load config from string path
@@ -136,16 +134,16 @@ func (bul *rush) Config(path string) Bulrush {
 // Inject `inject` to bulrush
 // - inject should be someone that never be pushed in before.
 func (bul *rush) Inject(params ...interface{}) Bulrush {
-	cParams := InjectsValidOption(params...).
+	params = InjectsValidOption(params...).
 		check(bul).([]interface{})
-	return InjectsOption(cParams...).apply(bul)
+	return InjectsOption(params...).apply(bul)
 }
 
 // Acquire defined acquire inject ele from type
 // - match type or match interface{}
 // - return nil if no ele match
-func (bul *rush) Acquire(ty reflect.Type) interface{} {
-	return bul.injects.Acquire(ty)
+func (bul *rush) Acquire(target reflect.Type) interface{} {
+	return bul.injects.Acquire(target)
 }
 
 // Wire defined wire ele from type
@@ -181,37 +179,33 @@ func (bul *rush) Inspect() {
 // GET defined HttpProxy handles
 // shortcut method
 func (bul *rush) GET(relativePath string, handlers ...gin.HandlerFunc) Bulrush {
-	bul.Use(func(router *gin.RouterGroup) {
+	return bul.Use(func(router *gin.RouterGroup) {
 		router.GET(relativePath, handlers...)
 	})
-	return bul
 }
 
 // POST defined HttpProxy handles
 // shortcut method
 func (bul *rush) POST(relativePath string, handlers ...gin.HandlerFunc) Bulrush {
-	bul.Use(func(router *gin.RouterGroup) {
+	return bul.Use(func(router *gin.RouterGroup) {
 		router.POST(relativePath, handlers...)
 	})
-	return bul
 }
 
 // PUT defined HttpProxy handles
 // shortcut method
 func (bul *rush) PUT(relativePath string, handlers ...gin.HandlerFunc) Bulrush {
-	bul.Use(func(router *gin.RouterGroup) {
+	return bul.Use(func(router *gin.RouterGroup) {
 		router.PUT(relativePath, handlers...)
 	})
-	return bul
 }
 
 // DELETE defined HttpProxy handles
 // shortcut method
 func (bul *rush) DELETE(relativePath string, handlers ...gin.HandlerFunc) Bulrush {
-	bul.Use(func(router *gin.RouterGroup) {
+	return bul.Use(func(router *gin.RouterGroup) {
 		router.DELETE(relativePath, handlers...)
 	})
-	return bul
 }
 
 // CatchError error which one from outside of recovery pluigns, this rec just for bulrush
@@ -265,9 +259,9 @@ func (bul *rush) RunTLS(b ...interface{}) (err error) {
 // execWithBooting defined exeute plugins with a booting plugins
 // Note: this method will block the calling goroutine indefinitely unless an error happens
 func (bul *rush) ExecWithBooting(b interface{}) (err error) {
+	bul.PostUse(b)
 	go func() {
 		err = bul.CatchError(func() {
-			bul.PostUse(b)
 			scopes := bul.
 				prePlugins.
 				Append(bul.plugins).

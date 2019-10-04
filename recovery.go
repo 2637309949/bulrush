@@ -69,7 +69,7 @@ func recovery() gin.HandlerFunc {
 				} else {
 					c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 						"message": utils.Some(err.(error).Error(), "Internal Server Error"),
-						"stack":   stack,
+						"stack":   fmt.Sprintf("%s", stack),
 					})
 				}
 			}

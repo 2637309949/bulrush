@@ -147,17 +147,15 @@ func (c *Config) Unmarshal(field string, v interface{}) (err error) {
 
 // LoadConfig loads the bulrush tool configuration
 func LoadConfig(path string) *Config {
-	var (
-		err  error
-		data []byte
-	)
-	if data, err = ioutil.ReadFile(path); err == nil {
-		c := &Config{data: data}
-		c.cfgType = c.typeBySuffix(path)
-		err = c.UnmarshalByType(c.data, c, c.cfgType)
-		return c
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		panic(fmt.Errorf("failed to load file %s", err))
+
 	}
-	panic(fmt.Errorf("failed to load file %s", err))
+	c := &Config{data: data}
+	c.cfgType = c.typeBySuffix(path)
+	err = c.UnmarshalByType(c.data, c, c.cfgType)
+	return c
 }
 
 // UnmarshalByType defined unmarshal by diff file type

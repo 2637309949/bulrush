@@ -145,25 +145,7 @@ func (c *Config) Unmarshal(field string, v interface{}) (err error) {
 	return errors.New("can not unmarshal this type")
 }
 
-// LoadConfig loads the bulrush tool configuration
-func LoadConfig(path string) *Config {
-	var (
-		err  error
-		data []byte
-	)
-	if data, err = ioutil.ReadFile(path); err == nil {
-		c := &Config{data: data}
-		c.cfgType = c.typeBySuffix(path)
-		err = c.UnmarshalByType(c.data, c, c.cfgType)
-		return c
-	}
-	panic(fmt.Errorf("failed to load file %s", err))
-}
-
 // UnmarshalByType defined unmarshal by diff file type
-// suport
-// , : json
-// , : yaml
 func (c *Config) UnmarshalByType(data []byte, v interface{}, dataType cfgType) (err error) {
 	switch true {
 	case dataType == cfgTypeEnums.JSON:
@@ -174,4 +156,17 @@ func (c *Config) UnmarshalByType(data []byte, v interface{}, dataType cfgType) (
 		err = ErrNotMatch
 	}
 	return
+}
+
+// LoadConfig loads the bulrush tool configuration
+func LoadConfig(path string) *Config {
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		panic(fmt.Errorf("failed to load file %s", err))
+
+	}
+	c := &Config{data: data}
+	c.cfgType = c.typeBySuffix(path)
+	err = c.UnmarshalByType(c.data, c, c.cfgType)
+	return c
 }

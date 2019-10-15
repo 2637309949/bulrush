@@ -5,6 +5,7 @@
 package bulrush
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net"
@@ -202,7 +203,7 @@ var (
 		})
 	}
 	// HTTPBooting run http proxy and grpc proxy
-	HTTPBooting = func(httpProxy *gin.Engine, gs *grpc.Server, event events.EventEmmiter, config *Config) {
+	HTTPBooting = func(lifecycle Lifecycle, httpProxy *gin.Engine, gs *grpc.Server, event events.EventEmmiter, config *Config) {
 		var err error
 		defer func() {
 			if err != nil {
@@ -214,34 +215,38 @@ var (
 		name := config.Name
 		grpc, err := net.Listen("tcp", addr2)
 		http := &http.Server{Addr: addr1, Handler: httpProxy}
-		event.On(EventsShutdown, func(payload ...interface{}) {
-			gs.GracefulStop()
-			http.Shutdown(&HTTPContext{
-				DeadLineTime: time.Now().Add(3 * time.Second),
-				Chan:         make(chan struct{}, 1),
-			})
+		lifecycle.Append(Hook{
+			OnStart: func(ctx context.Context) error {
+				go func() {
+					err = http.ListenAndServe()
+					if err != nil {
+						rushLogger.Error(fmt.Sprintf("%v", err))
+					}
+				}()
+				go func() {
+					err = gs.Serve(grpc)
+					if err != nil {
+						rushLogger.Error(fmt.Sprintf("%v", err))
+					}
+				}()
+				rushLogger.Debug("================================")
+				rushLogger.Debug("App: %s", name)
+				rushLogger.Debug("Env: %s", config.Env)
+				rushLogger.Debug("Http Listen on %s", addr1)
+				rushLogger.Debug("Grpc Listen on %s", addr2)
+				rushLogger.Debug("================================")
+				return nil
+			},
+			OnStop: func(ctx context.Context) (err error) {
+				gs.GracefulStop()
+				http.Shutdown(ctx)
+				return
+			},
 		})
-		go func() {
-			err = http.ListenAndServe()
-			if err != nil {
-				rushLogger.Error(fmt.Sprintf("%v", err))
-			}
-		}()
-		go func() {
-			err = gs.Serve(grpc)
-			if err != nil {
-				rushLogger.Error(fmt.Sprintf("%v", err))
-			}
-		}()
-		rushLogger.Debug("================================")
-		rushLogger.Debug("App: %s", name)
-		rushLogger.Debug("Env: %s", config.Env)
-		rushLogger.Debug("Http Listen on %s", addr1)
-		rushLogger.Debug("Grpc Listen on %s", addr2)
-		rushLogger.Debug("================================")
 	}
+
 	// HTTPTLSBooting run http proxy and grpc proxy
-	HTTPTLSBooting = func(httpProxy *gin.Engine, gs *grpc.Server, event events.EventEmmiter, config *Config) {
+	HTTPTLSBooting = func(lifecycle Lifecycle, httpProxy *gin.Engine, gs *grpc.Server, event events.EventEmmiter, config *Config) {
 		var err error
 		defer func() {
 			if err != nil {
@@ -253,31 +258,37 @@ var (
 		name := config.Name
 		grpc, err := net.Listen("tcp", addr2)
 		http := &http.Server{Addr: addr1, Handler: httpProxy}
-		event.On(EventsShutdown, func(payload ...interface{}) {
-			gs.GracefulStop()
-			http.Shutdown(&HTTPContext{
-				DeadLineTime: time.Now().Add(3 * time.Second),
-				Chan:         make(chan struct{}, 1),
-			})
+		lifecycle.Append(Hook{
+			OnStart: func(ctx context.Context) error {
+				go func() {
+					err = http.ListenAndServeTLS(config.TLS.CRT, config.TLS.Key)
+					if err != nil {
+						rushLogger.Error(fmt.Sprintf("%v", err))
+					}
+				}()
+				go func() {
+					err = gs.Serve(grpc)
+					if err != nil {
+						rushLogger.Error(fmt.Sprintf("%v", err))
+					}
+				}()
+				rushLogger.Debug("================================")
+				rushLogger.Debug("App: %s", name)
+				rushLogger.Debug("Env: %s", config.Env)
+				rushLogger.Debug("Http Listen on %s", addr1)
+				rushLogger.Debug("Grpc Listen on %s", addr2)
+				rushLogger.Debug("================================")
+				return nil
+			},
+			OnStop: func(ctx context.Context) (err error) {
+				gs.GracefulStop()
+				err = http.Shutdown(&HTTPContext{
+					DeadLineTime: time.Now().Add(3 * time.Second),
+					Chan:         make(chan struct{}, 1),
+				})
+				return
+			},
 		})
-		go func() {
-			err = http.ListenAndServeTLS(config.TLS.CRT, config.TLS.Key)
-			if err != nil {
-				rushLogger.Error(fmt.Sprintf("%v", err))
-			}
-		}()
-		go func() {
-			err = gs.Serve(grpc)
-			if err != nil {
-				rushLogger.Error(fmt.Sprintf("%v", err))
-			}
-		}()
-		rushLogger.Debug("================================")
-		rushLogger.Debug("App: %s", name)
-		rushLogger.Debug("Env: %s", config.Env)
-		rushLogger.Debug("Http Listen on %s", addr1)
-		rushLogger.Debug("Grpc Listen on %s", addr2)
-		rushLogger.Debug("================================")
 	}
 	// Running defined after all plugin
 	Running = func(event events.EventEmmiter) {

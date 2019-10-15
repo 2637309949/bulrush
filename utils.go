@@ -5,6 +5,7 @@
 package bulrush
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"reflect"
@@ -154,5 +155,17 @@ func resolveAddress(addr []string) string {
 		return addr[0]
 	default:
 		panic("too much parameters")
+	}
+}
+
+func withTimeout(ctx context.Context, f func(context.Context) error) error {
+	c := make(chan error, 1)
+	go func() { c <- f(ctx) }()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case err := <-c:
+		return err
 	}
 }

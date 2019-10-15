@@ -5,9 +5,13 @@
 package bulrush
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"os/signal"
 	"reflect"
+	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -44,13 +48,13 @@ type (
 	// rush implement Bulrush std
 	rush struct {
 		events.EventEmmiter
+		lifecycle   Lifecycle
 		config      *Config
 		injects     *Injects
 		prePlugins  *Plugins
 		plugins     *Plugins
 		postPlugins *Plugins
 		lock        *sync.Lock
-		exit        chan struct{}
 	}
 )
 
@@ -62,21 +66,20 @@ type (
 func New(opt ...Option) Bulrush {
 	bul := (&rush{
 		EventEmmiter: events.New(),
+		lifecycle:    &lifecycleWrapper{},
 		config:       new(Config),
 		injects:      newInjects(),
 		prePlugins:   newPlugins(),
 		plugins:      newPlugins(),
 		postPlugins:  newPlugins(),
 		lock:         sync.NewLock(),
-		exit:         make(chan struct{}, 1),
 	})
 	for _, o := range opt {
 		o.apply(bul)
 	}
 	bul.Empty()
-	bul.Inject(builtInInjects(bul)...).
-		PreUse(Starting).
-		PostUse(Running)
+	bul.Inject(builtInInjects(bul)...)
+	bul.PreUse(Starting).PostUse(Running)
 	return bul
 }
 
@@ -215,23 +218,21 @@ func (bul *rush) CatchError(funk interface{}) error {
 	return CatchError(funk)
 }
 
+// Done returns a channel of signals to block on after starting the
+// application
+func (bul *rush) Done() <-chan os.Signal {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
+	return c
+}
+
 // Shutdown defined bul gracefulExit
 // ,, close http or other resources
 // should call Shutdown after bulrush has running success
 func (bul *rush) Shutdown() error {
-	defer func() {
-		close(bul.exit)
-	}()
-	// emit shutdown event
-	bul.Emit(EventsShutdown)
-	// shutdown bulrush
-	time.Sleep(time.Second * 5)
-	<-func() chan struct{} {
-		bul.exit <- struct{}{}
-		return bul.exit
-	}()
-	rushLogger.Warn("Shutdown: bulrush Closed")
-	return nil
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	return withTimeout(ctx, bul.lifecycle.Stop)
 }
 
 // Run application with a booting`plugin, excute plugin in orderly
@@ -259,24 +260,25 @@ func (bul *rush) RunTLS(b ...interface{}) (err error) {
 // execWithBooting defined exeute plugins with a booting plugins
 // Note: this method will block the calling goroutine indefinitely unless an error happens
 func (bul *rush) ExecWithBooting(b interface{}) (err error) {
+	done := bul.Done()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	bul.PostUse(b)
 	go func() {
 		err = bul.CatchError(func() {
-			scopes := bul.
-				prePlugins.
-				Append(bul.plugins).
-				Append(bul.postPlugins).
-				toScopes(func(t reflect.Type) interface{} {
-					return bul.injects.Acquire(t)
-				})
+			plugins := bul.prePlugins.Append(bul.plugins).Append(bul.postPlugins)
+			scopes := plugins.toScopes(func(t reflect.Type) interface{} {
+				return bul.injects.Acquire(t)
+			})
 			exec := &engine{
 				scopes: scopes,
 			}
 			exec.exec(func(ret ...interface{}) {
 				bul.Inject(ret...)
 			})
+			withTimeout(ctx, bul.lifecycle.Start)
 		})
 	}()
-	bul.exit <- <-bul.exit
+	<-done
 	return
 }

@@ -121,7 +121,8 @@ func (src *Injects) Swap(i, j int) {
 }
 
 func builtInInjects(bul *rush) Injects {
-	var emmiter = bul.EventEmmiter
+	lifecycle := bul.lifecycle
+	emmiter := bul.EventEmmiter
 	status := maps.NewSafeMap()
 	validate := validator.New()
 	schedule := cron.New()
@@ -133,6 +134,7 @@ func builtInInjects(bul *rush) Injects {
 	}
 	return Injects{
 		emmiter,
+		lifecycle,
 		status,
 		validate,
 		schedule,
